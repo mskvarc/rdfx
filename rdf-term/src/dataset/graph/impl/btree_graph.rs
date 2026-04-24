@@ -69,7 +69,7 @@ impl<R> BTreeGraph<R> {
     }
 
     /// Returns an iterator over the triples of the graph.
-    pub fn iter(&self) -> Triples<R> {
+    pub fn iter(&self) -> Triples<'_, R> {
         Triples {
             resources: &self.resources,
             triples: &self.triples,
@@ -78,7 +78,7 @@ impl<R> BTreeGraph<R> {
     }
 
     /// Returns an iterator over the resources of the graph.
-    pub fn resources(&self) -> Resources<R> {
+    pub fn resources(&self) -> Resources<'_, R> {
         Resources {
             resources: &self.resources,
             indexes: self.resources_indexes.iter(),

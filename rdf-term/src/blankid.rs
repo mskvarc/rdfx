@@ -44,7 +44,7 @@ impl BlankId {
     /// The input string `s` must be a valid blank node identifier.
     #[inline(always)]
     pub unsafe fn new_unchecked(s: &str) -> &Self {
-        std::mem::transmute(s)
+        unsafe { std::mem::transmute(s) }
     }
 
     /// Returns a reference to the underlying string defining the blank node identifier.
@@ -150,7 +150,7 @@ impl BlankIdBuf {
     /// The input string `s` must be a valid blank node identifier.
     #[inline(always)]
     pub unsafe fn new_unchecked(s: String) -> Self {
-        std::mem::transmute(s)
+        unsafe { std::mem::transmute(s) }
     }
 
     /// Creates a blank node identifier using the given `u8` as suffix.

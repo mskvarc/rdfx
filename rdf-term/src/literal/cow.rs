@@ -24,7 +24,7 @@ impl<'a> CowLiteral<'a> {
         }
     }
 
-    pub fn as_ref(&self) -> LiteralRef {
+    pub fn as_ref(&self) -> LiteralRef<'_> {
         LiteralRef::new(&self.value, self.type_.as_ref())
     }
 

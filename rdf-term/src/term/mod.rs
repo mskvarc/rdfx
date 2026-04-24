@@ -35,7 +35,7 @@ impl Term {
         matches!(self, Self::Literal(_))
     }
 
-    pub fn as_literal(&self) -> Option<LiteralRef> {
+    pub fn as_literal(&self) -> Option<LiteralRef<'_>> {
         match self {
             Self::Literal(lit) => Some(lit.as_ref()),
             _ => None,
@@ -74,14 +74,14 @@ impl Term {
         self.try_into_iri().ok()
     }
 
-    pub fn as_ref(&self) -> TermRef {
+    pub fn as_ref(&self) -> TermRef<'_> {
         match self {
             Self::Iri(id) => TermRef::Iri(id),
             Self::Literal(l) => TermRef::Literal(l.as_ref()),
         }
     }
 
-    pub fn as_cow(&self) -> CowTerm {
+    pub fn as_cow(&self) -> CowTerm<'_> {
         match self {
             Self::Iri(id) => CowTerm::Iri(Cow::Borrowed(id)),
             Self::Literal(l) => CowTerm::Literal(l.as_cow()),

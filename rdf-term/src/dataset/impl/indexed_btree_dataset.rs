@@ -156,7 +156,7 @@ impl<R> IndexedBTreeDataset<R> {
     }
 
     /// Returns an iterator over the quads of the dataset.
-    pub fn iter(&self) -> Quads<R> {
+    pub fn iter(&self) -> Quads<'_, R> {
         Quads {
             resources: &self.resources,
             quads: &self.quads,
@@ -165,7 +165,7 @@ impl<R> IndexedBTreeDataset<R> {
     }
 
     /// Returns an iterator over the resources of the dataset.
-    pub fn resources(&self) -> Resources<R> {
+    pub fn resources(&self) -> Resources<'_, R> {
         Resources {
             resources: &self.resources,
             indexes: self.resources_indexes.iter(),
@@ -173,7 +173,7 @@ impl<R> IndexedBTreeDataset<R> {
     }
 
     /// Returns an iterator over the subjects of the dataset.
-    pub fn subjects(&self) -> Subjects<R> {
+    pub fn subjects(&self) -> Subjects<'_, R> {
         Subjects {
             resources: &self.resources,
             indexes: self.subjects.iter(),
@@ -181,7 +181,7 @@ impl<R> IndexedBTreeDataset<R> {
     }
 
     /// Returns an iterator over the predicates of the dataset.
-    pub fn predicates(&self) -> Predicates<R> {
+    pub fn predicates(&self) -> Predicates<'_, R> {
         Predicates {
             resources: &self.resources,
             indexes: self.predicates.iter(),
@@ -189,7 +189,7 @@ impl<R> IndexedBTreeDataset<R> {
     }
 
     /// Returns an iterator over the objects of the dataset.
-    pub fn objects(&self) -> Objects<R> {
+    pub fn objects(&self) -> Objects<'_, R> {
         Objects {
             resources: &self.resources,
             indexes: self.objects.iter(),
@@ -197,7 +197,7 @@ impl<R> IndexedBTreeDataset<R> {
     }
 
     /// Returns an iterator over the named graphs of the dataset.
-    pub fn named_graphs(&self) -> NamedGraphs<R> {
+    pub fn named_graphs(&self) -> NamedGraphs<'_, R> {
         NamedGraphs {
             resources: &self.resources,
             indexes: self.named_graphs.iter(),
@@ -406,7 +406,7 @@ impl<R: Ord> IndexedBTreeDataset<R> {
 
     /// Returns an iterator over all the quads matching the given canonical
     /// quad pattern.
-    pub fn pattern_matching(&self, pattern: CanonicalQuadPattern<&R>) -> PatternMatching<R> {
+    pub fn pattern_matching(&self, pattern: CanonicalQuadPattern<&R>) -> PatternMatching<'_, R> {
         PatternMatching {
             resources: &self.resources,
             quads: &self.quads,
@@ -420,7 +420,7 @@ impl<R: Ord> IndexedBTreeDataset<R> {
 
     /// Returns an iterator over all the quads matching the given canonical
     /// quad pattern.
-    pub fn multi_pattern_matching<'a, P>(&self, pattern: CanonicalQuadPattern<P>) -> MultiPatternMatching<R>
+    pub fn multi_pattern_matching<'a, P>(&self, pattern: CanonicalQuadPattern<P>) -> MultiPatternMatching<'_, R>
     where
         P: IntoIterator<Item = &'a R>,
         R: 'a,
@@ -440,7 +440,7 @@ impl<R: Ord> IndexedBTreeDataset<R> {
 
     /// Returns an iterator over all the quads matching the given canonical
     /// quad pattern. The matching quads are removed from the dataset.
-    pub fn extract_pattern_matching(&mut self, pattern: CanonicalQuadPattern<&R>) -> ExtractPatternMatching<R> {
+    pub fn extract_pattern_matching(&mut self, pattern: CanonicalQuadPattern<&R>) -> ExtractPatternMatching<'_, R> {
         let subject = SubjectConstraints::new_owned(self, pattern.into_subject());
         let predicate = PredicateConstraints::new_owned(self, pattern.into_predicate());
         let object = ObjectConstraints::new_owned(self, pattern.into_object());

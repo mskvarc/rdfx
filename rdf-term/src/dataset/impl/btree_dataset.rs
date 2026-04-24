@@ -69,7 +69,7 @@ impl<R> BTreeDataset<R> {
     }
 
     /// Returns an iterator over the quads of the dataset.
-    pub fn iter(&self) -> Quads<R> {
+    pub fn iter(&self) -> Quads<'_, R> {
         Quads {
             resources: &self.resources,
             quads: &self.quads,
@@ -78,7 +78,7 @@ impl<R> BTreeDataset<R> {
     }
 
     /// Returns an iterator over the resources of the dataset.
-    pub fn resources(&self) -> Resources<R> {
+    pub fn resources(&self) -> Resources<'_, R> {
         Resources {
             resources: &self.resources,
             indexes: self.resources_indexes.iter(),

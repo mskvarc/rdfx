@@ -170,7 +170,7 @@ impl<T> Triple<T, T, T> {
 }
 
 impl LexicalTriple {
-    pub fn as_lexical_triple_ref(&self) -> LexicalTripleRef {
+    pub fn as_lexical_triple_ref(&self) -> LexicalTripleRef<'_> {
         Triple(self.0.as_ref(), self.1.as_iri(), self.2.as_ref())
     }
 }

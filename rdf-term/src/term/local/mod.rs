@@ -54,21 +54,21 @@ impl LocalTerm {
         }
     }
 
-    pub fn as_literal(&self) -> Option<LiteralRef> {
+    pub fn as_literal(&self) -> Option<LiteralRef<'_>> {
         match self {
             Self::Named(t) => t.as_literal(),
             Self::Anonymous(_) => None,
         }
     }
 
-    pub fn as_ref(&self) -> LocalTermRef {
+    pub fn as_ref(&self) -> LocalTermRef<'_> {
         match self {
             Self::Anonymous(blank_id) => LocalTermRef::Anonymous(blank_id),
             Self::Named(named) => LocalTermRef::Named(named.as_ref()),
         }
     }
 
-    pub fn as_cow(&self) -> CowLocalTerm {
+    pub fn as_cow(&self) -> CowLocalTerm<'_> {
         match self {
             Self::Anonymous(blank_id) => CowLocalTerm::Anonymous(Cow::Borrowed(blank_id)),
             Self::Named(named) => CowLocalTerm::Named(named.as_cow()),

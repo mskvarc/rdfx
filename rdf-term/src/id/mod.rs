@@ -22,14 +22,14 @@ impl Id {
         }
     }
 
-    pub fn as_ref(&self) -> IdRef {
+    pub fn as_ref(&self) -> IdRef<'_> {
         match self {
             Self::BlankId(blank_id) => IdRef::BlankId(blank_id),
             Self::Iri(iri) => IdRef::Iri(iri),
         }
     }
 
-    pub fn as_cow(&self) -> CowId {
+    pub fn as_cow(&self) -> CowId<'_> {
         match self {
             Self::BlankId(blank_id) => CowId::BlankId(Cow::Borrowed(blank_id)),
             Self::Iri(iri) => CowId::Iri(Cow::Borrowed(iri)),

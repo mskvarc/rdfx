@@ -72,7 +72,7 @@ impl<S, P, O, G> Quad<&S, &P, &O, &G> {
 }
 
 impl RdfQuad {
-    pub fn as_lexical_quad_ref(&self) -> RdfQuadRef {
+    pub fn as_lexical_quad_ref(&self) -> RdfQuadRef<'_> {
         Quad(self.0.as_ref(), self.1.as_iri(), self.2.as_ref(), self.3.as_ref().map(Id::as_ref))
     }
 }

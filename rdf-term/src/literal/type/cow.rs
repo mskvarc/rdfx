@@ -19,7 +19,7 @@ pub enum CowLiteralType<'a> {
 }
 
 impl CowLiteralType<'_> {
-    pub fn as_ref(&self) -> LiteralTypeRef {
+    pub fn as_ref(&self) -> LiteralTypeRef<'_> {
         match self {
             Self::Any(i) => LiteralTypeRef::Any(i),
             Self::LangString(l) => LiteralTypeRef::LangString(l),

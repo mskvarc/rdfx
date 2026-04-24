@@ -45,14 +45,14 @@ impl LiteralType {
         }
     }
 
-    pub fn as_ref(&self) -> LiteralTypeRef {
+    pub fn as_ref(&self) -> LiteralTypeRef<'_> {
         match self {
             Self::Any(i) => LiteralTypeRef::Any(i),
             Self::LangString(l) => LiteralTypeRef::LangString(l),
         }
     }
 
-    pub fn as_cow(&self) -> CowLiteralType {
+    pub fn as_cow(&self) -> CowLiteralType<'_> {
         match self {
             Self::Any(i) => CowLiteralType::Any(Cow::Borrowed(i)),
             Self::LangString(l) => CowLiteralType::LangString(Cow::Borrowed(l)),
