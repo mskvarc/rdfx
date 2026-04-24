@@ -1,10 +1,10 @@
 //! This file is auto generated using the
 //! `tests/utils/generate-iso-test.rb` script.
-use rdf_types::{dataset::BTreeDataset, iri, BlankIdBuf, LocalTerm, Quad};
+use rdf_term::{BlankIdBuf, LocalTerm, Quad, dataset::BTreeDataset, iri};
 use std::collections::BTreeMap;
 
 fn test(a: BTreeDataset, b: BTreeDataset) {
-	match rdf_types::dataset::isomorphism::find_bijection(&a, &b) {
+	match rdf_term::dataset::isomorphism::find_bijection(&a, &b) {
 		Some(bijection) => {
 			let substitution: BTreeMap<_, _> = bijection
 				.forward

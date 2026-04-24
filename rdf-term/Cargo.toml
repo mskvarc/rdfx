@@ -1,16 +1,14 @@
 [package]
-name = "rdf-types"
-authors = ["Timothée Haudebourg <author@haudebourg.net>"]
+name = "rdf-term"
 description = "Data-structures and traits definitions for RDF."
-categories = ["data-structures"]
-keywords = ["rdf", "w3c", "triple", "quad", "blank"]
-repository = "https://github.com/timothee-haudebourg/rdf-types"
-documentation = "https://docs.rs/rdf-types"
-license = "MIT/Apache-2.0"
-readme = "README.md"
-edition = "2021"
-rust-version = "1.70.0"
-version = "0.22.4"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+readme.workspace = true
+repository.workspace = true
+categories.workspace = true
 
 [features]
 default = []
@@ -21,21 +19,18 @@ uuid-generator-v4 = ["uuid", "uuid/v4"]
 uuid-generator-v5 = ["uuid", "uuid/v5"]
 
 [dependencies]
-# Major dependencies (major version must be synchronized).
+contextual = { version = "0.1.6", optional = true }
+educe = "0.5.11"
+equivalent = "1.0.2"
+indexmap = "2.2.5"
 iref = { version = "3.2.2", features = ["macros"] }
 langtag = "0.4.0"
-thiserror = "1.0.57"
-contextual = { version = "0.1.6", optional = true }
-serde = { version = "1.0", features = ["derive"], optional = true }
-uuid = { version = "0.8", optional = true }
-equivalent = "1.0.2"
-
-# Minor dependencies.
-indexmap = "2.2.5"
-educe = "0.5.11"
-slab = "0.4.9"
-replace_with = "0.1.7"
 raw-btree = "0.2.0"
+replace_with = "0.1.7"
+serde = { version = "1.0", features = ["derive"], optional = true }
+slab = "0.4.9"
+thiserror = "1.0.57"
+uuid = { version = "0.8", optional = true }
 
 [dev-dependencies]
 rand = { version = "0.8.5", features = ["small_rng"] }

@@ -1,7 +1,7 @@
-use rdf_types::{dataset::BTreeDataset, iri, BlankIdBuf, LocalTerm, Quad};
+use rdf_term::{BlankIdBuf, LocalTerm, Quad, dataset::BTreeDataset, iri};
 
 fn test(a: BTreeDataset, b: BTreeDataset) {
-	if let Some(_) = rdf_types::dataset::isomorphism::find_bijection(&a, &b) {
+	if let Some(_) = rdf_term::dataset::isomorphism::find_bijection(&a, &b) {
 		panic!("bijection found!")
 	}
 }
