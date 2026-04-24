@@ -1,7 +1,7 @@
 #[macro_export]
 #[doc(hidden)]
 macro_rules! unexpected_token {
-	() => {};
+    () => {};
 }
 
 /// Creates a gRDF triple.
@@ -346,39 +346,39 @@ macro_rules! grdf_quads {
 
 #[cfg(test)]
 mod tests {
-	use iref::iri;
+    use iref::iri;
 
-	#[test]
-	fn grdf_triple_macro() {
-		let _ = grdf_triple! [
-			_:"foo" <"https://example.org/#foo"> "foo"
-		];
-	}
+    #[test]
+    fn grdf_triple_macro() {
+        let _ = grdf_triple! [
+            _:"foo" <"https://example.org/#foo"> "foo"
+        ];
+    }
 
-	#[test]
-	fn grdf_triples_macro() {
-		let term = iri!("https://example.org/#iri").to_owned();
-		let _ = grdf_triples! [
-			_:"foo" <"https://example.org/#foo"> "foo" .
-			<"https://example.org/#bar"> _:"bar" "bar"^^"https://example.org/#datatype" .
-			<"https://example.org/#baz"> term "value" .
-		];
-	}
+    #[test]
+    fn grdf_triples_macro() {
+        let term = iri!("https://example.org/#iri").to_owned();
+        let _ = grdf_triples! [
+            _:"foo" <"https://example.org/#foo"> "foo" .
+            <"https://example.org/#bar"> _:"bar" "bar"^^"https://example.org/#datatype" .
+            <"https://example.org/#baz"> term "value" .
+        ];
+    }
 
-	#[test]
-	fn grdf_quad_macro() {
-		let _ = grdf_quad! [
-			_:"foo" <"https://example.org/#foo"> "foo"
-		];
-	}
+    #[test]
+    fn grdf_quad_macro() {
+        let _ = grdf_quad! [
+            _:"foo" <"https://example.org/#foo"> "foo"
+        ];
+    }
 
-	#[test]
-	fn grdf_quads_macro() {
-		let term = iri!("https://example.org/#iri").to_owned();
-		let _ = grdf_quads! [
-			_:"foo" <"https://example.org/#foo"> "foo" .
-			<"https://example.org/#bar"> _:"bar" "bar"^^"https://example.org/#datatype" .
-			<"https://example.org/#baz"> term "value" <"https://example.org/#graph"> .
-		];
-	}
+    #[test]
+    fn grdf_quads_macro() {
+        let term = iri!("https://example.org/#iri").to_owned();
+        let _ = grdf_quads! [
+            _:"foo" <"https://example.org/#foo"> "foo" .
+            <"https://example.org/#bar"> _:"bar" "bar"^^"https://example.org/#datatype" .
+            <"https://example.org/#baz"> term "value" <"https://example.org/#graph"> .
+        ];
+    }
 }

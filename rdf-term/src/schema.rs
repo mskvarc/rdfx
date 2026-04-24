@@ -1,12 +1,11 @@
-use iref::{iri, Iri};
+use iref::{Iri, iri};
 
 pub const RDFS_RESOURCE: &Iri = iri!("http://www.w3.org/2000/01/rdf-schema#Resource");
 pub const RDFS_CLASS: &Iri = iri!("http://www.w3.org/2000/01/rdf-schema#Class");
 pub const RDFS_LITERAL: &Iri = iri!("http://www.w3.org/2000/01/rdf-schema#Literal");
 pub const RDFS_DATATYPE: &Iri = iri!("http://www.w3.org/2000/01/rdf-schema#Datatype");
 pub const RDFS_CONTAINER: &Iri = iri!("http://www.w3.org/2000/01/rdf-schema#Container");
-pub const RDFS_CONTAINER_MEMBERSHIP_PROPERTY: &Iri =
-	iri!("http://www.w3.org/2000/01/rdf-schema#ContainerMembershipProperty");
+pub const RDFS_CONTAINER_MEMBERSHIP_PROPERTY: &Iri = iri!("http://www.w3.org/2000/01/rdf-schema#ContainerMembershipProperty");
 
 pub const RDFS_RANGE: &Iri = iri!("http://www.w3.org/2000/01/rdf-schema#range");
 pub const RDFS_DOMAIN: &Iri = iri!("http://www.w3.org/2000/01/rdf-schema#domain");

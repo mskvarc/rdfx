@@ -1,7 +1,9 @@
-use std::borrow::{Borrow, ToOwned};
-use std::fmt;
-use std::ops::Deref;
-use std::str::FromStr;
+use std::{
+    borrow::{Borrow, ToOwned},
+    fmt,
+    ops::Deref,
+    str::FromStr,
+};
 
 /// Invalid blank node identifier.
 ///
@@ -25,94 +27,94 @@ pub struct InvalidBlankId<T>(pub T);
 pub struct BlankId(str);
 
 impl BlankId {
-	/// Parses a blank node identifier.
-	#[inline(always)]
-	pub fn new(s: &str) -> Result<&Self, InvalidBlankId<&str>> {
-		if check(s.chars()) {
-			Ok(unsafe { Self::new_unchecked(s) })
-		} else {
-			Err(InvalidBlankId(s))
-		}
-	}
+    /// Parses a blank node identifier.
+    #[inline(always)]
+    pub fn new(s: &str) -> Result<&Self, InvalidBlankId<&str>> {
+        if check(s.chars()) {
+            Ok(unsafe { Self::new_unchecked(s) })
+        } else {
+            Err(InvalidBlankId(s))
+        }
+    }
 
-	/// Creates a new blank node identifier from `s` without checking it.
-	///
-	/// # Safety
-	///
-	/// The input string `s` must be a valid blank node identifier.
-	#[inline(always)]
-	pub unsafe fn new_unchecked(s: &str) -> &Self {
-		std::mem::transmute(s)
-	}
+    /// Creates a new blank node identifier from `s` without checking it.
+    ///
+    /// # Safety
+    ///
+    /// The input string `s` must be a valid blank node identifier.
+    #[inline(always)]
+    pub unsafe fn new_unchecked(s: &str) -> &Self {
+        std::mem::transmute(s)
+    }
 
-	/// Returns a reference to the underlying string defining the blank node identifier.
-	#[inline(always)]
-	pub fn as_str(&self) -> &str {
-		&self.0
-	}
+    /// Returns a reference to the underlying string defining the blank node identifier.
+    #[inline(always)]
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
 
-	/// Returns the suffix part (after `_:`) of the blank node identifier.
-	#[inline(always)]
-	pub fn suffix(&self) -> &str {
-		&self.0[2..]
-	}
+    /// Returns the suffix part (after `_:`) of the blank node identifier.
+    #[inline(always)]
+    pub fn suffix(&self) -> &str {
+        &self.0[2..]
+    }
 }
 
 impl Deref for BlankId {
-	type Target = str;
+    type Target = str;
 
-	#[inline(always)]
-	fn deref(&self) -> &str {
-		self.as_str()
-	}
+    #[inline(always)]
+    fn deref(&self) -> &str {
+        self.as_str()
+    }
 }
 
 impl AsRef<str> for BlankId {
-	fn as_ref(&self) -> &str {
-		self.as_str()
-	}
+    fn as_ref(&self) -> &str {
+        self.as_str()
+    }
 }
 
 impl AsRef<[u8]> for BlankId {
-	fn as_ref(&self) -> &[u8] {
-		self.as_bytes()
-	}
+    fn as_ref(&self) -> &[u8] {
+        self.as_bytes()
+    }
 }
 
 impl Borrow<str> for BlankId {
-	fn borrow(&self) -> &str {
-		self.as_str()
-	}
+    fn borrow(&self) -> &str {
+        self.as_str()
+    }
 }
 
 impl ToOwned for BlankId {
-	type Owned = BlankIdBuf;
+    type Owned = BlankIdBuf;
 
-	#[inline(always)]
-	fn to_owned(&self) -> BlankIdBuf {
-		unsafe { BlankIdBuf::new_unchecked(self.as_str().to_owned()) }
-	}
+    #[inline(always)]
+    fn to_owned(&self) -> BlankIdBuf {
+        unsafe { BlankIdBuf::new_unchecked(self.as_str().to_owned()) }
+    }
 }
 
 impl fmt::Display for BlankId {
-	#[inline(always)]
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		self.0.fmt(f)
-	}
+    #[inline(always)]
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
 }
 
 impl fmt::Debug for BlankId {
-	#[inline(always)]
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		self.0.fmt(f)
-	}
+    #[inline(always)]
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
 }
 
 impl PartialEq<str> for BlankId {
-	#[inline(always)]
-	fn eq(&self, other: &str) -> bool {
-		self.0 == *other
-	}
+    #[inline(always)]
+    fn eq(&self, other: &str) -> bool {
+        self.0 == *other
+    }
 }
 
 /// Owned blank node identifier.
@@ -131,247 +133,244 @@ impl PartialEq<str> for BlankId {
 pub struct BlankIdBuf(String);
 
 impl BlankIdBuf {
-	/// Parses a blank node identifier.
-	#[inline(always)]
-	pub fn new(s: String) -> Result<Self, InvalidBlankId<String>> {
-		if check(s.chars()) {
-			Ok(unsafe { Self::new_unchecked(s) })
-		} else {
-			Err(InvalidBlankId(s))
-		}
-	}
+    /// Parses a blank node identifier.
+    #[inline(always)]
+    pub fn new(s: String) -> Result<Self, InvalidBlankId<String>> {
+        if check(s.chars()) {
+            Ok(unsafe { Self::new_unchecked(s) })
+        } else {
+            Err(InvalidBlankId(s))
+        }
+    }
 
-	/// Creates a new blank node identifier from `s` without checking it.
-	///
-	/// # Safety
-	///
-	/// The input string `s` must be a valid blank node identifier.
-	#[inline(always)]
-	pub unsafe fn new_unchecked(s: String) -> Self {
-		std::mem::transmute(s)
-	}
+    /// Creates a new blank node identifier from `s` without checking it.
+    ///
+    /// # Safety
+    ///
+    /// The input string `s` must be a valid blank node identifier.
+    #[inline(always)]
+    pub unsafe fn new_unchecked(s: String) -> Self {
+        std::mem::transmute(s)
+    }
 
-	/// Creates a blank node identifier using the given `u8` as suffix.
-	#[inline(always)]
-	pub fn from_u8(i: u8) -> Self {
-		unsafe { Self::new_unchecked(format!("_:{i}")) }
-	}
+    /// Creates a blank node identifier using the given `u8` as suffix.
+    #[inline(always)]
+    pub fn from_u8(i: u8) -> Self {
+        unsafe { Self::new_unchecked(format!("_:{i}")) }
+    }
 
-	/// Creates a blank node identifier using the given `u16` as suffix.
-	#[inline(always)]
-	pub fn from_u16(i: u16) -> Self {
-		unsafe { Self::new_unchecked(format!("_:{i}")) }
-	}
+    /// Creates a blank node identifier using the given `u16` as suffix.
+    #[inline(always)]
+    pub fn from_u16(i: u16) -> Self {
+        unsafe { Self::new_unchecked(format!("_:{i}")) }
+    }
 
-	/// Creates a blank node identifier using the given `u32` as suffix.
-	#[inline(always)]
-	pub fn from_u32(i: u32) -> Self {
-		unsafe { Self::new_unchecked(format!("_:{i}")) }
-	}
+    /// Creates a blank node identifier using the given `u32` as suffix.
+    #[inline(always)]
+    pub fn from_u32(i: u32) -> Self {
+        unsafe { Self::new_unchecked(format!("_:{i}")) }
+    }
 
-	/// Creates a blank node identifier using the given `u64` as suffix.
-	#[inline(always)]
-	pub fn from_u64(i: u64) -> Self {
-		unsafe { Self::new_unchecked(format!("_:{i}")) }
-	}
+    /// Creates a blank node identifier using the given `u64` as suffix.
+    #[inline(always)]
+    pub fn from_u64(i: u64) -> Self {
+        unsafe { Self::new_unchecked(format!("_:{i}")) }
+    }
 
-	/// Creates a blank node identifier using the given suffix.
-	#[inline(always)]
-	pub fn from_suffix(suffix: &str) -> Result<Self, InvalidBlankId<String>> {
-		Self::new(format!("_:{suffix}"))
-	}
+    /// Creates a blank node identifier using the given suffix.
+    #[inline(always)]
+    pub fn from_suffix(suffix: &str) -> Result<Self, InvalidBlankId<String>> {
+        Self::new(format!("_:{suffix}"))
+    }
 
-	/// Returns a reference to this blank id as a `BlankId`.
-	#[inline(always)]
-	pub fn as_blank_id_ref(&self) -> &BlankId {
-		unsafe { BlankId::new_unchecked(&self.0) }
-	}
+    /// Returns a reference to this blank id as a `BlankId`.
+    #[inline(always)]
+    pub fn as_blank_id_ref(&self) -> &BlankId {
+        unsafe { BlankId::new_unchecked(&self.0) }
+    }
 }
 
 impl FromStr for BlankIdBuf {
-	type Err = InvalidBlankId<String>;
+    type Err = InvalidBlankId<String>;
 
-	fn from_str(s: &str) -> Result<Self, InvalidBlankId<String>> {
-		Self::new(s.to_owned())
-	}
+    fn from_str(s: &str) -> Result<Self, InvalidBlankId<String>> {
+        Self::new(s.to_owned())
+    }
 }
 
 impl Deref for BlankIdBuf {
-	type Target = BlankId;
+    type Target = BlankId;
 
-	#[inline(always)]
-	fn deref(&self) -> &BlankId {
-		self.as_blank_id_ref()
-	}
+    #[inline(always)]
+    fn deref(&self) -> &BlankId {
+        self.as_blank_id_ref()
+    }
 }
 
 impl AsRef<BlankId> for BlankIdBuf {
-	#[inline(always)]
-	fn as_ref(&self) -> &BlankId {
-		self.as_blank_id_ref()
-	}
+    #[inline(always)]
+    fn as_ref(&self) -> &BlankId {
+        self.as_blank_id_ref()
+    }
 }
 
 impl Borrow<BlankId> for BlankIdBuf {
-	#[inline(always)]
-	fn borrow(&self) -> &BlankId {
-		self.as_blank_id_ref()
-	}
+    #[inline(always)]
+    fn borrow(&self) -> &BlankId {
+        self.as_blank_id_ref()
+    }
 }
 
 impl AsRef<str> for BlankIdBuf {
-	#[inline(always)]
-	fn as_ref(&self) -> &str {
-		self.0.as_str()
-	}
+    #[inline(always)]
+    fn as_ref(&self) -> &str {
+        self.0.as_str()
+    }
 }
 
 impl Borrow<str> for BlankIdBuf {
-	#[inline(always)]
-	fn borrow(&self) -> &str {
-		self.0.as_str()
-	}
+    #[inline(always)]
+    fn borrow(&self) -> &str {
+        self.0.as_str()
+    }
 }
 
 impl AsRef<[u8]> for BlankIdBuf {
-	#[inline(always)]
-	fn as_ref(&self) -> &[u8] {
-		self.0.as_bytes()
-	}
+    #[inline(always)]
+    fn as_ref(&self) -> &[u8] {
+        self.0.as_bytes()
+    }
 }
 
 impl Borrow<BlankId> for &BlankIdBuf {
-	#[inline(always)]
-	fn borrow(&self) -> &BlankId {
-		self.as_blank_id_ref()
-	}
+    #[inline(always)]
+    fn borrow(&self) -> &BlankId {
+        self.as_blank_id_ref()
+    }
 }
 
 impl Borrow<str> for &BlankIdBuf {
-	#[inline(always)]
-	fn borrow(&self) -> &str {
-		self.0.as_str()
-	}
+    #[inline(always)]
+    fn borrow(&self) -> &str {
+        self.0.as_str()
+    }
 }
 
 impl<'a> From<&'a BlankIdBuf> for &'a BlankId {
-	#[inline(always)]
-	fn from(b: &'a BlankIdBuf) -> Self {
-		b.as_ref()
-	}
+    #[inline(always)]
+    fn from(b: &'a BlankIdBuf) -> Self {
+        b.as_ref()
+    }
 }
 
 impl fmt::Display for BlankIdBuf {
-	#[inline(always)]
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		self.0.fmt(f)
-	}
+    #[inline(always)]
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
 }
 
 impl fmt::Debug for BlankIdBuf {
-	#[inline(always)]
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		self.0.fmt(f)
-	}
+    #[inline(always)]
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
 }
 
 impl PartialEq<BlankId> for BlankIdBuf {
-	fn eq(&self, other: &BlankId) -> bool {
-		self.as_blank_id_ref() == other
-	}
+    fn eq(&self, other: &BlankId) -> bool {
+        self.as_blank_id_ref() == other
+    }
 }
 
 impl<'a> PartialEq<&'a BlankId> for BlankIdBuf {
-	fn eq(&self, other: &&'a BlankId) -> bool {
-		self.as_blank_id_ref() == *other
-	}
+    fn eq(&self, other: &&'a BlankId) -> bool {
+        self.as_blank_id_ref() == *other
+    }
 }
 
 impl PartialEq<BlankIdBuf> for &BlankId {
-	fn eq(&self, other: &BlankIdBuf) -> bool {
-		*self == other.as_blank_id_ref()
-	}
+    fn eq(&self, other: &BlankIdBuf) -> bool {
+        *self == other.as_blank_id_ref()
+    }
 }
 
 impl PartialEq<BlankIdBuf> for BlankId {
-	fn eq(&self, other: &BlankIdBuf) -> bool {
-		self == other.as_blank_id_ref()
-	}
+    fn eq(&self, other: &BlankIdBuf) -> bool {
+        self == other.as_blank_id_ref()
+    }
 }
 
 fn check<C: Iterator<Item = char>>(mut chars: C) -> bool {
-	match chars.next() {
-		Some('_') => match chars.next() {
-			Some(':') => match chars.next() {
-				Some(c) if c.is_ascii_digit() || is_pn_char_u(c) => {
-					for c in chars {
-						if !is_pn_char(c) {
-							return false;
-						}
-					}
+    match chars.next() {
+        Some('_') => match chars.next() {
+            Some(':') => match chars.next() {
+                Some(c) if c.is_ascii_digit() || is_pn_char_u(c) => {
+                    for c in chars {
+                        if !is_pn_char(c) {
+                            return false;
+                        }
+                    }
 
-					true
-				}
-				_ => false,
-			},
-			_ => false,
-		},
-		_ => false,
-	}
+                    true
+                }
+                _ => false,
+            },
+            _ => false,
+        },
+        _ => false,
+    }
 }
 
 fn is_pn_char_base(c: char) -> bool {
-	matches!(c, 'A'..='Z' | 'a'..='z' | '\u{00c0}'..='\u{00d6}' | '\u{00d8}'..='\u{00f6}' | '\u{00f8}'..='\u{02ff}' | '\u{0370}'..='\u{037d}' | '\u{037f}'..='\u{1fff}' | '\u{200c}'..='\u{200d}' | '\u{2070}'..='\u{218f}' | '\u{2c00}'..='\u{2fef}' | '\u{3001}'..='\u{d7ff}' | '\u{f900}'..='\u{fdcf}' | '\u{fdf0}'..='\u{fffd}' | '\u{10000}'..='\u{effff}')
+    matches!(c, 'A'..='Z' | 'a'..='z' | '\u{00c0}'..='\u{00d6}' | '\u{00d8}'..='\u{00f6}' | '\u{00f8}'..='\u{02ff}' | '\u{0370}'..='\u{037d}' | '\u{037f}'..='\u{1fff}' | '\u{200c}'..='\u{200d}' | '\u{2070}'..='\u{218f}' | '\u{2c00}'..='\u{2fef}' | '\u{3001}'..='\u{d7ff}' | '\u{f900}'..='\u{fdcf}' | '\u{fdf0}'..='\u{fffd}' | '\u{10000}'..='\u{effff}')
 }
 
 fn is_pn_char_u(c: char) -> bool {
-	is_pn_char_base(c) || matches!(c, '_' | ':')
+    is_pn_char_base(c) || matches!(c, '_' | ':')
 }
 
 fn is_pn_char(c: char) -> bool {
-	is_pn_char_u(c)
-		|| matches!(c, '-' | '0'..='9' | '\u{00b7}' | '\u{0300}'..='\u{036f}' | '\u{203f}'..='\u{2040}')
+    is_pn_char_u(c) || matches!(c, '-' | '0'..='9' | '\u{00b7}' | '\u{0300}'..='\u{036f}' | '\u{203f}'..='\u{2040}')
 }
 
 #[cfg(feature = "serde")]
 impl<'de> serde::Deserialize<'de> for BlankIdBuf {
-	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-	where
-		D: serde::Deserializer<'de>,
-	{
-		struct Visitor;
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        struct Visitor;
 
-		impl<'de> serde::de::Visitor<'de> for Visitor {
-			type Value = BlankIdBuf;
+        impl<'de> serde::de::Visitor<'de> for Visitor {
+            type Value = BlankIdBuf;
 
-			fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-				write!(formatter, "blank node identifier")
-			}
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                write!(formatter, "blank node identifier")
+            }
 
-			fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
-			where
-				E: serde::de::Error,
-			{
-				BlankIdBuf::new(v).map_err(|InvalidBlankId(unexpected)| {
-					E::invalid_value(serde::de::Unexpected::Str(&unexpected), &self)
-				})
-			}
+            fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                BlankIdBuf::new(v).map_err(|InvalidBlankId(unexpected)| E::invalid_value(serde::de::Unexpected::Str(&unexpected), &self))
+            }
 
-			fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-			where
-				E: serde::de::Error,
-			{
-				self.visit_string(v.to_owned())
-			}
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                self.visit_string(v.to_owned())
+            }
 
-			fn visit_borrowed_str<E>(self, v: &'de str) -> Result<Self::Value, E>
-			where
-				E: serde::de::Error,
-			{
-				self.visit_string(v.to_owned())
-			}
-		}
+            fn visit_borrowed_str<E>(self, v: &'de str) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                self.visit_string(v.to_owned())
+            }
+        }
 
-		deserializer.deserialize_string(Visitor)
-	}
+        deserializer.deserialize_string(Visitor)
+    }
 }
