@@ -1,6 +1,6 @@
 use std::{
     fmt::Debug,
-    hash::{BuildHasher, Hash},
+    hash::{BuildHasher, Hash, Hasher},
 };
 
 use hashbrown::{DefaultHashBuilder, HashTable};
@@ -378,13 +378,26 @@ impl<'a, R> Iterator for Resources<'a, R> {
     }
 }
 
-impl<R: Eq + Hash> PartialEq for HashDataset<R> {
-    fn eq(&self, other: &Self) -> bool {
-        self.len() == other.len() && self.iter().all(|q| other.contains(q))
+impl<A: PartialEq<B>, B> PartialEq<HashDataset<B>> for HashDataset<A> {
+    fn eq(&self, other: &HashDataset<B>) -> bool {
+        self.len() == other.len() && self.iter().all(|a| other.iter().any(|b| a == b))
     }
 }
 
 impl<R: Eq + Hash> Eq for HashDataset<R> {}
+
+impl<R: Hash> Hash for HashDataset<R> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        state.write_usize(self.len());
+        let mut acc: u64 = 0;
+        for elt in self {
+            let mut h = std::collections::hash_map::DefaultHasher::new();
+            elt.hash(&mut h);
+            acc ^= h.finish();
+        }
+        state.write_u64(acc);
+    }
+}
 
 impl<R: Debug> Debug for HashDataset<R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

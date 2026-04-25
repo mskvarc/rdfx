@@ -2,7 +2,7 @@ use std::{
     cmp::Ordering,
     collections::BTreeSet,
     fmt::Debug,
-    hash::{BuildHasher, Hash},
+    hash::{BuildHasher, Hash, Hasher},
 };
 
 use hashbrown::{DefaultHashBuilder, HashSet, HashTable};
@@ -776,6 +776,19 @@ impl<R: Eq + Hash> PartialEq for IndexedHashDataset<R> {
 }
 
 impl<R: Eq + Hash> Eq for IndexedHashDataset<R> {}
+
+impl<R: Hash> Hash for IndexedHashDataset<R> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        state.write_usize(self.len());
+        let mut acc: u64 = 0;
+        for elt in self.iter() {
+            let mut h = std::collections::hash_map::DefaultHasher::new();
+            elt.hash(&mut h);
+            acc ^= h.finish();
+        }
+        state.write_u64(acc);
+    }
+}
 
 pub struct PatternMatching<'a, R> {
     resources: &'a Slab<Resource<R>>,
