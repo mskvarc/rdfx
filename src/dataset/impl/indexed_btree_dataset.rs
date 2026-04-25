@@ -373,12 +373,11 @@ impl<R: Ord> IndexedBTreeDataset<R> {
 
         let Quad(s_i, p_i, o_i, g_i) = self.quads.remove(i);
 
-        self.subjects.remove(&s_i);
-        self.predicates.remove(&p_i);
-        self.objects.remove(&o_i);
-
         let s = &mut self.resources[s_i];
         s.as_subject.remove(&i);
+        if s.as_subject.is_empty() {
+            self.subjects.remove(&s_i);
+        }
         if s.is_empty() {
             self.resources_indexes.remove(resource_index_cmp(&self.resources), &s_i);
             self.resources.remove(s_i);
@@ -386,6 +385,9 @@ impl<R: Ord> IndexedBTreeDataset<R> {
 
         let p = &mut self.resources[p_i];
         p.as_predicate.remove(&i);
+        if p.as_predicate.is_empty() {
+            self.predicates.remove(&p_i);
+        }
         if p.is_empty() {
             self.resources_indexes.remove(resource_index_cmp(&self.resources), &p_i);
             self.resources.remove(p_i);
@@ -393,6 +395,9 @@ impl<R: Ord> IndexedBTreeDataset<R> {
 
         let o = &mut self.resources[o_i];
         o.as_object.remove(&i);
+        if o.as_object.is_empty() {
+            self.objects.remove(&o_i);
+        }
         if o.is_empty() {
             self.resources_indexes.remove(resource_index_cmp(&self.resources), &o_i);
             self.resources.remove(o_i);
@@ -1503,5 +1508,22 @@ mod tests {
         for i in 0u8..32 {
             remove_test(i as usize * 11, [i; 32]);
         }
+    }
+
+    #[test]
+    fn subjects_after_partial_remove() {
+        let mut dataset = IndexedBTreeDataset::<u32>::new();
+        dataset.insert(Quad(1u32, 2u32, 3u32, None));
+        dataset.insert(Quad(1u32, 2u32, 4u32, None));
+        dataset.remove(Quad(&1u32, &2u32, &3u32, None));
+
+        let subjects: Vec<u32> = dataset.subjects().copied().collect();
+        assert_eq!(subjects, vec![1u32]);
+
+        let predicates: Vec<u32> = dataset.predicates().copied().collect();
+        assert_eq!(predicates, vec![2u32]);
+
+        let objects: Vec<u32> = dataset.objects().copied().collect();
+        assert_eq!(objects, vec![4u32]);
     }
 }
