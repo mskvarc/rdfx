@@ -17,20 +17,42 @@ pub trait RdfDisplay {
 
 impl RdfDisplay for str {
     fn rdf_fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use fmt::Display;
-        write!(f, "\"")?;
+        f.write_str("\"")?;
 
-        for c in self.chars() {
-            match c {
-                '"' => write!(f, "\\\""),
-                '\\' => write!(f, "\\\\"),
-                '\n' => write!(f, "\\n"),
-                '\r' => write!(f, "\\r"),
-                c => c.fmt(f),
-            }?
+        let bytes = self.as_bytes();
+        let mut start = 0;
+        while start < bytes.len() {
+            let rem = &bytes[start..];
+            let p1 = memchr::memchr3(b'"', b'\\', b'\n', rem);
+            let p2 = memchr::memchr(b'\r', rem);
+            let pos = match (p1, p2) {
+                (Some(a), Some(b)) => Some(a.min(b)),
+                (Some(a), None) => Some(a),
+                (None, Some(b)) => Some(b),
+                (None, None) => None,
+            };
+            match pos {
+                Some(off) => {
+                    // Safe: split is on an ASCII boundary (the matched byte is one of " \ \n \r,
+                    // all ASCII; the prefix [start..start+off] therefore ends at a UTF-8 boundary).
+                    f.write_str(unsafe { std::str::from_utf8_unchecked(&rem[..off]) })?;
+                    f.write_str(match rem[off] {
+                        b'"' => "\\\"",
+                        b'\\' => "\\\\",
+                        b'\n' => "\\n",
+                        b'\r' => "\\r",
+                        _ => unreachable!(),
+                    })?;
+                    start += off + 1;
+                }
+                None => {
+                    f.write_str(unsafe { std::str::from_utf8_unchecked(rem) })?;
+                    break;
+                }
+            }
         }
 
-        write!(f, "\"")
+        f.write_str("\"")
     }
 }
 
@@ -42,21 +64,52 @@ impl RdfDisplay for String {
 
 impl<T: Deref<Target = str>> RdfDisplay for IriRef<T> {
     fn rdf_fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "<")?;
+        f.write_str("<")?;
 
-        for c in self.as_str().chars() {
-            match c {
-                '\x00'..='\x20' | '<' | '>' | '"' | '{' | '}' | '|' | '^' | '`' | '\\' => {
-                    let bytes: u32 = c.into();
-                    write!(f, "\\u{bytes:#04x}")
+        let s = self.as_str();
+        let bytes = s.as_bytes();
+        let mut start = 0;
+        let mut i = 0;
+        while i < bytes.len() {
+            let b = bytes[i];
+            if b < 0x80 && IRI_ESCAPE[b as usize] {
+                if i > start {
+                    // Safe: split is on ASCII boundary; bytes[start..i] is valid UTF-8.
+                    f.write_str(unsafe { std::str::from_utf8_unchecked(&bytes[start..i]) })?;
                 }
-                _ => fmt::Display::fmt(&c, f),
-            }?;
+                write!(f, "\\u{:#04x}", b as u32)?;
+                i += 1;
+                start = i;
+            } else {
+                i += 1;
+            }
+        }
+        if start < bytes.len() {
+            f.write_str(unsafe { std::str::from_utf8_unchecked(&bytes[start..]) })?;
         }
 
-        write!(f, ">")
+        f.write_str(">")
     }
 }
+
+const IRI_ESCAPE: [bool; 128] = {
+    let mut t = [false; 128];
+    let mut i = 0;
+    while i <= 0x20 {
+        t[i] = true;
+        i += 1;
+    }
+    t[b'<' as usize] = true;
+    t[b'>' as usize] = true;
+    t[b'"' as usize] = true;
+    t[b'{' as usize] = true;
+    t[b'}' as usize] = true;
+    t[b'|' as usize] = true;
+    t[b'^' as usize] = true;
+    t[b'`' as usize] = true;
+    t[b'\\' as usize] = true;
+    t
+};
 
 impl<T: Deref<Target = str>> RdfDisplay for Iri<T> {
     #[inline(always)]
