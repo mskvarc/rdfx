@@ -22,7 +22,7 @@ use crate::{
         ResourceTraversableDataset,
         SubjectTraversableDataset,
         TraversableDataset,
-        isomorphism::{HashBijection, are_isomorphic_hash, find_hash_bijection},
+        isomorphism::{Bijection, are_isomorphic, find_bijection},
     },
     pattern::{
         CanonicalQuadPattern,
@@ -489,13 +489,13 @@ impl<R: Clone + Eq + Hash> IndexedHashDataset<R> {
 
 impl IndexedHashDataset<LocalTerm> {
     /// Returns a blank-node bijection from `self` to `other` if one exists.
-    pub fn find_blank_id_bijection<'a, 'b>(&'a self, other: &'b Self) -> Option<HashBijection<'a, 'b>> {
-        find_hash_bijection(self, other)
+    pub fn find_blank_id_bijection<'a, 'b>(&'a self, other: &'b Self) -> Option<Bijection<'a, 'b>> {
+        find_bijection(self, other)
     }
 
     /// Checks if `self` and `other` are isomorphic.
     pub fn is_isomorphic_to(&self, other: &Self) -> bool {
-        are_isomorphic_hash(self, other)
+        are_isomorphic(self, other)
     }
 
     /// Returns a copy of `self` with each blank node identifier replaced by the

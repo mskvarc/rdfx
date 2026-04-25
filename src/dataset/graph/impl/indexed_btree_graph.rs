@@ -18,7 +18,7 @@ use crate::{
         ResourceTraversableGraph,
         SubjectTraversableGraph,
         TraversableGraph,
-        isomorphism::{BTreeBijection, are_isomorphic_btree, find_btree_bijection},
+        isomorphism::{Bijection, are_isomorphic, find_bijection},
     },
     pattern::{
         CanonicalTriplePattern,
@@ -365,13 +365,13 @@ impl<R: Clone + Ord> IndexedBTreeGraph<R> {
 
 impl IndexedBTreeGraph<LocalTerm> {
     /// Returns a blank-node bijection from `self` to `other` if one exists.
-    pub fn find_blank_id_bijection<'a, 'b>(&'a self, other: &'b Self) -> Option<BTreeBijection<'a, 'b>> {
-        find_btree_bijection(self, other)
+    pub fn find_blank_id_bijection<'a, 'b>(&'a self, other: &'b Self) -> Option<Bijection<'a, 'b>> {
+        find_bijection(self, other)
     }
 
     /// Checks if `self` and `other` are isomorphic.
     pub fn is_isomorphic_to(&self, other: &Self) -> bool {
-        are_isomorphic_btree(self, other)
+        are_isomorphic(self, other)
     }
 
     /// Returns a copy of `self` with each blank node identifier replaced by the
