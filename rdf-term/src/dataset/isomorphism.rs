@@ -294,27 +294,7 @@ impl<'a, 'b, R: Ord> BTreeBijection<'a, 'b, R> {
     where
         I: ReverseInterpretation<Resource = R>,
     {
-        if a.len() == b.len() {
-            let mut other: Vec<_> = b.0.iter().map(|q| Some(*q)).collect();
-            'next_quad: for quad in a.0.iter() {
-                for other_quad in &mut other {
-                    if let Some(oq) = other_quad {
-                        if self.quad_matches_with(interpretation, *quad, *oq) {
-                            // eprintln!("matching {} with {}", quad, oq);
-                            other_quad.take();
-                            continue 'next_quad;
-                        }
-                    }
-                }
-
-                // eprintln!("could not match {} with anything", quad);
-                return false;
-            }
-
-            true
-        } else {
-            false
-        }
+        match_quad_lists(&a.0, &b.0, |qa, qb| self.quad_matches_with(interpretation, qa, qb))
     }
 
     fn find_from_candidates<I>(
@@ -376,24 +356,65 @@ impl<'a, R> BlankSignature<'a, R> {
     where
         I: ReverseInterpretation<Resource = R>,
     {
-        if self.len() == other.len() {
-            let mut other: Vec<_> = other.0.iter().map(|q| Some(*q)).collect();
-            'next_quad: for quad in &self.0 {
-                for other_quad in &mut other {
-                    if let Some(oq) = other_quad {
-                        if quad_matches(interpretation, *quad, *oq) {
-                            other_quad.take();
-                            continue 'next_quad;
-                        }
-                    }
-                }
+        match_quad_lists(&self.0, &other.0, |qa, qb| quad_matches(interpretation, qa, qb))
+    }
+}
 
+fn match_quad_lists<R, F>(a: &[Quad<&R>], b: &[Quad<&R>], mut matches: F) -> bool
+where
+    F: FnMut(Quad<&R>, Quad<&R>) -> bool,
+{
+    if a.len() != b.len() {
+        return false;
+    }
+    let n = b.len();
+    if n <= 128 {
+        let mut available: u128 = if n == 128 { u128::MAX } else { (1u128 << n) - 1 };
+        for &qa in a {
+            let mut remaining = available;
+            let mut hit = false;
+            while remaining != 0 {
+                let i = remaining.trailing_zeros() as usize;
+                let bit = 1u128 << i;
+                remaining &= !bit;
+                if matches(qa, b[i]) {
+                    available &= !bit;
+                    hit = true;
+                    break;
+                }
+            }
+            if !hit {
                 return false;
             }
-
-            true
-        } else {
-            false
         }
+        true
+    } else {
+        let words = n.div_ceil(64);
+        let mut available = vec![0u64; words];
+        for (w, slot) in available.iter_mut().enumerate() {
+            let bits = (n - w * 64).min(64);
+            *slot = if bits == 64 { u64::MAX } else { (1u64 << bits) - 1 };
+        }
+        for &qa in a {
+            let mut hit = false;
+            'outer: for (w, slot) in available.iter_mut().enumerate() {
+                let mut remaining = *slot;
+                while remaining != 0 {
+                    let bit = remaining.trailing_zeros();
+                    let mask = 1u64 << bit;
+                    remaining &= !mask;
+                    let i = w * 64 + bit as usize;
+                    if matches(qa, b[i]) {
+                        *slot &= !mask;
+                        hit = true;
+                        break 'outer;
+                    }
+                }
+            }
+            if !hit {
+                return false;
+            }
+        }
+        true
     }
 }
