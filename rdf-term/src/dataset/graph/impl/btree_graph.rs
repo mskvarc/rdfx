@@ -438,7 +438,7 @@ impl<'de, R: Clone + Ord + serde::Deserialize<'de>> serde::Deserialize<'de> for 
 
 #[cfg(test)]
 mod tests {
-    use rand::{RngCore, SeedableRng, rngs::SmallRng};
+    use rand::{Rng, SeedableRng, rngs::SmallRng};
 
     use crate::Triple;
 

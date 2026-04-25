@@ -43,35 +43,14 @@ impl Uuid {
             Self::V5(vocabulary, name) => uuid::Uuid::new_v5(vocabulary, name.as_bytes()),
         }
     }
-
-    #[cfg(feature = "meta")]
-    /// Generates identifiers annotated with the given metadata.
-    pub fn with_metadata<M>(self, metadata: M) -> WithMetadata<Self, M>
-    where
-        Self: Sized,
-    {
-        WithMetadata { metadata, generator: self }
-    }
-
-    #[cfg(feature = "meta")]
-    /// Generates identifiers annotated with the default value of type `M`.
-    pub fn with_default_metadata<M: Default>(self) -> WithMetadata<Self, M>
-    where
-        Self: Sized,
-    {
-        WithMetadata {
-            metadata: M::default(),
-            generator: self,
-        }
-    }
 }
 
 #[cfg(any(feature = "uuid-generator-v3", feature = "uuid-generator-v4", feature = "uuid-generator-v5"))]
 impl crate::Generator for Uuid {
     fn next_term(&mut self) -> crate::Term {
-        let mut buffer: Vec<u8> = vec![0; uuid::adapter::Urn::LENGTH];
+        let mut buffer: Vec<u8> = vec![0; uuid::fmt::Urn::LENGTH];
         let uuid = self.next_uuid();
-        let len = uuid.to_urn().encode_lower(buffer.as_mut()).len();
+        let len = uuid.urn().encode_lower(buffer.as_mut()).len();
         buffer.truncate(len);
         let s = unsafe { String::from_utf8_unchecked(buffer) };
         crate::Term::Iri(iri_rs::IriBuf::parse(s).unwrap())

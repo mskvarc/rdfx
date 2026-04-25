@@ -130,7 +130,7 @@ pub trait RdfDisplayWithContext<C: ?Sized> {
 }
 
 #[cfg(feature = "contextual")]
-impl<'a, T: RdfDisplayWithContext<C> + ?Sized, C: ?Sized> RdfDisplayWithContext<C> for &'a T {
+impl<T: RdfDisplayWithContext<C> + ?Sized, C: ?Sized> RdfDisplayWithContext<C> for &T {
     #[inline(always)]
     fn rdf_fmt_with(&self, context: &C, f: &mut fmt::Formatter) -> fmt::Result {
         T::rdf_fmt_with(*self, context, f)
@@ -138,7 +138,7 @@ impl<'a, T: RdfDisplayWithContext<C> + ?Sized, C: ?Sized> RdfDisplayWithContext<
 }
 
 #[cfg(feature = "contextual")]
-impl<'c, T: RdfDisplayWithContext<C>, C: ?Sized> RdfDisplay for contextual::Contextual<T, &'c C> {
+impl<T: RdfDisplayWithContext<C>, C: ?Sized> RdfDisplay for contextual::Contextual<T, &C> {
     #[inline(always)]
     fn rdf_fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.0.rdf_fmt_with(self.1, f)
@@ -146,7 +146,7 @@ impl<'c, T: RdfDisplayWithContext<C>, C: ?Sized> RdfDisplay for contextual::Cont
 }
 
 #[cfg(feature = "contextual")]
-impl<'c, T: RdfDisplayWithContext<C>, C: ?Sized> RdfDisplay for contextual::Contextual<T, &'c mut C> {
+impl<T: RdfDisplayWithContext<C>, C: ?Sized> RdfDisplay for contextual::Contextual<T, &mut C> {
     #[inline(always)]
     fn rdf_fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.0.rdf_fmt_with(self.1, f)

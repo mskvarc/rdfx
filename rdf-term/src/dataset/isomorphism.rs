@@ -1,7 +1,5 @@
 use std::collections::{BTreeMap, BTreeSet, btree_map::Entry};
 
-use educe::Educe;
-
 use crate::{LocalTerm, Quad, dataset::TraversableDataset, interpretation::ReverseInterpretation};
 
 /// Checks that there is an isomorphism between the datasets `a` and `b`.
@@ -233,11 +231,18 @@ where
 
 /// Blank node identifier bijection
 /// between two (isomorphic) datasets.
-#[derive(Educe)]
-#[educe(Clone)]
 pub struct BTreeBijection<'a, 'b, R = LocalTerm> {
     pub forward: BTreeMap<&'a R, &'b R>,
     pub backward: BTreeMap<&'b R, &'a R>,
+}
+
+impl<R> Clone for BTreeBijection<'_, '_, R> {
+    fn clone(&self) -> Self {
+        Self {
+            forward: self.forward.clone(),
+            backward: self.backward.clone(),
+        }
+    }
 }
 
 impl<R> BTreeBijection<'_, '_, R> {
