@@ -27,6 +27,7 @@ mod literal;
 mod r#macro;
 mod quad;
 mod schema;
+mod swar;
 mod term;
 mod triple;
 

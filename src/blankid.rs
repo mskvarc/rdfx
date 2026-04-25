@@ -319,17 +319,32 @@ fn check(s: &str) -> bool {
     if bytes[bytes.len() - 1] == b'.' {
         return false;
     }
-    let mut chars = s[2..].chars();
-    match chars.next() {
-        Some(c) if c.is_ascii_digit() || is_pn_char_u(c) => {}
-        _ => return false,
-    }
-    for c in chars {
-        if !is_pn_char(c) && c != '.' {
-            return false;
+    let body = &bytes[2..];
+    let seed_len = match body[0] {
+        b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'_' | b':' => 1,
+        c if c < 0x80 => return false,
+        _ => {
+            let mut chars = s[2..].chars();
+            match chars.next() {
+                Some(ch) if is_pn_char_u(ch) => ch.len_utf8(),
+                _ => return false,
+            }
+        }
+    };
+    let rest = &body[seed_len..];
+    match crate::swar::blankid_body_scan(rest) {
+        crate::swar::BodyScan::AllValidAscii => true,
+        crate::swar::BodyScan::InvalidAt(_) => false,
+        crate::swar::BodyScan::NonAsciiAt(i) => {
+            let off_in_s = 2 + seed_len + i;
+            for c in s[off_in_s..].chars() {
+                if !is_pn_char(c) && c != '.' {
+                    return false;
+                }
+            }
+            true
         }
     }
-    true
 }
 
 const fn is_pn_char_base(c: char) -> bool {

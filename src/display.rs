@@ -69,47 +69,29 @@ impl<T: Deref<Target = str>> RdfDisplay for IriRef<T> {
         let s = self.as_str();
         let bytes = s.as_bytes();
         let mut start = 0;
-        let mut i = 0;
-        while i < bytes.len() {
-            let b = bytes[i];
-            if b < 0x80 && IRI_ESCAPE[b as usize] {
-                if i > start {
-                    // Safe: split is on ASCII boundary; bytes[start..i] is valid UTF-8.
-                    f.write_str(unsafe { std::str::from_utf8_unchecked(&bytes[start..i]) })?;
+        loop {
+            match crate::swar::iri_find_next_escape(&bytes[start..]) {
+                Some(off) => {
+                    let i = start + off;
+                    if i > start {
+                        // Safe: split is on ASCII boundary; bytes[start..i] is valid UTF-8.
+                        f.write_str(unsafe { std::str::from_utf8_unchecked(&bytes[start..i]) })?;
+                    }
+                    write!(f, "\\u{:#04x}", bytes[i] as u32)?;
+                    start = i + 1;
                 }
-                write!(f, "\\u{:#04x}", b as u32)?;
-                i += 1;
-                start = i;
-            } else {
-                i += 1;
+                None => {
+                    if start < bytes.len() {
+                        f.write_str(unsafe { std::str::from_utf8_unchecked(&bytes[start..]) })?;
+                    }
+                    break;
+                }
             }
-        }
-        if start < bytes.len() {
-            f.write_str(unsafe { std::str::from_utf8_unchecked(&bytes[start..]) })?;
         }
 
         f.write_str(">")
     }
 }
-
-const IRI_ESCAPE: [bool; 128] = {
-    let mut t = [false; 128];
-    let mut i = 0;
-    while i <= 0x20 {
-        t[i] = true;
-        i += 1;
-    }
-    t[b'<' as usize] = true;
-    t[b'>' as usize] = true;
-    t[b'"' as usize] = true;
-    t[b'{' as usize] = true;
-    t[b'}' as usize] = true;
-    t[b'|' as usize] = true;
-    t[b'^' as usize] = true;
-    t[b'`' as usize] = true;
-    t[b'\\' as usize] = true;
-    t
-};
 
 impl<T: Deref<Target = str>> RdfDisplay for Iri<T> {
     #[inline(always)]
