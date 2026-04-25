@@ -297,20 +297,40 @@ impl<R: Clone + Eq + Hash> IndexedHashGraph<R> {
             Err(_) => return false,
         };
 
+        self.remove_by_index(i, false);
+        true
+    }
+
+    fn remove_by_index(&mut self, i: usize, remove_index: bool) {
+        if remove_index {
+            let resources = &self.resources;
+            let triples = &self.triples;
+            let t = triple_with_resources(resources, triples[i]);
+            let h = self.hasher.hash_one(&t);
+            if let Ok(entry) = self.triples_indexes.find_entry(h, |&j| j == i) {
+                entry.remove();
+            }
+        }
+
         let Triple(s_i, p_i, o_i) = self.triples.remove(i);
 
-        self.subjects.remove(&s_i);
-        self.predicates.remove(&p_i);
-        self.objects.remove(&o_i);
-
         self.resources[s_i].as_subject.remove(&i);
+        if self.resources[s_i].as_subject.is_empty() {
+            self.subjects.remove(&s_i);
+        }
         self.drop_resource_if_empty(s_i);
-        self.resources[p_i].as_predicate.remove(&i);
-        self.drop_resource_if_empty(p_i);
-        self.resources[o_i].as_object.remove(&i);
-        self.drop_resource_if_empty(o_i);
 
-        true
+        self.resources[p_i].as_predicate.remove(&i);
+        if self.resources[p_i].as_predicate.is_empty() {
+            self.predicates.remove(&p_i);
+        }
+        self.drop_resource_if_empty(p_i);
+
+        self.resources[o_i].as_object.remove(&i);
+        if self.resources[o_i].as_object.is_empty() {
+            self.objects.remove(&o_i);
+        }
+        self.drop_resource_if_empty(o_i);
     }
 }
 
@@ -324,6 +344,22 @@ impl<R: Eq + Hash> IndexedHashGraph<R> {
             subject: SubjectConstraints::new(self, pattern.into_subject()),
             predicate: PredicateConstraints::new(self, pattern.into_predicate()),
             object: ObjectConstraints::new(self, pattern.into_object()),
+            i: 0,
+        }
+    }
+
+    /// Returns an iterator over all the triples matching the given canonical
+    /// triple pattern. The matching triples are removed from the graph.
+    pub fn extract_pattern_matching(&mut self, pattern: CanonicalTriplePattern<&R>) -> ExtractPatternMatching<'_, R> {
+        let subject = SubjectConstraints::new(self, pattern.into_subject());
+        let predicate = PredicateConstraints::new(self, pattern.into_predicate());
+        let object = ObjectConstraints::new(self, pattern.into_object());
+
+        ExtractPatternMatching {
+            graph: self,
+            subject,
+            predicate,
+            object,
             i: 0,
         }
     }
@@ -370,9 +406,7 @@ impl<R: Clone + Eq + Hash> IndexedHashGraph<R> {
     /// Removes and returns the first triple matching the given option-pattern, if any.
     pub fn take_match(&mut self, pattern: Triple<Option<&R>, Option<&R>, Option<&R>>) -> Option<Triple<R>> {
         let canonical = CanonicalTriplePattern::from_option_triple(pattern);
-        let triple: Triple<R> = self.pattern_matching(canonical).next()?.cloned();
-        self.remove(triple.as_ref());
-        Some(triple)
+        self.extract_pattern_matching(canonical).next()
     }
 }
 
@@ -414,6 +448,10 @@ impl<R> TraversableGraph for IndexedHashGraph<R> {
 
     fn triples(&self) -> Self::Triples<'_> {
         self.iter()
+    }
+
+    fn triples_count(&self) -> usize {
+        self.len()
     }
 }
 
@@ -647,6 +685,41 @@ impl<'a, R> Iterator for PatternMatching<'a, R> {
     }
 }
 
+/// Iterator over the triples of an [`IndexedHashGraph`] matching some given pattern.
+/// The matching triples are removed from the graph as they are yielded.
+pub struct ExtractPatternMatching<'a, R> {
+    graph: &'a mut IndexedHashGraph<R>,
+    subject: SubjectConstraints,
+    predicate: PredicateConstraints,
+    object: ObjectConstraints,
+    i: usize,
+}
+
+impl<R: Clone + Eq + Hash> Iterator for ExtractPatternMatching<'_, R> {
+    type Item = Triple<R>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        while self.i < self.graph.triples.capacity() {
+            let i = self.subject.next(self.i)?;
+            let triple = *self.graph.triples.get(i)?;
+            match self.predicate.next(i, triple) {
+                Ok(()) => match self.object.next(i, triple) {
+                    Ok(()) => {
+                        let value = triple_with_resources(&self.graph.resources, triple).cloned();
+                        self.graph.remove_by_index(i, true);
+                        self.i = i + 1;
+                        return Some(value);
+                    }
+                    Err(j) => self.i = j?,
+                },
+                Err(j) => self.i = j?,
+            }
+        }
+
+        None
+    }
+}
+
 type SortedIndexes = std::iter::Peekable<std::vec::IntoIter<usize>>;
 
 fn sorted_set(set: &BTreeSet<usize>) -> SortedIndexes {
@@ -793,15 +866,15 @@ impl ObjectConstraints {
 }
 
 #[derive(Default, Clone)]
-pub(crate) struct Resource<R> {
-    pub value: R,
-    pub as_subject: BTreeSet<usize>,
-    pub as_predicate: BTreeSet<usize>,
-    pub as_object: BTreeSet<usize>,
+struct Resource<R> {
+    value: R,
+    as_subject: BTreeSet<usize>,
+    as_predicate: BTreeSet<usize>,
+    as_object: BTreeSet<usize>,
 }
 
 impl<R> Resource<R> {
-    pub fn subject(value: R, i: usize) -> Self {
+    fn subject(value: R, i: usize) -> Self {
         let mut as_subject = BTreeSet::new();
         as_subject.insert(i);
         Self {
@@ -812,7 +885,7 @@ impl<R> Resource<R> {
         }
     }
 
-    pub fn predicate(value: R, i: usize) -> Self {
+    fn predicate(value: R, i: usize) -> Self {
         let mut as_predicate = BTreeSet::new();
         as_predicate.insert(i);
         Self {
@@ -823,7 +896,7 @@ impl<R> Resource<R> {
         }
     }
 
-    pub fn object(value: R, i: usize) -> Self {
+    fn object(value: R, i: usize) -> Self {
         let mut as_object = BTreeSet::new();
         as_object.insert(i);
         Self {
@@ -834,7 +907,7 @@ impl<R> Resource<R> {
         }
     }
 
-    pub fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.as_subject.is_empty() && self.as_predicate.is_empty() && self.as_object.is_empty()
     }
 }

@@ -554,6 +554,10 @@ impl<R> TraversableDataset for IndexedBTreeDataset<R> {
     fn quads(&self) -> Self::Quads<'_> {
         self.iter()
     }
+
+    fn quads_count(&self) -> usize {
+        self.len()
+    }
 }
 
 impl<R> ResourceTraversableDataset for IndexedBTreeDataset<R> {

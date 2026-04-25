@@ -564,6 +564,10 @@ impl<R> TraversableDataset for IndexedHashDataset<R> {
     fn quads(&self) -> Self::Quads<'_> {
         self.iter()
     }
+
+    fn quads_count(&self) -> usize {
+        self.len()
+    }
 }
 
 impl<R> ResourceTraversableDataset for IndexedHashDataset<R> {

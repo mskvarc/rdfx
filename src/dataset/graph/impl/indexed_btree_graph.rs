@@ -269,36 +269,48 @@ impl<R: Ord> IndexedBTreeGraph<R> {
     pub fn remove(&mut self, triple: Triple<&R>) -> bool {
         match self.triples_indexes.remove(triple_cmp(&self.resources, &self.triples), &triple) {
             Some(i) => {
-                let Triple(s_i, p_i, o_i) = self.triples.remove(i);
-
-                self.subjects.remove(&s_i);
-                self.predicates.remove(&p_i);
-                self.objects.remove(&o_i);
-
-                let s = &mut self.resources[s_i];
-                s.as_subject.remove(&i);
-                if s.is_empty() {
-                    self.resources_indexes.remove(resource_cmp(&self.resources), triple.0);
-                    self.resources.remove(s_i);
-                }
-
-                let p = &mut self.resources[p_i];
-                p.as_predicate.remove(&i);
-                if p.is_empty() {
-                    self.resources_indexes.remove(resource_cmp(&self.resources), triple.1);
-                    self.resources.remove(p_i);
-                }
-
-                let o = &mut self.resources[o_i];
-                o.as_object.remove(&i);
-                if o.is_empty() {
-                    self.resources_indexes.remove(resource_cmp(&self.resources), triple.2);
-                    self.resources.remove(o_i);
-                }
-
+                self.remove_by_index(i, false);
                 true
             }
             None => false,
+        }
+    }
+
+    fn remove_by_index(&mut self, i: usize, remove_index: bool) {
+        if remove_index {
+            self.triples_indexes.remove(triple_index_cmp(&self.resources, &self.triples), &i);
+        }
+
+        let Triple(s_i, p_i, o_i) = self.triples.remove(i);
+
+        let s = &mut self.resources[s_i];
+        s.as_subject.remove(&i);
+        if s.as_subject.is_empty() {
+            self.subjects.remove(&s_i);
+        }
+        if s.is_empty() {
+            self.resources_indexes.remove(resource_index_cmp(&self.resources), &s_i);
+            self.resources.remove(s_i);
+        }
+
+        let p = &mut self.resources[p_i];
+        p.as_predicate.remove(&i);
+        if p.as_predicate.is_empty() {
+            self.predicates.remove(&p_i);
+        }
+        if p.is_empty() {
+            self.resources_indexes.remove(resource_index_cmp(&self.resources), &p_i);
+            self.resources.remove(p_i);
+        }
+
+        let o = &mut self.resources[o_i];
+        o.as_object.remove(&i);
+        if o.as_object.is_empty() {
+            self.objects.remove(&o_i);
+        }
+        if o.is_empty() {
+            self.resources_indexes.remove(resource_index_cmp(&self.resources), &o_i);
+            self.resources.remove(o_i);
         }
     }
 
@@ -311,6 +323,22 @@ impl<R: Ord> IndexedBTreeGraph<R> {
             subject: SubjectConstraints::new(self, pattern.into_subject()),
             predicate: PredicateConstraints::new(self, pattern.into_predicate()),
             object: ObjectConstraints::new(self, pattern.into_object()),
+            i: 0,
+        }
+    }
+
+    /// Returns an iterator over all the triples matching the given canonical
+    /// triple pattern. The matching triples are removed from the graph.
+    pub fn extract_pattern_matching(&mut self, pattern: CanonicalTriplePattern<&R>) -> ExtractPatternMatching<'_, R> {
+        let subject = SubjectConstraints::new_owned(self, pattern.into_subject());
+        let predicate = PredicateConstraints::new_owned(self, pattern.into_predicate());
+        let object = ObjectConstraints::new_owned(self, pattern.into_object());
+
+        ExtractPatternMatching {
+            graph: self,
+            subject,
+            predicate,
+            object,
             i: 0,
         }
     }
@@ -357,9 +385,7 @@ impl<R: Clone + Ord> IndexedBTreeGraph<R> {
     /// Removes and returns the first triple matching the given option-pattern, if any.
     pub fn take_match(&mut self, pattern: Triple<Option<&R>, Option<&R>, Option<&R>>) -> Option<Triple<R>> {
         let canonical = CanonicalTriplePattern::from_option_triple(pattern);
-        let triple: Triple<R> = self.pattern_matching(canonical).next()?.cloned();
-        self.remove(triple.as_ref());
-        Some(triple)
+        self.extract_pattern_matching(canonical).next()
     }
 }
 
@@ -401,6 +427,10 @@ impl<R> TraversableGraph for IndexedBTreeGraph<R> {
 
     fn triples(&self) -> Self::Triples<'_> {
         self.iter()
+    }
+
+    fn triples_count(&self) -> usize {
+        self.len()
     }
 }
 
@@ -631,9 +661,9 @@ impl<R: Hash> Hash for IndexedBTreeGraph<R> {
 pub struct PatternMatching<'a, R> {
     resources: &'a Slab<Resource<R>>,
     triples: &'a Slab<Triple<usize>>,
-    subject: SubjectConstraints<'a>,
-    predicate: PredicateConstraints<'a>,
-    object: ObjectConstraints<'a>,
+    subject: SubjectConstraints<TripleIndexes<'a>>,
+    predicate: PredicateConstraints<TripleIndexes<'a>>,
+    object: ObjectConstraints<TripleIndexes<'a>>,
     i: usize,
 }
 
@@ -660,13 +690,51 @@ impl<'a, R> Iterator for PatternMatching<'a, R> {
     }
 }
 
-enum SubjectConstraints<'a> {
-    None,
-    Any,
-    Fixed(std::iter::Peekable<std::iter::Copied<std::collections::btree_set::Iter<'a, usize>>>),
+/// Iterator over the triples of an [`IndexedBTreeGraph`] matching some given pattern.
+/// The matching triples are removed from the graph as they are yielded.
+pub struct ExtractPatternMatching<'a, R> {
+    graph: &'a mut IndexedBTreeGraph<R>,
+    subject: SubjectConstraints<OwnedTripleIndexes>,
+    predicate: PredicateConstraints<OwnedTripleIndexes>,
+    object: ObjectConstraints<OwnedTripleIndexes>,
+    i: usize,
 }
 
-impl<'a> SubjectConstraints<'a> {
+impl<R: Clone + Ord> Iterator for ExtractPatternMatching<'_, R> {
+    type Item = Triple<R>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        while self.i < self.graph.triples.capacity() {
+            let i = self.subject.next(self.i)?;
+            let triple = *self.graph.triples.get(i)?;
+            match self.predicate.next(i, triple) {
+                Ok(()) => match self.object.next(i, triple) {
+                    Ok(()) => {
+                        let value = triple_with_resources(&self.graph.resources, triple).cloned();
+                        self.graph.remove_by_index(i, true);
+                        self.i = i + 1;
+                        return Some(value);
+                    }
+                    Err(j) => self.i = j?,
+                },
+                Err(j) => self.i = j?,
+            }
+        }
+
+        None
+    }
+}
+
+type TripleIndexes<'a> = std::iter::Copied<std::collections::btree_set::Iter<'a, usize>>;
+type OwnedTripleIndexes = std::vec::IntoIter<usize>;
+
+enum SubjectConstraints<I: Iterator> {
+    None,
+    Any,
+    Fixed(std::iter::Peekable<I>),
+}
+
+impl<'a> SubjectConstraints<TripleIndexes<'a>> {
     fn new<R: Ord>(graph: &'a IndexedBTreeGraph<R>, s: PatternSubject<&R>) -> Self {
         match s {
             PatternSubject::Any => Self::Any,
@@ -676,7 +744,21 @@ impl<'a> SubjectConstraints<'a> {
             },
         }
     }
+}
 
+impl SubjectConstraints<OwnedTripleIndexes> {
+    fn new_owned<R: Ord>(graph: &IndexedBTreeGraph<R>, s: PatternSubject<&R>) -> Self {
+        match s {
+            PatternSubject::Any => Self::Any,
+            PatternSubject::Given(s) => match graph.get_resource(s) {
+                Some(subject) => Self::Fixed(subject.as_subject.iter().copied().collect::<Vec<_>>().into_iter().peekable()),
+                None => Self::None,
+            },
+        }
+    }
+}
+
+impl<I: Iterator<Item = usize>> SubjectConstraints<I> {
     fn next(&mut self, i: usize) -> Option<usize> {
         match self {
             Self::None => None,
@@ -696,14 +778,14 @@ impl<'a> SubjectConstraints<'a> {
     }
 }
 
-enum PredicateConstraints<'a> {
+enum PredicateConstraints<I: Iterator> {
     None,
     Any,
     SameAsSubject,
-    Fixed(std::iter::Peekable<std::iter::Copied<std::collections::btree_set::Iter<'a, usize>>>),
+    Fixed(std::iter::Peekable<I>),
 }
 
-impl<'a> PredicateConstraints<'a> {
+impl<'a> PredicateConstraints<TripleIndexes<'a>> {
     fn new<R: Ord>(graph: &'a IndexedBTreeGraph<R>, p: PatternPredicate<&R>) -> Self {
         match p {
             PatternPredicate::Any => Self::Any,
@@ -714,7 +796,22 @@ impl<'a> PredicateConstraints<'a> {
             },
         }
     }
+}
 
+impl PredicateConstraints<OwnedTripleIndexes> {
+    fn new_owned<R: Ord>(graph: &IndexedBTreeGraph<R>, p: PatternPredicate<&R>) -> Self {
+        match p {
+            PatternPredicate::Any => Self::Any,
+            PatternPredicate::SameAsSubject => Self::SameAsSubject,
+            PatternPredicate::Given(s) => match graph.get_resource(s) {
+                Some(subject) => Self::Fixed(subject.as_predicate.iter().copied().collect::<Vec<_>>().into_iter().peekable()),
+                None => Self::None,
+            },
+        }
+    }
+}
+
+impl<I: Iterator<Item = usize>> PredicateConstraints<I> {
     fn next(&mut self, i: usize, triple: Triple<usize>) -> Result<(), Option<usize>> {
         match self {
             Self::None => Err(None),
@@ -743,15 +840,15 @@ impl<'a> PredicateConstraints<'a> {
     }
 }
 
-enum ObjectConstraints<'a> {
+enum ObjectConstraints<I: Iterator> {
     None,
     Any,
     SameAsSubject,
     SameAsPredicate,
-    Fixed(std::iter::Peekable<std::iter::Copied<std::collections::btree_set::Iter<'a, usize>>>),
+    Fixed(std::iter::Peekable<I>),
 }
 
-impl<'a> ObjectConstraints<'a> {
+impl<'a> ObjectConstraints<TripleIndexes<'a>> {
     fn new<R: Ord>(graph: &'a IndexedBTreeGraph<R>, p: PatternObject<&R>) -> Self {
         match p {
             PatternObject::Any => Self::Any,
@@ -763,7 +860,23 @@ impl<'a> ObjectConstraints<'a> {
             },
         }
     }
+}
 
+impl ObjectConstraints<OwnedTripleIndexes> {
+    fn new_owned<R: Ord>(graph: &IndexedBTreeGraph<R>, p: PatternObject<&R>) -> Self {
+        match p {
+            PatternObject::Any => Self::Any,
+            PatternObject::SameAsSubject => Self::SameAsSubject,
+            PatternObject::SameAsPredicate => Self::SameAsPredicate,
+            PatternObject::Given(s) => match graph.get_resource(s) {
+                Some(subject) => Self::Fixed(subject.as_object.iter().copied().collect::<Vec<_>>().into_iter().peekable()),
+                None => Self::None,
+            },
+        }
+    }
+}
+
+impl<I: Iterator<Item = usize>> ObjectConstraints<I> {
     fn next(&mut self, i: usize, triple: Triple<usize>) -> Result<(), Option<usize>> {
         match self {
             Self::None => Err(None),
