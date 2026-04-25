@@ -42,14 +42,6 @@ impl Literal {
         self.type_
     }
 
-    pub fn as_value(&self) -> &String {
-        &self.value
-    }
-
-    pub fn as_value_mut(&mut self) -> &mut String {
-        &mut self.value
-    }
-
     pub fn into_value(self) -> String {
         self.value
     }
