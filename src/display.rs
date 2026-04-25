@@ -62,31 +62,80 @@ impl RdfDisplay for String {
     }
 }
 
+/// Precomputed `\uXX` escape strings for every byte. Six bytes each:
+/// `\`, `u`, `0`, `x`, hex_hi, hex_lo (lowercase). Bypasses `write!` macro
+/// dispatch — escape emission becomes a single `f.write_str` of fixed bytes.
+const IRI_ESC: [[u8; 6]; 256] = {
+    let mut t = [[0u8; 6]; 256];
+    let mut i = 0usize;
+    while i < 256 {
+        let hi = ((i >> 4) & 0xF) as u8;
+        let lo = (i & 0xF) as u8;
+        t[i][0] = b'\\';
+        t[i][1] = b'u';
+        t[i][2] = b'0';
+        t[i][3] = b'x';
+        t[i][4] = if hi < 10 { b'0' + hi } else { b'a' + hi - 10 };
+        t[i][5] = if lo < 10 { b'0' + lo } else { b'a' + lo - 10 };
+        i += 1;
+    }
+    t
+};
+
+#[inline]
+fn iri_emit_escapes(
+    f: &mut fmt::Formatter,
+    mut mask: u64,
+    base: usize,
+    bytes: &[u8],
+    start: &mut usize,
+) -> fmt::Result {
+    while mask != 0 {
+        let pos = base + crate::swar::first_set_byte_index(mask) as usize;
+        if pos > *start {
+            // Safe: split is on ASCII boundary; bytes[*start..pos] is valid UTF-8.
+            f.write_str(unsafe { std::str::from_utf8_unchecked(&bytes[*start..pos]) })?;
+        }
+        // Safe: IRI_ESC entries are six ASCII bytes.
+        f.write_str(unsafe { std::str::from_utf8_unchecked(&IRI_ESC[bytes[pos] as usize]) })?;
+        *start = pos + 1;
+        mask &= mask - 1;
+    }
+    Ok(())
+}
+
 impl<T: Deref<Target = str>> RdfDisplay for IriRef<T> {
     fn rdf_fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str("<")?;
 
         let s = self.as_str();
         let bytes = s.as_bytes();
+        let mut i = 0;
         let mut start = 0;
-        loop {
-            match crate::swar::iri_find_next_escape(&bytes[start..]) {
-                Some(off) => {
-                    let i = start + off;
-                    if i > start {
-                        // Safe: split is on ASCII boundary; bytes[start..i] is valid UTF-8.
-                        f.write_str(unsafe { std::str::from_utf8_unchecked(&bytes[start..i]) })?;
-                    }
-                    write!(f, "\\u{:#04x}", bytes[i] as u32)?;
-                    start = i + 1;
-                }
-                None => {
-                    if start < bytes.len() {
-                        f.write_str(unsafe { std::str::from_utf8_unchecked(&bytes[start..]) })?;
-                    }
-                    break;
-                }
+
+        while i + 8 <= bytes.len() {
+            let mask = crate::swar::iri_escape_word(crate::swar::load_u64(bytes, i));
+            if mask != 0 {
+                iri_emit_escapes(f, mask, i, bytes, &mut start)?;
             }
+            i += 8;
+        }
+
+        let tail_len = bytes.len() - i;
+        if tail_len > 0 {
+            let mut arr = [0u8; 8];
+            arr[..tail_len].copy_from_slice(&bytes[i..]);
+            let w = u64::from_le_bytes(arr);
+            // Padding bytes (0x00 < 0x21) appear as escapes; mask off positions >= tail_len.
+            let len_mask = (1u64 << (tail_len * 8)) - 1;
+            let mask = crate::swar::iri_escape_word(w) & len_mask;
+            if mask != 0 {
+                iri_emit_escapes(f, mask, i, bytes, &mut start)?;
+            }
+        }
+
+        if start < bytes.len() {
+            f.write_str(unsafe { std::str::from_utf8_unchecked(&bytes[start..]) })?;
         }
 
         f.write_str(">")

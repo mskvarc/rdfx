@@ -79,7 +79,7 @@ pub(crate) enum BodyScan {
 }
 
 #[inline(always)]
-fn load_u64(bytes: &[u8], i: usize) -> u64 {
+pub(crate) fn load_u64(bytes: &[u8], i: usize) -> u64 {
     let mut arr = [0u8; 8];
     arr.copy_from_slice(&bytes[i..i + 8]);
     u64::from_le_bytes(arr)
@@ -125,8 +125,11 @@ pub(crate) fn blankid_body_scan(body: &[u8]) -> BodyScan {
     BodyScan::AllValidAscii
 }
 
+/// Per-word IRI escape mask: high bit set per byte that needs to be escaped
+/// (controls + space `0x00..=0x20`, plus `"`, `<`, `>`, `\\`, `^`, `` ` ``,
+/// `{`, `|`, `}`). High-bit input bytes (UTF-8 multi-byte) are never escapes.
 #[inline(always)]
-const fn iri_escape_mask(w: u64) -> u64 {
+pub(crate) const fn iri_escape_word(w: u64) -> u64 {
     let lt21 = has_byte_lt(w, 0x21);
     let sp = has_byte_eq(w, 0x22)
         | has_byte_eq(w, 0x3C)
@@ -138,33 +141,6 @@ const fn iri_escape_mask(w: u64) -> u64 {
         | has_byte_eq(w, 0x7C)
         | has_byte_eq(w, 0x7D);
     lt21 | sp
-}
-
-pub(crate) fn iri_find_next_escape(bytes: &[u8]) -> Option<usize> {
-    let mut i = 0;
-    while i + 8 <= bytes.len() {
-        let w = load_u64(bytes, i);
-        let mask = iri_escape_mask(w);
-        if mask != 0 {
-            return Some(i + first_set_byte_index(mask) as usize);
-        }
-        i += 8;
-    }
-    let tail_len = bytes.len() - i;
-    if tail_len > 0 {
-        let mut arr = [0u8; 8];
-        arr[..tail_len].copy_from_slice(&bytes[i..]);
-        let w = u64::from_le_bytes(arr);
-        let raw = iri_escape_mask(w);
-        // Zero-padding bytes (0x00 < 0x21) appear as escapes in `raw`. Mask off
-        // bit positions belonging to the padding so only real bytes contribute.
-        let len_mask = (1u64 << (tail_len * 8)) - 1;
-        let mask = raw & len_mask;
-        if mask != 0 {
-            return Some(i + first_set_byte_index(mask) as usize);
-        }
-    }
-    None
 }
 
 #[cfg(test)]
@@ -248,50 +224,44 @@ mod tests {
     }
 
     #[test]
-    fn iri_escape_clean() {
-        assert_eq!(iri_find_next_escape(b""), None);
-        assert_eq!(iri_find_next_escape(b"http://example.org/foo"), None);
-        assert_eq!(iri_find_next_escape(b"abcdefgh"), None);
+    fn iri_escape_word_clean_ascii() {
+        let w = u64::from_le_bytes(*b"abcdefgh");
+        assert_eq!(iri_escape_word(w), 0);
     }
 
     #[test]
-    fn iri_escape_finds_specials() {
+    fn iri_escape_word_finds_specials() {
         for &b in &[
             b'<', b'>', b'"', b'{', b'}', b'|', b'^', b'`', b'\\', b' ', b'\t', 0x00, 0x1F,
             0x20,
         ] {
-            let s = [b'a', b, b'b'];
-            assert_eq!(iri_find_next_escape(&s), Some(1), "byte {b:#x}");
+            let arr = [b'a', b, b'a', b'a', b'a', b'a', b'a', b'a'];
+            let w = u64::from_le_bytes(arr);
+            let mask = iri_escape_word(w);
+            assert_ne!(mask, 0, "byte {b:#x}");
+            assert_eq!(first_set_byte_index(mask), 1, "byte {b:#x}");
         }
     }
 
     #[test]
-    fn iri_escape_at_each_alignment() {
-        for &i in &[0usize, 1, 7, 8, 9, 15, 16, 17] {
-            let mut buf = vec![b'a'; i + 4];
-            buf[i] = b'<';
-            assert_eq!(iri_find_next_escape(&buf), Some(i));
-        }
+    fn iri_escape_word_passes_high_bytes() {
+        // UTF-8 multi-byte bytes (>= 0x80) are never escapes.
+        let arr = [0xC3, 0xA9, 0xE4, 0xB8, 0xAD, 0xF0, 0x9F, 0xA6];
+        let w = u64::from_le_bytes(arr);
+        assert_eq!(iri_escape_word(w), 0);
     }
 
     #[test]
-    fn iri_escape_passes_high_bytes() {
-        let s = "abc中def".as_bytes();
-        assert_eq!(iri_find_next_escape(s), None);
-    }
-
-    #[test]
-    fn iri_escape_tail_no_false_positive() {
-        // Tail of 1..=7 clean ASCII bytes — must not match due to padding zeros.
-        for n in 1..=7 {
-            let buf = vec![b'a'; n];
-            assert_eq!(iri_find_next_escape(&buf), None, "n={n}");
-        }
-    }
-
-    #[test]
-    fn iri_escape_tail_finds_real() {
-        let buf = b"aaaa<aa";
-        assert_eq!(iri_find_next_escape(buf), Some(4));
+    fn iri_escape_word_multiple_in_chunk() {
+        // Escapes at positions 1 and 4: should set both high bits.
+        let arr = [b'a', b'<', b'b', b'c', b'>', b'd', b'e', b'f'];
+        let w = u64::from_le_bytes(arr);
+        let mask = iri_escape_word(w);
+        assert_ne!(mask, 0);
+        let first = first_set_byte_index(mask);
+        let cleared = mask & (mask - 1);
+        let second = first_set_byte_index(cleared);
+        assert_eq!(first, 1);
+        assert_eq!(second, 4);
     }
 }
