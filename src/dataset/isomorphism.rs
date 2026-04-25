@@ -202,10 +202,6 @@ where
             }
         }
     }
-
-    for sig in map.values_mut() {
-        sig.0.sort_unstable();
-    }
 }
 
 fn split_by_size<'s, 'd, R>(blanks: &'s BTreeMap<&'d R, BlankSignature<'d, R>>) -> BTreeMap<usize, BTreeMap<&'d R, &'s BlankSignature<'d, R>>>
@@ -320,7 +316,7 @@ impl<'a, 'b, R: Ord> Bijection<'a, 'b, R> {
             self.forward.insert(a_blank_id, b_candidate);
             self.backward.insert(b_candidate, a_blank_id);
 
-            let sig_ok = self.signature_matches_with(interpretation, a.get(a_blank_id).unwrap(), b.get(b_candidate).unwrap());
+            let sig_ok = depth == 0 || self.signature_matches_with(interpretation, a.get(a_blank_id).unwrap(), b.get(b_candidate).unwrap());
             if sig_ok && self.find_from_candidates(interpretation, candidates, depth + 1, a, b) {
                 return true;
             }
