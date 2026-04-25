@@ -1,0 +1,23 @@
+use rdf_term::{BlankIdBuf, Quad, LocalTerm, dataset::HashDataset, iri};
+use rdf_term::dataset::isomorphism::HashBijection;
+use std::collections::HashMap;
+
+fn test(a: HashDataset, b: HashDataset) {
+	let substitution: HashMap<_, _> = match rdf_term::dataset::isomorphism::find_hash_bijection(&a, &b) {
+		Some(HashBijection { forward, .. }) => forward.into_iter().map(|(a, b)| (a.to_owned(), b.clone())).collect(),
+		None => panic!("no substitution found"),
+	};
+	let c: HashDataset = a
+		.into_iter()
+		.map(|q| {
+			q.map(|t| {
+				if t.is_blank_id() {
+					substitution.get(&t).unwrap().clone()
+				} else {
+					t
+				}
+			})
+		})
+		.collect();
+	assert_eq!(c, b)
+}

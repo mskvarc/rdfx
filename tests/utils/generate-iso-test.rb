@@ -1,7 +1,16 @@
 #!/usr/bin/env ruby
 # Usage: generate-iso-test.rb TEST_NAME DATASET_SIZE BLANK_NODE_COUNT OTHER_NODES_COUNT
 #        Without arguments, it will generate an entire test file.
+#        BACKEND=btree (default) or BACKEND=hash to pick the storage backend.
 require 'set'
+
+BACKEND = ENV.fetch('BACKEND', 'btree')
+DATASET_TYPE = case BACKEND
+               when 'btree' then 'BTreeDataset'
+               when 'hash'  then 'HashDataset'
+               else
+                 abort "unknown BACKEND=#{BACKEND.inspect}; expected 'btree' or 'hash'"
+               end
 
 class BlankNode
 	attr_reader :suffix
@@ -65,7 +74,7 @@ class Iri
 	end
 
 	def to_rust
-		"LocalTerm::iri(iri!(\"#{self.to_s}\").to_owned())"
+		"LocalTerm::iri(iri_rs::IriBuf::from(iri!(\"#{self.to_s}\")))"
 	end
 
 	def substituted
@@ -136,7 +145,7 @@ class Dataset
 	end
 
 	def to_rust(id)
-		result = "\tlet mut #{id} = BTreeDataset::new();"
+		result = "\tlet mut #{id} = #{DATASET_TYPE}::new();"
 		@triples.each do |triple|
 			result += "\n\t#{id}.insert(#{triple.to_rust});"
 		end
@@ -190,7 +199,7 @@ if ARGV.empty? then
 	puts "//! This file is auto generated using the"
 	puts "//! `tests/utils/generate-iso-test.rb` script."
 
-	puts File.open("tests/utils/iso.rs.template").read
+	puts File.open("tests/utils/iso.#{BACKEND}.rs.template").read
 
 	CLASSES = [
 		# blank nodes count, graph size, test count
