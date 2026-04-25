@@ -23,7 +23,7 @@ use crate::{
         ResourceTraversableDataset,
         SubjectTraversableDataset,
         TraversableDataset,
-        isomorphism::{BTreeBijection, are_isomorphic, find_bijection},
+        isomorphism::{BTreeBijection, are_isomorphic_btree, find_btree_bijection},
     },
     pattern::{
         CanonicalQuadPattern,
@@ -513,12 +513,12 @@ impl<R: Clone + Ord> IndexedBTreeDataset<R> {
 impl IndexedBTreeDataset<LocalTerm> {
     /// Returns a blank-node bijection from `self` to `other` if one exists.
     pub fn find_blank_id_bijection<'a, 'b>(&'a self, other: &'b Self) -> Option<BTreeBijection<'a, 'b>> {
-        find_bijection(self, other)
+        find_btree_bijection(self, other)
     }
 
     /// Checks if `self` and `other` are isomorphic.
     pub fn is_isomorphic_to(&self, other: &Self) -> bool {
-        are_isomorphic(self, other)
+        are_isomorphic_btree(self, other)
     }
 
     /// Returns a copy of `self` with each blank node identifier replaced by the
@@ -668,7 +668,7 @@ impl<R: Ord> MultiPatternMatchingDataset for IndexedBTreeDataset<R> {
     }
 }
 
-/// Iterator over the quads of a [`BTreeGraph`].
+/// Iterator over the quads of an [`IndexedBTreeDataset`].
 #[derive(Educe)]
 #[educe(Clone, Copy)]
 pub struct Quads<'a, R> {
@@ -685,14 +685,14 @@ impl<'a, R> Iterator for Quads<'a, R> {
     }
 }
 
-/// Iterator over the quads of a [`BTreeGraph`].
-pub struct IntoTriples<R> {
+/// Iterator over the quads of an [`IndexedBTreeDataset`].
+pub struct IntoQuads<R> {
     resources: Slab<Resource<R>>,
     quads: Slab<Quad<usize>>,
     indexes: raw_btree::IntoIter<usize>,
 }
 
-impl<R: Clone> Iterator for IntoTriples<R> {
+impl<R: Clone> Iterator for IntoQuads<R> {
     type Item = Quad<R>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -711,10 +711,10 @@ impl<'a, R> IntoIterator for &'a IndexedBTreeDataset<R> {
 
 impl<R: Clone> IntoIterator for IndexedBTreeDataset<R> {
     type Item = Quad<R>;
-    type IntoIter = IntoTriples<R>;
+    type IntoIter = IntoQuads<R>;
 
     fn into_iter(self) -> Self::IntoIter {
-        IntoTriples {
+        IntoQuads {
             resources: self.resources,
             quads: self.quads,
             indexes: self.quads_indexes.into_iter(),
@@ -816,7 +816,7 @@ impl<R: Hash> Hash for IndexedBTreeDataset<R> {
     }
 }
 
-/// Iterator over the quads of a [`BTreeGraph`] matching some given pattern.
+/// Iterator over the quads of an [`IndexedBTreeDataset`] matching some given pattern.
 pub struct PatternMatching<'a, R> {
     resources: &'a Slab<Resource<R>>,
     quads: &'a Slab<Quad<usize>>,
@@ -853,7 +853,7 @@ impl<'a, R> Iterator for PatternMatching<'a, R> {
     }
 }
 
-/// Iterator over the quads of a [`BTreeGraph`] matching some given pattern.
+/// Iterator over the quads of an [`IndexedBTreeDataset`] matching some given pattern.
 pub struct MultiPatternMatching<'a, R> {
     resources: &'a Slab<Resource<R>>,
     quads: &'a Slab<Quad<usize>>,
@@ -890,7 +890,7 @@ impl<'a, R> Iterator for MultiPatternMatching<'a, R> {
     }
 }
 
-/// Iterator over the quads of a [`BTreeGraph`] matching some given pattern.
+/// Iterator over the quads of an [`IndexedBTreeDataset`] matching some given pattern.
 pub struct ExtractPatternMatching<'a, R> {
     dataset: &'a mut IndexedBTreeDataset<R>,
     subject: SubjectConstraints<OwnedTripleIndexes>,

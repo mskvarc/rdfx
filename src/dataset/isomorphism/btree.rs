@@ -6,45 +6,42 @@ use crate::{LocalTerm, Quad, dataset::TraversableDataset, interpretation::Revers
 ///
 /// There is an isomorphism if there exists a blank node identifier bijection
 /// between `a` and `b`.
-/// This is equivalent to `find_bijection_with(a, b).is_some()`.
-pub fn are_isomorphic<A, B>(a: &A, b: &B) -> bool
+/// This is equivalent to `find_btree_bijection(a, b).is_some()`.
+pub fn are_isomorphic_btree<A, B>(a: &A, b: &B) -> bool
 where
     A: TraversableDataset<Resource = LocalTerm>,
     B: TraversableDataset<Resource = LocalTerm>,
 {
-    are_isomorphic_with(&(), a, b)
+    are_isomorphic_btree_with(&(), a, b)
 }
 
 /// Checks that there is an isomorphism between the datasets `a` and `b`.
 ///
 /// There is an isomorphism if there exists a blank node identifier bijection
 /// between `a` and `b`.
-/// This is equivalent to `find_bijection_with(a, b).is_some()`.
-pub fn are_isomorphic_with<I, A, B>(interpretation: &I, a: &A, b: &B) -> bool
+pub fn are_isomorphic_btree_with<I, A, B>(interpretation: &I, a: &A, b: &B) -> bool
 where
     I: ReverseInterpretation,
     I::Resource: Ord,
     A: TraversableDataset<Resource = I::Resource>,
     B: TraversableDataset<Resource = I::Resource>,
 {
-    find_bijection_with(interpretation, a, b).is_some()
+    find_btree_bijection_with(interpretation, a, b).is_some()
 }
 
-/// Finds a blank node identifier bijection between from `a` to `b`.
-/// If such bijection exists,
-/// there is an isomorphism between `a` and `b`.
-pub fn find_bijection<'a, 'b, A, B>(a: &'a A, b: &'b B) -> Option<BTreeBijection<'a, 'b>>
+/// Finds a blank node identifier bijection from `a` to `b`.
+/// If such bijection exists, there is an isomorphism between `a` and `b`.
+pub fn find_btree_bijection<'a, 'b, A, B>(a: &'a A, b: &'b B) -> Option<BTreeBijection<'a, 'b>>
 where
     A: TraversableDataset<Resource = LocalTerm>,
     B: TraversableDataset<Resource = LocalTerm>,
 {
-    find_bijection_with(&(), a, b)
+    find_btree_bijection_with(&(), a, b)
 }
 
-/// Finds a blank node identifier bijection between from `a` to `b`.
-/// If such bijection exists,
-/// there is an isomorphism between `a` and `b`.
-pub fn find_bijection_with<'a, 'b, I, A, B>(interpretation: &I, a: &'a A, b: &'b B) -> Option<BTreeBijection<'a, 'b, I::Resource>>
+/// Finds a blank node identifier bijection from `a` to `b`.
+/// If such bijection exists, there is an isomorphism between `a` and `b`.
+pub fn find_btree_bijection_with<'a, 'b, I, A, B>(interpretation: &I, a: &'a A, b: &'b B) -> Option<BTreeBijection<'a, 'b, I::Resource>>
 where
     I: ReverseInterpretation,
     I::Resource: Ord,

@@ -1,8 +1,5 @@
 use std::{fmt::Debug, hash::Hash};
 
-#[allow(unused_imports)]
-use std::hash::BuildHasher as _;
-
 use hashbrown::HashTable;
 use slab::Slab;
 
@@ -19,7 +16,7 @@ use crate::{
         TraversableDataset,
         isomorphism::{HashBijection, are_isomorphic_hash, find_hash_bijection},
     },
-    utils::hash_map::DefaultHashBuilder,
+    utils::hash_map::{DefaultHashBuilder, hash_one},
 };
 
 fn quad_with_resources<R>(resources: &Slab<Resource<R>>, Quad(s, p, o, g): Quad<usize>) -> Quad<&R> {
@@ -90,11 +87,11 @@ impl<R: Eq + Hash> HashDataset<R> {
     }
 
     fn hash_resource(&self, r: &R) -> u64 {
-        self.hasher.hash_one(r)
+        hash_one(&self.hasher, r)
     }
 
     fn hash_quad(&self, q: &Quad<&R>) -> u64 {
-        self.hasher.hash_one(q)
+        hash_one(&self.hasher, q)
     }
 
     fn index_of_resource(&self, r: &R) -> Option<usize> {
@@ -127,11 +124,11 @@ impl<R: Clone + Eq + Hash> HashDataset<R> {
                 i
             }
             None => {
-                let h = self.hasher.hash_one(&r);
+                let h = hash_one(&self.hasher, &r);
                 let i = self.resources.insert(Resource::new(r));
                 let hasher = self.hasher.clone();
                 let resources = &self.resources;
-                self.resources_indexes.insert_unique(h, i, |&j| hasher.hash_one(&resources[j].value));
+                self.resources_indexes.insert_unique(h, i, |&j| hash_one(&hasher, &resources[j].value));
                 i
             }
         }
@@ -152,7 +149,7 @@ impl<R: Clone + Eq + Hash> HashDataset<R> {
         if let (Some(s_i), Some(p_i), Some(o_i), Some(g_slot)) = (s_pre, p_pre, o_pre, g_existing) {
             let target = Quad(s_i, p_i, o_i, g_slot);
             let resolved = quad_with_resources(&self.resources, target);
-            let h = self.hasher.hash_one(&resolved);
+            let h = hash_one(&self.hasher, &resolved);
             let resources = &self.resources;
             let quads = &self.quads;
             if self
@@ -174,14 +171,14 @@ impl<R: Clone + Eq + Hash> HashDataset<R> {
         };
 
         let stored = Quad(s_i, p_i, o_i, g_i);
-        let h = self.hasher.hash_one(&quad_with_resources(&self.resources, stored));
+        let h = hash_one(&self.hasher, &quad_with_resources(&self.resources, stored));
         let i = self.quads.insert(stored);
 
         let hasher = self.hasher.clone();
         let resources = &self.resources;
         let quads = &self.quads;
         self.quads_indexes
-            .insert_unique(h, i, |&j| hasher.hash_one(&quad_with_resources(resources, quads[j])));
+            .insert_unique(h, i, |&j| hash_one(&hasher, &quad_with_resources(resources, quads[j])));
 
         true
     }
@@ -190,7 +187,7 @@ impl<R: Clone + Eq + Hash> HashDataset<R> {
         let r = &mut self.resources[i];
         r.occurrences -= 1;
         if r.is_empty() {
-            let h = self.hasher.hash_one(value);
+            let h = hash_one(&self.hasher, value);
             if let Ok(entry) = self.resources_indexes.find_entry(h, |&j| j == i) {
                 entry.remove();
             }

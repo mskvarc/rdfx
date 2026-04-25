@@ -221,10 +221,7 @@ pub trait TryExportQuad<S, P, O, G> {
     fn try_export_quad(&self, quad: Quad<S, P, O, G>) -> Result<RdfQuad, Self::Error>;
 }
 
-/// Error returned when calling [`try_extract_from_vocabulary`][1] on a
-/// [`Quad`].
-///
-/// [1]: TryExtractFromVocabulary::try_extract_from_vocabulary
+/// Error returned when calling `try_extract_from_vocabulary` on a [`Quad`].
 #[derive(Debug, thiserror::Error)]
 pub enum QuadExportFailed<S, P, O, G> {
     #[error("invalid subject: {0}")]

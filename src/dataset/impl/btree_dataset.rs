@@ -15,7 +15,7 @@ use crate::{
         IndexedBTreeDataset,
         ResourceTraversableDataset,
         TraversableDataset,
-        isomorphism::{BTreeBijection, are_isomorphic, find_bijection},
+        isomorphism::{BTreeBijection, are_isomorphic_btree, find_btree_bijection},
     },
 };
 
@@ -291,12 +291,12 @@ impl<R: Clone + Ord> BTreeDataset<R> {
 impl BTreeDataset<LocalTerm> {
     /// Returns a blank-node bijection from `self` to `other` if one exists.
     pub fn find_blank_id_bijection<'a, 'b>(&'a self, other: &'b Self) -> Option<BTreeBijection<'a, 'b>> {
-        find_bijection(self, other)
+        find_btree_bijection(self, other)
     }
 
     /// Checks if `self` and `other` are isomorphic.
     pub fn is_isomorphic_to(&self, other: &Self) -> bool {
-        are_isomorphic(self, other)
+        are_isomorphic_btree(self, other)
     }
 
     /// Returns a copy of `self` with each blank node identifier replaced by the
@@ -349,7 +349,7 @@ impl<R: Clone + Ord> DatasetMut for BTreeDataset<R> {
     }
 }
 
-/// Iterator over the quads of a [`BTreeGraph`].
+/// Iterator over the quads of a [`BTreeDataset`].
 #[derive(Educe)]
 #[educe(Clone, Copy)]
 pub struct Quads<'a, R> {
@@ -366,14 +366,14 @@ impl<'a, R> Iterator for Quads<'a, R> {
     }
 }
 
-/// Iterator over the quads of a [`BTreeGraph`].
-pub struct IntoTriples<R> {
+/// Iterator over the quads of a [`BTreeDataset`].
+pub struct IntoQuads<R> {
     resources: Slab<Resource<R>>,
     quads: Slab<Quad<usize>>,
     indexes: raw_btree::IntoIter<usize>,
 }
 
-impl<R: Clone> Iterator for IntoTriples<R> {
+impl<R: Clone> Iterator for IntoQuads<R> {
     type Item = Quad<R>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -392,10 +392,10 @@ impl<'a, R> IntoIterator for &'a BTreeDataset<R> {
 
 impl<R: Clone> IntoIterator for BTreeDataset<R> {
     type Item = Quad<R>;
-    type IntoIter = IntoTriples<R>;
+    type IntoIter = IntoQuads<R>;
 
     fn into_iter(self) -> Self::IntoIter {
-        IntoTriples {
+        IntoQuads {
             resources: self.resources,
             quads: self.quads,
             indexes: self.quads_indexes.into_iter(),

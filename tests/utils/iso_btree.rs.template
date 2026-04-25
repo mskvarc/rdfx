@@ -1,0 +1,23 @@
+use rdf_term::{BlankIdBuf, Quad, LocalTerm, dataset::BTreeDataset, iri};
+use rdf_term::dataset::isomorphism::BTreeBijection;
+use std::collections::BTreeMap;
+
+fn test(a: BTreeDataset, b: BTreeDataset) {
+	let substitution: BTreeMap<_, _> = match rdf_term::dataset::isomorphism::find_btree_bijection(&a, &b) {
+		Some(BTreeBijection { forward, .. }) => forward.into_iter().map(|(a, b)| (a.to_owned(), b.clone())).collect(),
+		None => panic!("no substitution found"),
+	};
+	let c: BTreeDataset = a
+		.into_iter()
+		.map(|q| {
+			q.map(|t| {
+				if t.is_blank_id() {
+					substitution.get(&t).unwrap().clone()
+				} else {
+					t
+				}
+			})
+		})
+		.collect();
+	assert_eq!(c, b)
+}

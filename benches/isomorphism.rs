@@ -6,7 +6,7 @@ use rdf_term::{
     dataset::{
         BTreeDataset,
         HashDataset,
-        isomorphism::{find_bijection, find_hash_bijection},
+        isomorphism::{find_btree_bijection, find_hash_bijection},
     },
     iri,
 };
@@ -75,7 +75,7 @@ fn bench_iso_named(c: &mut Criterion) {
         let b = iri_chain(n);
         g.throughput(Throughput::Elements(n as u64));
         g.bench_with_input(BenchmarkId::from_parameter(n), &(a, b), |bn, (a, b)| {
-            bn.iter(|| black_box(find_bijection(black_box(a), black_box(b))));
+            bn.iter(|| black_box(find_btree_bijection(black_box(a), black_box(b))));
         });
     }
     g.finish();
@@ -88,7 +88,7 @@ fn bench_iso_blank_relabeled(c: &mut Criterion) {
         let b = blank_chain(n, "b");
         g.throughput(Throughput::Elements(n as u64));
         g.bench_with_input(BenchmarkId::from_parameter(n), &(a, b), |bn, (a, b)| {
-            bn.iter(|| black_box(find_bijection(black_box(a), black_box(b))));
+            bn.iter(|| black_box(find_btree_bijection(black_box(a), black_box(b))));
         });
     }
     g.finish();

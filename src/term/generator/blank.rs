@@ -6,7 +6,7 @@ use super::LocalGenerator;
 /// with an optional prefix.
 ///
 /// This generator can create `usize::MAX` unique blank node identifiers.
-/// If [`Generator::next`] is called `usize::MAX + 1` times, it will panic.
+/// If `next` is called `usize::MAX + 1` times, it will panic.
 #[derive(Default)]
 pub struct Blank {
     /// Prefix string.

@@ -199,7 +199,7 @@ if ARGV.empty? then
 	puts "//! This file is auto generated using the"
 	puts "//! `tests/utils/generate-iso-test.rb` script."
 
-	puts File.open("tests/utils/iso.#{BACKEND}.rs.template").read
+	puts File.open("tests/utils/iso_#{BACKEND}.rs.template").read
 
 	CLASSES = [
 		# blank nodes count, graph size, test count
