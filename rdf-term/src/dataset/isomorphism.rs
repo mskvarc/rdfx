@@ -69,7 +69,6 @@ where
     collect_signatures(interpretation, &mut b_blanks_map, b);
 
     if a_blanks_map.len() != b_blanks_map.len() {
-        eprintln!("different blank node count");
         return None;
     }
 
@@ -78,12 +77,10 @@ where
     let b_groups = split_by_size(&b_blanks_map);
 
     if a_groups.len() != b_groups.len() {
-        eprintln!("different group count");
         return None;
     }
 
     if !a_groups.iter().all(|(len, _)| b_groups.contains_key(len)) {
-        eprintln!("different group lengths");
         return None;
     }
 
@@ -101,7 +98,6 @@ where
             }
 
             if a_blank_id_candidates.is_empty() {
-                eprintln!("no candidates found for blank id");
                 return None;
             }
 
