@@ -312,24 +312,23 @@ impl PartialEq<BlankIdBuf> for BlankId {
 }
 
 fn check<C: Iterator<Item = char>>(mut chars: C) -> bool {
-    match chars.next() {
-        Some('_') => match chars.next() {
-            Some(':') => match chars.next() {
-                Some(c) if c.is_ascii_digit() || is_pn_char_u(c) => {
-                    for c in chars {
-                        if !is_pn_char(c) {
-                            return false;
-                        }
-                    }
-
-                    true
-                }
-                _ => false,
-            },
-            _ => false,
-        },
-        _ => false,
+    if chars.next() != Some('_') {
+        return false;
     }
+    if chars.next() != Some(':') {
+        return false;
+    }
+    let mut last = match chars.next() {
+        Some(c) if c.is_ascii_digit() || is_pn_char_u(c) => c,
+        _ => return false,
+    };
+    for c in chars {
+        if c != '.' && !is_pn_char(c) {
+            return false;
+        }
+        last = c;
+    }
+    last != '.'
 }
 
 const fn is_pn_char_base(c: char) -> bool {
@@ -382,5 +381,99 @@ impl<'de> serde::Deserialize<'de> for BlankIdBuf {
         }
 
         deserializer.deserialize_string(Visitor)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::BlankId;
+
+    fn ok(s: &str) -> bool {
+        BlankId::new(s).is_ok()
+    }
+
+    #[test]
+    fn accepts_minimal() {
+        assert!(ok("_:a"));
+        assert!(ok("_:_"));
+        assert!(ok("_:0"));
+        assert!(ok("_:9"));
+        assert!(ok("_::"));
+    }
+
+    #[test]
+    fn rejects_no_prefix() {
+        assert!(!ok(""));
+        assert!(!ok("_"));
+        assert!(!ok("_x"));
+        assert!(!ok(":a"));
+        assert!(!ok("_:"));
+    }
+
+    #[test]
+    fn rejects_bad_seed() {
+        assert!(!ok("_:."));
+        assert!(!ok("_:-"));
+    }
+
+    #[test]
+    fn rejects_trailing_dot() {
+        assert!(!ok("_:abc."));
+        assert!(!ok("_:a.b."));
+        assert!(!ok("_:1."));
+    }
+
+    #[test]
+    fn accepts_interior_dot() {
+        assert!(ok("_:a.b"));
+        assert!(ok("_:a..b"));
+        assert!(ok("_:1.2.3"));
+    }
+
+    #[test]
+    fn accepts_unicode_seed() {
+        assert!(ok("_:é"));
+        assert!(ok("_:ñabc"));
+    }
+
+    #[test]
+    fn accepts_unicode_interior() {
+        assert!(ok("_:abcñdef"));
+        assert!(ok("_:abc·def"));
+    }
+
+    #[test]
+    fn rejects_unicode_invalid() {
+        assert!(!ok("_:abc\u{200B}"));
+    }
+
+    const LENGTHS: &[usize] = &[1, 7, 8, 9, 15, 16, 17, 63, 64, 65, 1000];
+
+    #[test]
+    fn length_sweep_accept() {
+        for &n in LENGTHS {
+            let s = format!("_:{}", "a".repeat(n));
+            assert!(ok(&s), "length {n} should accept");
+        }
+    }
+
+    #[test]
+    fn length_sweep_trailing_dot_reject() {
+        for &n in LENGTHS {
+            let s = format!("_:{}.", "a".repeat(n));
+            assert!(!ok(&s), "length {n} with trailing dot should reject");
+        }
+    }
+
+    #[test]
+    fn length_sweep_non_ascii_at_every_position() {
+        for &n in LENGTHS {
+            for p in 0..n {
+                let mut body: String = "a".repeat(n);
+                body.replace_range(p..p + 1, "é");
+                let s = format!("_:{body}");
+                assert!(ok(&s), "length {n} pos {p} non-ASCII should accept");
+            }
+        }
     }
 }

@@ -205,3 +205,73 @@ impl<T: RdfDisplayWithContext<C>, C: ?Sized> RdfDisplay for contextual::Contextu
         self.0.rdf_fmt_with(self.1, f)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::RdfDisplay;
+    use iri_rs::IriRef;
+
+    fn render(s: &str) -> String {
+        let iri = IriRef::parse_unchecked(s);
+        format!("{}", iri.rdf_display())
+    }
+
+    #[test]
+    fn clean_ascii() {
+        assert_eq!(render("http://example.org/foo"), "<http://example.org/foo>");
+    }
+
+    #[test]
+    fn escapes_each_special() {
+        assert_eq!(render("a<b"), "<a\\u0x3cb>");
+        assert_eq!(render("a>b"), "<a\\u0x3eb>");
+        assert_eq!(render("a\"b"), "<a\\u0x22b>");
+        assert_eq!(render("a{b"), "<a\\u0x7bb>");
+        assert_eq!(render("a}b"), "<a\\u0x7db>");
+        assert_eq!(render("a|b"), "<a\\u0x7cb>");
+        assert_eq!(render("a^b"), "<a\\u0x5eb>");
+        assert_eq!(render("a`b"), "<a\\u0x60b>");
+        assert_eq!(render("a\\b"), "<a\\u0x5cb>");
+        assert_eq!(render("a b"), "<a\\u0x20b>");
+        assert_eq!(render("a\tb"), "<a\\u0x09b>");
+        assert_eq!(render("a\0b"), "<a\\u0x00b>");
+        assert_eq!(render("a\x1fb"), "<a\\u0x1fb>");
+    }
+
+    #[test]
+    fn passes_through_high_bytes() {
+        assert_eq!(render("aéb"), "<aéb>");
+        assert_eq!(render("a中b"), "<a中b>");
+        assert_eq!(render("a🦀b"), "<a🦀b>");
+    }
+
+    #[test]
+    fn length_sweep_clean() {
+        for &n in &[7usize, 8, 9, 15, 16, 17, 64, 65, 256] {
+            let body = "a".repeat(n);
+            assert_eq!(render(&body), format!("<{body}>"), "len {n}");
+        }
+    }
+
+    #[test]
+    fn escape_at_every_alignment() {
+        for &i in &[0usize, 7, 8, 9, 15, 16, 17] {
+            let len = i + 8;
+            let mut body: String = "a".repeat(len);
+            body.replace_range(i..i + 1, "<");
+            let mut expected = String::from("<");
+            expected.push_str(&body[..i]);
+            expected.push_str("\\u0x3c");
+            expected.push_str(&body[i + 1..]);
+            expected.push('>');
+            assert_eq!(render(&body), expected, "escape at index {i}");
+        }
+    }
+
+    #[test]
+    fn all_escapes_back_to_back() {
+        let body = "<>\"{|}^`\\";
+        let expected = "<\\u0x3c\\u0x3e\\u0x22\\u0x7b\\u0x7c\\u0x7d\\u0x5e\\u0x60\\u0x5c>";
+        assert_eq!(render(body), expected);
+    }
+}
