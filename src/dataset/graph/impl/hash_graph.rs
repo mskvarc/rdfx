@@ -10,7 +10,7 @@ use crate::{
     LocalTerm,
     RdfDisplay,
     Triple,
-    dataset::{Graph, GraphMut, ResourceTraversableGraph, TraversableGraph},
+    dataset::{Graph, GraphMut, IndexedHashGraph, ResourceTraversableGraph, TraversableGraph},
     utils::hash_map::DefaultHashBuilder,
 };
 
@@ -66,6 +66,12 @@ impl<R> HashGraph<R> {
             resources: &self.resources,
             indexes: self.resources_indexes.iter(),
         }
+    }
+}
+
+impl<R: Eq + Hash> HashGraph<R> {
+    pub fn into_indexed(self) -> IndexedHashGraph<R> {
+        IndexedHashGraph::from_non_indexed(self)
     }
 }
 
