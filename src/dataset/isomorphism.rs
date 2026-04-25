@@ -364,53 +364,105 @@ where
         return false;
     }
     let n = b.len();
-    if n <= 128 {
-        let mut available: u128 = if n == 128 { u128::MAX } else { (1u128 << n) - 1 };
-        for &qa in a {
-            let mut remaining = available;
-            let mut hit = false;
-            while remaining != 0 {
-                let i = remaining.trailing_zeros() as usize;
-                let bit = 1u128 << i;
-                remaining &= !bit;
-                if matches(qa, b[i]) {
-                    available &= !bit;
-                    hit = true;
-                    break;
-                }
-            }
-            if !hit {
-                return false;
-            }
+    let mut matched_b: Vec<Option<usize>> = vec![None; n];
+    for ai in 0..a.len() {
+        let mut visited = vec![false; n];
+        if !try_augment(ai, a, b, &mut matched_b, &mut visited, &mut matches) {
+            return false;
         }
-        true
-    } else {
-        let words = n.div_ceil(64);
-        let mut available = vec![0u64; words];
-        for (w, slot) in available.iter_mut().enumerate() {
-            let bits = (n - w * 64).min(64);
-            *slot = if bits == 64 { u64::MAX } else { (1u64 << bits) - 1 };
+    }
+    true
+}
+
+fn try_augment<R, F>(
+    ai: usize,
+    a: &[Quad<&R>],
+    b: &[Quad<&R>],
+    matched_b: &mut [Option<usize>],
+    visited: &mut [bool],
+    matches: &mut F,
+) -> bool
+where
+    F: FnMut(Quad<&R>, Quad<&R>) -> bool,
+{
+    for bi in 0..b.len() {
+        if visited[bi] {
+            continue;
         }
-        for &qa in a {
-            let mut hit = false;
-            'outer: for (w, slot) in available.iter_mut().enumerate() {
-                let mut remaining = *slot;
-                while remaining != 0 {
-                    let bit = remaining.trailing_zeros();
-                    let mask = 1u64 << bit;
-                    remaining &= !mask;
-                    let i = w * 64 + bit as usize;
-                    if matches(qa, b[i]) {
-                        *slot &= !mask;
-                        hit = true;
-                        break 'outer;
-                    }
-                }
-            }
-            if !hit {
-                return false;
-            }
+        if !matches(a[ai], b[bi]) {
+            continue;
         }
-        true
+        visited[bi] = true;
+        let augmented = match matched_b[bi] {
+            None => true,
+            Some(prev_ai) => try_augment(prev_ai, a, b, matched_b, visited, matches),
+        };
+        if augmented {
+            matched_b[bi] = Some(ai);
+            return true;
+        }
+    }
+    false
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn bipartite_matching_adversarial() {
+        // a = [x, y], b = [X, Y]. x can match {X, Y}; y can match {X} only.
+        // Greedy first-fit picks x->X, then y has no candidate. Augmenting-path
+        // recovers the true matching x->Y, y->X.
+        let x = "x";
+        let y = "y";
+        let cap_x = "X";
+        let cap_y = "Y";
+        let r = "r";
+        let z = "z";
+
+        let a: Vec<Quad<&&str>> = vec![Quad(&x, &r, &z, None), Quad(&y, &r, &z, None)];
+        let b: Vec<Quad<&&str>> = vec![Quad(&cap_x, &r, &z, None), Quad(&cap_y, &r, &z, None)];
+
+        let result = match_quad_lists(&a, &b, |qa, qb| {
+            // x matches both X and Y; y matches only X.
+            if *qa.0 == "x" {
+                return *qb.0 == "X" || *qb.0 == "Y";
+            }
+            if *qa.0 == "y" {
+                return *qb.0 == "X";
+            }
+            false
+        });
+
+        assert!(result, "augmenting-path matcher must find x->Y, y->X");
+    }
+
+    #[test]
+    fn bipartite_matching_no_solution() {
+        // a = [x, y], b = [X, Y]. x matches {X}; y matches {X}.
+        // No perfect matching exists.
+        let x = "x";
+        let y = "y";
+        let cap_x = "X";
+        let cap_y = "Y";
+        let r = "r";
+        let z = "z";
+
+        let a: Vec<Quad<&&str>> = vec![Quad(&x, &r, &z, None), Quad(&y, &r, &z, None)];
+        let b: Vec<Quad<&&str>> = vec![Quad(&cap_x, &r, &z, None), Quad(&cap_y, &r, &z, None)];
+
+        let result = match_quad_lists(&a, &b, |qa, _qb| {
+            // both x and y can only match X
+            *qa.0 == "x" || *qa.0 == "y"
+        });
+        // Both can match X but matches() returns true for any (x,*) and (y,*),
+        // which forms perfect matching trivially. Tighten:
+        let _ = result;
+
+        let result = match_quad_lists(&a, &b, |qa, qb| {
+            (*qa.0 == "x" && *qb.0 == "X") || (*qa.0 == "y" && *qb.0 == "X")
+        });
+        assert!(!result, "no perfect matching when both a-nodes only match same b-node");
     }
 }
