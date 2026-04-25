@@ -106,12 +106,12 @@ impl<S, P, O> Triple<S, P, O> {
         Triple(f(self.0), self.1, self.2)
     }
 
-    /// Maps the subject with the given function.
+    /// Maps the predicate with the given function.
     pub fn map_predicate<U>(self, f: impl FnOnce(P) -> U) -> Triple<S, U, O> {
         Triple(self.0, f(self.1), self.2)
     }
 
-    /// Maps the subject with the given function.
+    /// Maps the object with the given function.
     pub fn map_object<U>(self, f: impl FnOnce(O) -> U) -> Triple<S, P, U> {
         Triple(self.0, self.1, f(self.2))
     }

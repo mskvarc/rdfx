@@ -170,12 +170,12 @@ impl<S, P, O, G> Quad<S, P, O, G> {
         Quad(f(self.0), self.1, self.2, self.3)
     }
 
-    /// Maps the subject with the given function.
+    /// Maps the predicate with the given function.
     pub fn map_predicate<U>(self, f: impl FnOnce(P) -> U) -> Quad<S, U, O, G> {
         Quad(self.0, f(self.1), self.2, self.3)
     }
 
-    /// Maps the subject with the given function.
+    /// Maps the object with the given function.
     pub fn map_object<U>(self, f: impl FnOnce(O) -> U) -> Quad<S, P, U, G> {
         Quad(self.0, self.1, f(self.2), self.3)
     }
