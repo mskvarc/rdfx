@@ -73,3 +73,7 @@ harness = false
 [[bench]]
 name = "isomorphism"
 harness = false
+
+[[bench]]
+name = "swar"
+harness = false
