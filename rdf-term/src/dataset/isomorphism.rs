@@ -1,6 +1,13 @@
-use std::collections::{BTreeMap, BTreeSet, btree_map::Entry};
+use std::{
+    collections::{BTreeMap, BTreeSet, hash_map::DefaultHasher},
+    hash::{Hash, Hasher},
+};
 
 use crate::{LocalTerm, Quad, dataset::TraversableDataset, interpretation::ReverseInterpretation};
+
+const SELF_TAG: u64 = 0xA5A5_5A5A_DEAD_BEEF;
+const ANON_TAG: u64 = 0x1234_5678_9ABC_DEF0;
+const MAX_REFINEMENT_ROUNDS: usize = 8;
 
 /// Checks that there is an isomorphism between the datasets `a` and `b`.
 ///
@@ -72,37 +79,32 @@ where
         return None;
     }
 
-    // Step 2: split by sizes.
-    let a_groups = split_by_size(&a_blanks_map);
-    let b_groups = split_by_size(&b_blanks_map);
+    // Step 2: refine blank-node colors via Weisfeiler-Leman style iterations.
+    let (a_color, b_color) = refine_colors(interpretation, &a_blanks_map, &b_blanks_map)?;
 
-    if a_groups.len() != b_groups.len() {
-        return None;
+    // Step 3: build per-color groups in B and find candidates for each A blank.
+    let mut b_by_color: BTreeMap<u64, Vec<&'b I::Resource>> = BTreeMap::new();
+    for (b_blank, &c) in &b_color {
+        b_by_color.entry(c).or_default().push(*b_blank);
     }
 
-    if !a_groups.iter().all(|(len, _)| b_groups.contains_key(len)) {
-        return None;
-    }
-
-    // Step 3: find candidates for each blank id.
     let mut candidates: Vec<(&'a I::Resource, BTreeSet<&'b I::Resource>)> = Vec::new();
-    for (len, a_group) in a_groups {
-        let b_group = b_groups.get(&len).unwrap();
-
-        for (a_blank_id, a_sig) in a_group {
-            let mut a_blank_id_candidates = BTreeSet::new();
-            for (b_blank_id, b_sig) in b_group {
-                if a_sig.matches(interpretation, b_sig) {
-                    a_blank_id_candidates.insert(*b_blank_id);
-                }
+    for (a_blank_id, &c) in &a_color {
+        let same_color = b_by_color.get(&c)?;
+        let a_sig = a_blanks_map.get(a_blank_id).unwrap();
+        let mut a_blank_id_candidates = BTreeSet::new();
+        for &b_blank_id in same_color {
+            let b_sig = b_blanks_map.get(b_blank_id).unwrap();
+            if a_sig.matches(interpretation, b_sig) {
+                a_blank_id_candidates.insert(b_blank_id);
             }
-
-            if a_blank_id_candidates.is_empty() {
-                return None;
-            }
-
-            candidates.push((a_blank_id, a_blank_id_candidates));
         }
+
+        if a_blank_id_candidates.is_empty() {
+            return None;
+        }
+
+        candidates.push((*a_blank_id, a_blank_id_candidates));
     }
 
     let mut bijection = BTreeBijection::new();
@@ -208,26 +210,124 @@ where
     }
 }
 
-fn split_by_size<'s, 'd, R>(blanks: &'s BTreeMap<&'d R, BlankSignature<'d, R>>) -> BTreeMap<usize, BTreeMap<&'d R, &'s BlankSignature<'d, R>>>
+fn hash_one<T: Hash + ?Sized>(v: &T) -> u64 {
+    let mut h = DefaultHasher::new();
+    v.hash(&mut h);
+    h.finish()
+}
+
+fn nonblank_fingerprint<I>(interpretation: &I, r: &I::Resource) -> u64
 where
+    I: ReverseInterpretation,
+{
+    let mut iris: Vec<u64> = interpretation.iris_of(r).map(|i| hash_one(&i)).collect();
+    let mut lits: Vec<u64> = interpretation.literals_of(r).map(|l| hash_one(&l)).collect();
+    if iris.is_empty() && lits.is_empty() {
+        // Anonymous resource encountered without a known color.
+        return ANON_TAG;
+    }
+    iris.sort_unstable();
+    lits.sort_unstable();
+    let mut h = DefaultHasher::new();
+    0x4Eu8.hash(&mut h);
+    iris.hash(&mut h);
+    lits.hash(&mut h);
+    h.finish()
+}
+
+fn position_fingerprint<I, R>(interpretation: &I, term: &R, my_id: &R, color: &BTreeMap<&R, u64>) -> u64
+where
+    I: ReverseInterpretation<Resource = R>,
     R: Ord,
 {
-    let mut result = BTreeMap::new();
-
-    for (&blank_id, sig) in blanks {
-        match result.entry(sig.len()) {
-            Entry::Vacant(entry) => {
-                let mut map = BTreeMap::new();
-                map.insert(blank_id, sig);
-                entry.insert(map);
-            }
-            Entry::Occupied(mut entry) => {
-                entry.get_mut().insert(blank_id, sig);
-            }
-        }
+    if term == my_id {
+        SELF_TAG
+    } else if interpretation.is_anonymous(term) {
+        color.get(term).copied().unwrap_or(ANON_TAG)
+    } else {
+        nonblank_fingerprint(interpretation, term)
     }
+}
 
-    result
+fn quad_fingerprint<I, R>(interpretation: &I, q: Quad<&R>, my_id: &R, color: &BTreeMap<&R, u64>) -> u64
+where
+    I: ReverseInterpretation<Resource = R>,
+    R: Ord,
+{
+    let mut h = DefaultHasher::new();
+    position_fingerprint(interpretation, q.0, my_id, color).hash(&mut h);
+    position_fingerprint(interpretation, q.1, my_id, color).hash(&mut h);
+    position_fingerprint(interpretation, q.2, my_id, color).hash(&mut h);
+    match q.3 {
+        Some(g) => {
+            1u8.hash(&mut h);
+            position_fingerprint(interpretation, g, my_id, color).hash(&mut h);
+        }
+        None => 0u8.hash(&mut h),
+    }
+    h.finish()
+}
+
+fn compute_round<'d, I, R>(
+    interpretation: &I,
+    blanks: &BTreeMap<&'d R, BlankSignature<'d, R>>,
+    color: &BTreeMap<&'d R, u64>,
+) -> BTreeMap<&'d R, u64>
+where
+    I: ReverseInterpretation<Resource = R>,
+    R: Ord,
+{
+    let mut out = BTreeMap::new();
+    for (blank, sig) in blanks {
+        let mut quad_fps: Vec<u64> = sig.0.iter().map(|q| quad_fingerprint(interpretation, *q, blank, color)).collect();
+        quad_fps.sort_unstable();
+        let mut h = DefaultHasher::new();
+        color.get(blank).copied().unwrap_or(0).hash(&mut h);
+        quad_fps.hash(&mut h);
+        out.insert(*blank, h.finish());
+    }
+    out
+}
+
+fn color_multiset<R>(color: &BTreeMap<&R, u64>) -> BTreeMap<u64, usize> {
+    let mut m: BTreeMap<u64, usize> = BTreeMap::new();
+    for &c in color.values() {
+        *m.entry(c).or_default() += 1;
+    }
+    m
+}
+
+#[allow(clippy::type_complexity)]
+fn refine_colors<'da, 'db, I, R>(
+    interpretation: &I,
+    a_blanks: &BTreeMap<&'da R, BlankSignature<'da, R>>,
+    b_blanks: &BTreeMap<&'db R, BlankSignature<'db, R>>,
+) -> Option<(BTreeMap<&'da R, u64>, BTreeMap<&'db R, u64>)>
+where
+    I: ReverseInterpretation<Resource = R>,
+    R: Ord,
+{
+    let mut a_color: BTreeMap<&R, u64> = a_blanks.keys().map(|k| (*k, 0u64)).collect();
+    let mut b_color: BTreeMap<&R, u64> = b_blanks.keys().map(|k| (*k, 0u64)).collect();
+
+    let mut prev_unique = 1usize;
+    for _ in 0..MAX_REFINEMENT_ROUNDS {
+        let new_a = compute_round(interpretation, a_blanks, &a_color);
+        let new_b = compute_round(interpretation, b_blanks, &b_color);
+        let a_counts = color_multiset(&new_a);
+        let b_counts = color_multiset(&new_b);
+        if a_counts != b_counts {
+            return None;
+        }
+        let unique = a_counts.len();
+        a_color = new_a;
+        b_color = new_b;
+        if unique == a_blanks.len() || unique == prev_unique {
+            break;
+        }
+        prev_unique = unique;
+    }
+    Some((a_color, b_color))
 }
 
 /// Blank node identifier bijection
@@ -346,10 +446,6 @@ impl<R> Default for BlankSignature<'_, R> {
 impl<'a, R> BlankSignature<'a, R> {
     fn insert(&mut self, quad: Quad<&'a R>) {
         self.0.push(quad)
-    }
-
-    fn len(&self) -> usize {
-        self.0.len()
     }
 
     fn matches<I>(&self, interpretation: &I, other: &BlankSignature<R>) -> bool
