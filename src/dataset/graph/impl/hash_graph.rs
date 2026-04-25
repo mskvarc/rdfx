@@ -264,6 +264,10 @@ impl<R> TraversableGraph for HashGraph<R> {
     fn triples(&self) -> Self::Triples<'_> {
         self.iter()
     }
+
+    fn triples_count(&self) -> usize {
+        self.len()
+    }
 }
 
 impl<R> ResourceTraversableGraph for HashGraph<R> {
@@ -274,6 +278,10 @@ impl<R> ResourceTraversableGraph for HashGraph<R> {
 
     fn graph_resources(&self) -> Self::GraphResources<'_> {
         self.resources()
+    }
+
+    fn graph_resource_count(&self) -> usize {
+        self.resources.len()
     }
 }
 

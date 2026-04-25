@@ -326,6 +326,10 @@ impl<R> TraversableDataset for BTreeDataset<R> {
     fn quads(&self) -> Self::Quads<'_> {
         self.iter()
     }
+
+    fn quads_count(&self) -> usize {
+        self.len()
+    }
 }
 
 impl<R> ResourceTraversableDataset for BTreeDataset<R> {
@@ -336,6 +340,10 @@ impl<R> ResourceTraversableDataset for BTreeDataset<R> {
 
     fn resources(&self) -> Self::Resources<'_> {
         self.resources()
+    }
+
+    fn resource_count(&self) -> usize {
+        self.resources.len()
     }
 }
 

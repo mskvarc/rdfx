@@ -283,6 +283,10 @@ impl<R> TraversableDataset for HashDataset<R> {
     fn quads(&self) -> Self::Quads<'_> {
         self.iter()
     }
+
+    fn quads_count(&self) -> usize {
+        self.len()
+    }
 }
 
 impl<R> ResourceTraversableDataset for HashDataset<R> {
@@ -293,6 +297,10 @@ impl<R> ResourceTraversableDataset for HashDataset<R> {
 
     fn resources(&self) -> Self::Resources<'_> {
         self.resources()
+    }
+
+    fn resource_count(&self) -> usize {
+        self.resources.len()
     }
 }
 

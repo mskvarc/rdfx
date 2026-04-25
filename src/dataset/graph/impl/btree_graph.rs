@@ -277,6 +277,10 @@ impl<R> TraversableGraph for BTreeGraph<R> {
     fn triples(&self) -> Self::Triples<'_> {
         self.iter()
     }
+
+    fn triples_count(&self) -> usize {
+        self.len()
+    }
 }
 
 impl<R> ResourceTraversableGraph for BTreeGraph<R> {
@@ -287,6 +291,10 @@ impl<R> ResourceTraversableGraph for BTreeGraph<R> {
 
     fn graph_resources(&self) -> Self::GraphResources<'_> {
         self.resources()
+    }
+
+    fn graph_resource_count(&self) -> usize {
+        self.resources.len()
     }
 }
 
