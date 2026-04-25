@@ -1,4 +1,4 @@
-use crate::{Id, IdRef, LocalTerm, LocalTermRef, Quad, RdfDisplay};
+use crate::{Id, IdRef, IsGraph, IsObject, IsPredicate, IsSubject, LocalTerm, LocalTermRef, Quad, RdfDisplay};
 use iri_rs::{Iri, IriBuf};
 use std::{cmp::Ordering, fmt};
 
@@ -9,17 +9,38 @@ pub type LexicalTriple = Triple<Id, IriBuf, LocalTerm>;
 pub type LexicalTripleRef<'a> = Triple<IdRef<'a>, Iri<&'a str>, LocalTermRef<'a>>;
 
 /// RDF triple.
+///
+/// Position bounds enforce the RDF 1.1 abstract syntax: subjects must be IRIs
+/// or blank nodes (no literals), predicates must be IRIs (no blank nodes or
+/// literals), objects may be any term. For generalized RDF (RDF 1.1 §A) use
+/// [`GeneralizedTriple`](crate::GeneralizedTriple).
 #[derive(Clone, Copy, Eq, Ord, Hash, Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct Triple<S = LocalTerm, P = S, O = S>(pub S, pub P, pub O);
+pub struct Triple<S: IsSubject = Id, P: IsPredicate = IriBuf, O: IsObject = LocalTerm>(pub S, pub P, pub O);
 
-impl<S1: PartialEq<S2>, P1: PartialEq<P2>, O1: PartialEq<O2>, S2, P2, O2> PartialEq<Triple<S2, P2, O2>> for Triple<S1, P1, O1> {
+impl<S1, P1, O1, S2, P2, O2> PartialEq<Triple<S2, P2, O2>> for Triple<S1, P1, O1>
+where
+    S1: IsSubject + PartialEq<S2>,
+    P1: IsPredicate + PartialEq<P2>,
+    O1: IsObject + PartialEq<O2>,
+    S2: IsSubject,
+    P2: IsPredicate,
+    O2: IsObject,
+{
     fn eq(&self, other: &Triple<S2, P2, O2>) -> bool {
         self.0 == other.0 && self.1 == other.1 && self.2 == other.2
     }
 }
 
-impl<S1: PartialOrd<S2>, P1: PartialOrd<P2>, O1: PartialOrd<O2>, S2, P2, O2> PartialOrd<Triple<S2, P2, O2>> for Triple<S1, P1, O1> {
+impl<S1, P1, O1, S2, P2, O2> PartialOrd<Triple<S2, P2, O2>> for Triple<S1, P1, O1>
+where
+    S1: IsSubject + PartialOrd<S2>,
+    P1: IsPredicate + PartialOrd<P2>,
+    O1: IsObject + PartialOrd<O2>,
+    S2: IsSubject,
+    P2: IsPredicate,
+    O2: IsObject,
+{
     fn partial_cmp(&self, other: &Triple<S2, P2, O2>) -> Option<Ordering> {
         match self.0.partial_cmp(&other.0) {
             Some(Ordering::Equal) => match self.1.partial_cmp(&other.1) {
@@ -31,7 +52,7 @@ impl<S1: PartialOrd<S2>, P1: PartialOrd<P2>, O1: PartialOrd<O2>, S2, P2, O2> Par
     }
 }
 
-impl<S, P, O> Triple<S, P, O> {
+impl<S: IsSubject, P: IsPredicate, O: IsObject> Triple<S, P, O> {
     /// Creates a new triple.
     pub const fn new(subject: S, predicate: P, object: O) -> Self {
         Self(subject, predicate, object)
@@ -97,22 +118,22 @@ impl<S, P, O> Triple<S, P, O> {
     }
 
     /// Turns the triple into a quad with the given `graph` component.
-    pub fn into_quad<G>(self, graph: Option<G>) -> Quad<S, P, O, G> {
+    pub fn into_quad<G: IsGraph>(self, graph: Option<G>) -> Quad<S, P, O, G> {
         Quad(self.0, self.1, self.2, graph)
     }
 
     /// Maps the subject with the given function.
-    pub fn map_subject<U>(self, f: impl FnOnce(S) -> U) -> Triple<U, P, O> {
+    pub fn map_subject<U: IsSubject>(self, f: impl FnOnce(S) -> U) -> Triple<U, P, O> {
         Triple(f(self.0), self.1, self.2)
     }
 
     /// Maps the predicate with the given function.
-    pub fn map_predicate<U>(self, f: impl FnOnce(P) -> U) -> Triple<S, U, O> {
+    pub fn map_predicate<U: IsPredicate>(self, f: impl FnOnce(P) -> U) -> Triple<S, U, O> {
         Triple(self.0, f(self.1), self.2)
     }
 
     /// Maps the object with the given function.
-    pub fn map_object<U>(self, f: impl FnOnce(O) -> U) -> Triple<S, P, U> {
+    pub fn map_object<U: IsObject>(self, f: impl FnOnce(O) -> U) -> Triple<S, P, U> {
         Triple(self.0, self.1, f(self.2))
     }
 
@@ -122,7 +143,7 @@ impl<S, P, O> Triple<S, P, O> {
     }
 }
 
-impl<S, P, O> Triple<&S, &P, &O> {
+impl<S: IsSubject, P: IsPredicate, O: IsObject> Triple<&S, &P, &O> {
     pub fn cloned(&self) -> Triple<S, P, O>
     where
         S: Clone,
@@ -142,7 +163,7 @@ impl<S, P, O> Triple<&S, &P, &O> {
     }
 }
 
-impl<S, P, O> Triple<&S, &P, &O> {
+impl<S: IsSubject, P: IsPredicate, O: IsObject> Triple<&S, &P, &O> {
     pub const fn copied(&self) -> Triple<S, P, O>
     where
         S: Copy,
@@ -162,9 +183,9 @@ impl<S, P, O> Triple<&S, &P, &O> {
     }
 }
 
-impl<T> Triple<T, T, T> {
+impl<T: IsSubject + IsPredicate + IsObject> Triple<T, T, T> {
     /// Maps the components with the given function.
-    pub fn map<U>(self, mut f: impl FnMut(T) -> U) -> Triple<U, U, U> {
+    pub fn map<U: IsSubject + IsPredicate + IsObject>(self, mut f: impl FnMut(T) -> U) -> Triple<U, U, U> {
         Triple(f(self.0), f(self.1), f(self.2))
     }
 }
@@ -181,13 +202,23 @@ impl LexicalTripleRef<'_> {
     }
 }
 
-impl<S: RdfDisplay, P: RdfDisplay, O: RdfDisplay> fmt::Display for Triple<S, P, O> {
+impl<S, P, O> fmt::Display for Triple<S, P, O>
+where
+    S: IsSubject + RdfDisplay,
+    P: IsPredicate + RdfDisplay,
+    O: IsObject + RdfDisplay,
+{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{} {} {}", self.0.rdf_display(), self.1.rdf_display(), self.2.rdf_display())
     }
 }
 
-impl<S: RdfDisplay, P: RdfDisplay, O: RdfDisplay> RdfDisplay for Triple<S, P, O> {
+impl<S, P, O> RdfDisplay for Triple<S, P, O>
+where
+    S: IsSubject + RdfDisplay,
+    P: IsPredicate + RdfDisplay,
+    O: IsObject + RdfDisplay,
+{
     fn rdf_fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{} {} {}", self.0.rdf_display(), self.1.rdf_display(), self.2.rdf_display())
     }
