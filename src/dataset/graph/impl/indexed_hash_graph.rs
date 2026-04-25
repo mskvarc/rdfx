@@ -63,18 +63,22 @@ impl<R> Default for IndexedHashGraph<R> {
 }
 
 impl<R> IndexedHashGraph<R> {
+    /// Creates a new empty graph.
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Returns the number of triples in the graph.
     pub fn len(&self) -> usize {
         self.triples.len()
     }
 
+    /// Checks if the graph is empty.
     pub fn is_empty(&self) -> bool {
         self.triples.is_empty()
     }
 
+    /// Returns an iterator over the triples of the graph.
     pub fn iter(&self) -> Triples<'_, R> {
         Triples {
             resources: &self.resources,
@@ -83,6 +87,7 @@ impl<R> IndexedHashGraph<R> {
         }
     }
 
+    /// Returns an iterator over the resources of the graph.
     pub fn resources(&self) -> Resources<'_, R> {
         Resources {
             resources: &self.resources,
@@ -90,6 +95,7 @@ impl<R> IndexedHashGraph<R> {
         }
     }
 
+    /// Returns an iterator over the subjects of the graph.
     pub fn subjects(&self) -> Subjects<'_, R> {
         Subjects {
             resources: &self.resources,
@@ -97,6 +103,7 @@ impl<R> IndexedHashGraph<R> {
         }
     }
 
+    /// Returns an iterator over the predicates of the graph.
     pub fn predicates(&self) -> Predicates<'_, R> {
         Predicates {
             resources: &self.resources,
@@ -104,6 +111,7 @@ impl<R> IndexedHashGraph<R> {
         }
     }
 
+    /// Returns an iterator over the objects of the graph.
     pub fn objects(&self) -> Objects<'_, R> {
         Objects {
             resources: &self.resources,
@@ -113,6 +121,7 @@ impl<R> IndexedHashGraph<R> {
 }
 
 impl<R: Eq + Hash> IndexedHashGraph<R> {
+    /// Creates a new indexed graph from a non-indexed one.
     pub fn from_non_indexed(graph: HashGraph<R>) -> Self {
         let mut resources: Slab<Resource<R>> = graph
             .resources
@@ -186,10 +195,12 @@ impl<R: Eq + Hash> IndexedHashGraph<R> {
             .copied()
     }
 
+    /// Checks if the provided resource appears in any triple in the graph.
     pub fn contains_resource(&self, r: &R) -> bool {
         self.index_of_resource(r).is_some()
     }
 
+    /// Checks if the provided triple is in the graph.
     pub fn contains(&self, triple: Triple<&R>) -> bool {
         self.index_of_triple(triple).is_some()
     }
@@ -210,6 +221,10 @@ impl<R: Clone + Eq + Hash> IndexedHashGraph<R> {
         }
     }
 
+    /// Inserts the given triple in the graph.
+    ///
+    /// Returns `true` if the triple was not already in the graph, and `false`
+    /// if it was.
     pub fn insert(&mut self, triple: Triple<R>) -> bool {
         if self.contains(triple.as_ref()) {
             return false;
@@ -264,6 +279,10 @@ impl<R: Clone + Eq + Hash> IndexedHashGraph<R> {
         }
     }
 
+    /// Removes the given triple from the graph.
+    ///
+    /// Returns whether or not the triple was in the graph.
+    /// Does nothing if the triple was not in the graph.
     pub fn remove(&mut self, triple: Triple<&R>) -> bool {
         let h = self.hash_triple(&triple);
         let resources = &self.resources;
@@ -296,6 +315,8 @@ impl<R: Clone + Eq + Hash> IndexedHashGraph<R> {
 }
 
 impl<R: Eq + Hash> IndexedHashGraph<R> {
+    /// Returns an iterator over all the triples matching the given canonical
+    /// triple pattern.
     pub fn pattern_matching(&self, pattern: CanonicalTriplePattern<&R>) -> PatternMatching<'_, R> {
         PatternMatching {
             resources: &self.resources,

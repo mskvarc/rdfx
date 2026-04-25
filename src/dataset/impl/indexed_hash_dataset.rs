@@ -36,6 +36,9 @@ use crate::{
 };
 
 fn quad_with_resources<R>(resources: &Slab<Resource<R>>, Quad(s, p, o, g): Quad<usize>) -> Quad<&R> {
+    // Safety: resource indexes in stored quads always point to live entries in `resources`.
+    // The slab key remains valid until the quad referencing it is removed, which only happens
+    // before the corresponding resource entry is freed.
     unsafe {
         Quad(
             &resources.get_unchecked(s).value,
@@ -79,18 +82,22 @@ impl<R> Default for IndexedHashDataset<R> {
 }
 
 impl<R> IndexedHashDataset<R> {
+    /// Creates a new empty dataset.
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Returns the number of quads in the dataset.
     pub fn len(&self) -> usize {
         self.quads.len()
     }
 
+    /// Checks if the dataset is empty.
     pub fn is_empty(&self) -> bool {
         self.quads.is_empty()
     }
 
+    /// Returns an iterator over the quads of the dataset.
     pub fn iter(&self) -> Quads<'_, R> {
         Quads {
             resources: &self.resources,
@@ -99,6 +106,7 @@ impl<R> IndexedHashDataset<R> {
         }
     }
 
+    /// Returns an iterator over the resources of the dataset.
     pub fn resources(&self) -> Resources<'_, R> {
         Resources {
             resources: &self.resources,
@@ -106,6 +114,7 @@ impl<R> IndexedHashDataset<R> {
         }
     }
 
+    /// Returns an iterator over the subjects of the dataset.
     pub fn subjects(&self) -> Subjects<'_, R> {
         Subjects {
             resources: &self.resources,
@@ -113,6 +122,7 @@ impl<R> IndexedHashDataset<R> {
         }
     }
 
+    /// Returns an iterator over the predicates of the dataset.
     pub fn predicates(&self) -> Predicates<'_, R> {
         Predicates {
             resources: &self.resources,
@@ -120,6 +130,7 @@ impl<R> IndexedHashDataset<R> {
         }
     }
 
+    /// Returns an iterator over the objects of the dataset.
     pub fn objects(&self) -> Objects<'_, R> {
         Objects {
             resources: &self.resources,
@@ -127,6 +138,7 @@ impl<R> IndexedHashDataset<R> {
         }
     }
 
+    /// Returns an iterator over the named graphs of the dataset.
     pub fn named_graphs(&self) -> NamedGraphs<'_, R> {
         NamedGraphs {
             resources: &self.resources,
@@ -136,6 +148,7 @@ impl<R> IndexedHashDataset<R> {
 }
 
 impl<R: Eq + Hash> IndexedHashDataset<R> {
+    /// Creates a new indexed dataset from a non-indexed one.
     pub fn from_non_indexed(dataset: HashDataset<R>) -> Self {
         let mut resources: Slab<Resource<R>> = dataset
             .resources
@@ -222,14 +235,18 @@ impl<R: Eq + Hash> IndexedHashDataset<R> {
         self.quads_indexes.find(h, |&i| quad_with_resources(resources, quads[i]) == q).copied()
     }
 
+    /// Checks if the provided resource appears in any quad in the dataset.
     pub fn contains_resource(&self, r: &R) -> bool {
         self.index_of_resource(r).is_some()
     }
 
+    /// Checks if the provided quad is in the dataset.
     pub fn contains(&self, q: Quad<&R>) -> bool {
         self.index_of_quad(q).is_some()
     }
 
+    /// Returns an iterator over all the quads matching the given canonical
+    /// quad pattern.
     pub fn pattern_matching(&self, pattern: CanonicalQuadPattern<&R>) -> PatternMatching<'_, R> {
         PatternMatching {
             resources: &self.resources,
@@ -242,6 +259,8 @@ impl<R: Eq + Hash> IndexedHashDataset<R> {
         }
     }
 
+    /// Returns an iterator over all the quads matching the given canonical
+    /// quad pattern.
     pub fn multi_pattern_matching<'a, P>(&self, pattern: CanonicalQuadPattern<P>) -> MultiPatternMatching<'_, R>
     where
         P: IntoIterator<Item = &'a R>,
@@ -276,6 +295,10 @@ impl<R: Clone + Eq + Hash> IndexedHashDataset<R> {
         }
     }
 
+    /// Inserts the given quad in the dataset.
+    ///
+    /// Returns `true` if the quad was not already in the dataset, and `false`
+    /// if it was.
     pub fn insert(&mut self, quad: Quad<R>) -> bool {
         if self.contains(quad.as_ref()) {
             return false;
@@ -339,6 +362,10 @@ impl<R: Clone + Eq + Hash> IndexedHashDataset<R> {
         true
     }
 
+    /// Removes the given quad from the dataset.
+    ///
+    /// Returns whether or not the quad was in the dataset.
+    /// Does nothing if the quad was not in the dataset.
     pub fn remove(&mut self, q: Quad<&R>) -> bool {
         let h = self.hash_quad(&q);
         let resources = &self.resources;
@@ -436,6 +463,8 @@ impl<R: Clone + Eq + Hash> IndexedHashDataset<R> {
         }
     }
 
+    /// Returns an iterator over all the quads matching the given canonical
+    /// quad pattern. The matching quads are removed from the dataset.
     pub fn extract_pattern_matching(&mut self, pattern: CanonicalQuadPattern<&R>) -> ExtractPatternMatching<'_, R> {
         let subject = SubjectConstraints::new(self, pattern.into_subject());
         let predicate = PredicateConstraints::new(self, pattern.into_predicate());

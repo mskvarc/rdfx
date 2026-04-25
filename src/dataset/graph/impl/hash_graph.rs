@@ -48,18 +48,22 @@ impl<R> Default for HashGraph<R> {
 }
 
 impl<R> HashGraph<R> {
+    /// Creates a new empty graph.
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Returns the number of triples in the graph.
     pub fn len(&self) -> usize {
         self.triples.len()
     }
 
+    /// Checks if the graph is empty.
     pub fn is_empty(&self) -> bool {
         self.triples.is_empty()
     }
 
+    /// Returns an iterator over the triples of the graph.
     pub fn iter(&self) -> Triples<'_, R> {
         Triples {
             resources: &self.resources,
@@ -68,6 +72,7 @@ impl<R> HashGraph<R> {
         }
     }
 
+    /// Returns an iterator over the resources of the graph.
     pub fn resources(&self) -> Resources<'_, R> {
         Resources {
             resources: &self.resources,
@@ -77,6 +82,10 @@ impl<R> HashGraph<R> {
 }
 
 impl<R: Eq + Hash> HashGraph<R> {
+    /// Indexes the triples to allow more operation on this graph, such as
+    /// pattern matching using the [`PatternMatchingGraph`] trait.
+    ///
+    /// [`PatternMatchingGraph`]: super::super::PatternMatchingGraph
     pub fn into_indexed(self) -> IndexedHashGraph<R> {
         IndexedHashGraph::from_non_indexed(self)
     }
@@ -106,10 +115,12 @@ impl<R: Eq + Hash> HashGraph<R> {
             .copied()
     }
 
+    /// Checks if the provided resource appears in any triple in the graph.
     pub fn contains_resource(&self, resource: &R) -> bool {
         self.index_of_resource(resource).is_some()
     }
 
+    /// Checks if the provided triple is in the graph.
     pub fn contains(&self, triple: Triple<&R>) -> bool {
         self.index_of_triple(triple).is_some()
     }
@@ -133,6 +144,10 @@ impl<R: Clone + Eq + Hash> HashGraph<R> {
         }
     }
 
+    /// Inserts the given triple in the graph.
+    ///
+    /// Returns `true` if the triple was not already in the graph, and `false`
+    /// if it was.
     pub fn insert(&mut self, triple: Triple<R>) -> bool {
         let s_pre = self.index_of_resource(&triple.0);
         let p_pre = self.index_of_resource(&triple.1);
@@ -187,6 +202,10 @@ impl<R: Clone + Eq + Hash> HashGraph<R> {
         }
     }
 
+    /// Removes the given triple from the graph.
+    ///
+    /// Returns whether or not the triple was in the graph.
+    /// Does nothing if the triple was not in the graph.
     pub fn remove(&mut self, triple: Triple<&R>) -> bool {
         let h = self.hash_triple(&triple);
         let resources = &self.resources;

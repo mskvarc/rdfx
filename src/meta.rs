@@ -3,6 +3,34 @@
 //! Provides a generic [`Meta<T, M>`] wrapper that pairs any value with metadata
 //! (e.g. a [`locspan::Span`] or [`locspan::Location`]). The [`Strip`] trait
 //! discards the metadata layer.
+//!
+//! # Examples
+//!
+//! Round-tripping a tagged term through [`Strip`]:
+//!
+//! ```
+//! use rdf_rs::{BlankIdBuf, LocalTerm, meta::{Meta, Span, Strip}};
+//!
+//! let term = LocalTerm::BlankId(BlankIdBuf::new("_:b0".to_owned()).unwrap());
+//! let tagged = Meta(term.clone(), Span::new(0, 5));
+//! assert_eq!(tagged.strip(), term);
+//! ```
+//!
+//! Using [`Meta`] as a dataset key to keep otherwise-equal quads distinct
+//! by their metadata:
+//!
+//! ```
+//! use rdf_rs::{BlankIdBuf, LocalTerm, Quad, dataset::BTreeDataset, meta::{Meta, Span}};
+//!
+//! let s = LocalTerm::BlankId(BlankIdBuf::new("_:s".to_owned()).unwrap());
+//! let p = LocalTerm::iri(iri_rs::IriBuf::new("http://example.org/p".to_owned()).unwrap());
+//! let o = LocalTerm::iri(iri_rs::IriBuf::new("http://example.org/o".to_owned()).unwrap());
+//!
+//! let mut d: BTreeDataset<Meta<LocalTerm, Span>> = BTreeDataset::new();
+//! d.insert(Quad(Meta(s.clone(), Span::new(0, 1)), Meta(p.clone(), Span::new(0, 1)), Meta(o.clone(), Span::new(0, 1)), None));
+//! d.insert(Quad(Meta(s, Span::new(2, 3)), Meta(p, Span::new(2, 3)), Meta(o, Span::new(2, 3)), None));
+//! assert_eq!(d.len(), 2);
+//! ```
 
 use crate::{BlankIdBuf, Id, Literal, LiteralType, LocalTerm, Quad, Term, Triple};
 use iri_rs::IriBuf;

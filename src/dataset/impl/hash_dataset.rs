@@ -22,6 +22,9 @@ use crate::{
 };
 
 fn quad_with_resources<R>(resources: &Slab<Resource<R>>, Quad(s, p, o, g): Quad<usize>) -> Quad<&R> {
+    // Safety: resource indexes in stored quads always point to live entries in `resources`.
+    // The slab key remains valid until the quad referencing it is removed, which only happens
+    // before the corresponding resource entry is freed.
     unsafe {
         Quad(
             &resources.get_unchecked(s).value,
@@ -34,6 +37,7 @@ fn quad_with_resources<R>(resources: &Slab<Resource<R>>, Quad(s, p, o, g): Quad<
 
 /// Hash-based RDF dataset.
 #[derive(Clone)]
+/// Hash-based RDF dataset.
 pub struct HashDataset<R = LocalTerm> {
     pub(crate) resources: Slab<Resource<R>>,
     pub(crate) quads: Slab<Quad<usize>>,
@@ -55,18 +59,22 @@ impl<R> Default for HashDataset<R> {
 }
 
 impl<R> HashDataset<R> {
+    /// Creates a new empty dataset.
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Returns the number of quads in the dataset.
     pub fn len(&self) -> usize {
         self.quads.len()
     }
 
+    /// Checks if the dataset is empty.
     pub fn is_empty(&self) -> bool {
         self.quads.is_empty()
     }
 
+    /// Returns an iterator over the quads of the dataset.
     pub fn iter(&self) -> Quads<'_, R> {
         Quads {
             resources: &self.resources,
@@ -75,6 +83,7 @@ impl<R> HashDataset<R> {
         }
     }
 
+    /// Returns an iterator over the resources of the dataset.
     pub fn resources(&self) -> Resources<'_, R> {
         Resources {
             resources: &self.resources,
@@ -84,6 +93,10 @@ impl<R> HashDataset<R> {
 }
 
 impl<R: Eq + Hash> HashDataset<R> {
+    /// Indexes the quads to allow more operation on this dataset, such as
+    /// pattern matching using the [`PatternMatchingDataset`] trait.
+    ///
+    /// [`PatternMatchingDataset`]: super::super::PatternMatchingDataset
     pub fn into_indexed(self) -> IndexedHashDataset<R> {
         IndexedHashDataset::from_non_indexed(self)
     }
@@ -109,10 +122,12 @@ impl<R: Eq + Hash> HashDataset<R> {
         self.quads_indexes.find(h, |&i| quad_with_resources(resources, quads[i]) == quad).copied()
     }
 
+    /// Checks if the provided resource appears in any quad in the dataset.
     pub fn contains_resource(&self, r: &R) -> bool {
         self.index_of_resource(r).is_some()
     }
 
+    /// Checks if the provided quad is in the dataset.
     pub fn contains(&self, q: Quad<&R>) -> bool {
         self.index_of_quad(q).is_some()
     }
@@ -136,6 +151,10 @@ impl<R: Clone + Eq + Hash> HashDataset<R> {
         }
     }
 
+    /// Inserts the given quad in the dataset.
+    ///
+    /// Returns `true` if the quad was not already in the dataset, and `false`
+    /// if it was.
     pub fn insert(&mut self, quad: Quad<R>) -> bool {
         let s_pre = self.index_of_resource(&quad.0);
         let p_pre = self.index_of_resource(&quad.1);
@@ -198,6 +217,10 @@ impl<R: Clone + Eq + Hash> HashDataset<R> {
         }
     }
 
+    /// Removes the given quad from the dataset.
+    ///
+    /// Returns whether or not the quad was in the dataset.
+    /// Does nothing if the quad was not in the dataset.
     pub fn remove(&mut self, quad: Quad<&R>) -> bool {
         let h = self.hash_quad(&quad);
         let resources = &self.resources;
