@@ -1,5 +1,8 @@
 use std::{cmp::Ordering, fmt::Debug, hash::Hash};
 
+#[allow(unused_imports)]
+use std::hash::BuildHasher as _;
+
 use hashbrown::HashTable;
 use slab::Slab;
 
