@@ -4,6 +4,8 @@ use educe::Educe;
 use iri_rs::{Iri, IriBuf};
 use langtag::{LangTag, LangTagBuf};
 
+use crate::{Datatype, RDF_LANG_STRING, RdfLangStringDatatypeError};
+
 use super::{LiteralType, LiteralTypeRef};
 
 /// Owned or referenced RDF literal type.
@@ -11,24 +13,24 @@ use super::{LiteralType, LiteralTypeRef};
 #[educe(Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum CowLiteralType<'a> {
-    /// Any type.
-    Any(Cow<'a, IriBuf>),
+    /// Typed literal datatype.
+    Any(Cow<'a, Datatype>),
 
-    /// Language string.
+    /// Language-tagged literal.
     LangString(Cow<'a, LangTag>),
 }
 
 impl CowLiteralType<'_> {
     pub fn as_ref(&self) -> LiteralTypeRef<'_> {
         match self {
-            Self::Any(i) => LiteralTypeRef::Any(i.as_ref().into()),
+            Self::Any(d) => LiteralTypeRef::Any(d.as_iri()),
             Self::LangString(l) => LiteralTypeRef::LangString(l),
         }
     }
 
     pub fn into_owned(self) -> LiteralType {
         match self {
-            Self::Any(iri) => LiteralType::Any(iri.into_owned()),
+            Self::Any(d) => LiteralType::Any(d.into_owned()),
             Self::LangString(lang) => LiteralType::LangString(lang.into_owned()),
         }
     }
@@ -43,32 +45,28 @@ impl<'a> From<CowLiteralType<'a>> for LiteralType {
 impl<'a> From<LiteralTypeRef<'a>> for CowLiteralType<'a> {
     fn from(value: LiteralTypeRef<'a>) -> Self {
         match value {
-            LiteralTypeRef::Any(i) => Self::Any(Cow::Owned(i.into())),
+            // Safety: see `LiteralTypeRef::into_owned` — invariant assumed
+            // upstream.
+            LiteralTypeRef::Any(i) => Self::Any(Cow::Owned(unsafe { Datatype::new_unchecked(i.into()) })),
             LiteralTypeRef::LangString(t) => Self::LangString(Cow::Borrowed(t)),
         }
     }
 }
 
-impl<'a> From<Iri<&'a str>> for CowLiteralType<'a> {
-    fn from(value: Iri<&'a str>) -> Self {
-        Self::Any(Cow::Owned(value.into()))
-    }
-}
-
-impl<'a> From<&'a IriBuf> for CowLiteralType<'a> {
-    fn from(value: &'a IriBuf) -> Self {
+impl<'a> From<&'a Datatype> for CowLiteralType<'a> {
+    fn from(value: &'a Datatype) -> Self {
         Self::Any(Cow::Borrowed(value))
     }
 }
 
-impl From<IriBuf> for CowLiteralType<'_> {
-    fn from(value: IriBuf) -> Self {
+impl From<Datatype> for CowLiteralType<'_> {
+    fn from(value: Datatype) -> Self {
         Self::Any(Cow::Owned(value))
     }
 }
 
-impl<'a> From<Cow<'a, IriBuf>> for CowLiteralType<'a> {
-    fn from(value: Cow<'a, IriBuf>) -> Self {
+impl<'a> From<Cow<'a, Datatype>> for CowLiteralType<'a> {
+    fn from(value: Cow<'a, Datatype>) -> Self {
         Self::Any(value)
     }
 }
@@ -88,5 +86,24 @@ impl From<LangTagBuf> for CowLiteralType<'_> {
 impl<'a> From<Cow<'a, LangTag>> for CowLiteralType<'a> {
     fn from(value: Cow<'a, LangTag>) -> Self {
         Self::LangString(value)
+    }
+}
+
+impl TryFrom<IriBuf> for CowLiteralType<'_> {
+    type Error = RdfLangStringDatatypeError;
+    fn try_from(value: IriBuf) -> Result<Self, Self::Error> {
+        Datatype::new(value).map(|d| Self::Any(Cow::Owned(d)))
+    }
+}
+
+impl<'a> TryFrom<Iri<&'a str>> for CowLiteralType<'a> {
+    type Error = RdfLangStringDatatypeError;
+    fn try_from(value: Iri<&'a str>) -> Result<Self, Self::Error> {
+        if value.as_str() == RDF_LANG_STRING.as_str() {
+            Err(RdfLangStringDatatypeError(value.into()))
+        } else {
+            // Safety: just checked `value != rdf:langString`.
+            Ok(Self::Any(Cow::Owned(unsafe { Datatype::new_unchecked(value.into()) })))
+        }
     }
 }

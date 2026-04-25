@@ -11,6 +11,9 @@ pub use cow::*;
 mod r#type;
 pub use r#type::*;
 
+mod datatype;
+pub use datatype::*;
+
 /// RDF Literal.
 #[derive(Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
