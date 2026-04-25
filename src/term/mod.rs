@@ -96,6 +96,18 @@ impl Term {
     }
 }
 
+impl From<IriBuf> for Term {
+    fn from(value: IriBuf) -> Self {
+        Self::Iri(value)
+    }
+}
+
+impl From<Literal> for Term {
+    fn from(value: Literal) -> Self {
+        Self::Literal(value)
+    }
+}
+
 impl Hash for Term {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         match self {
