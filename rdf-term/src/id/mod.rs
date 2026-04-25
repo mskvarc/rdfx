@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use crate::BlankIdBuf;
-use iref::{Iri, IriBuf};
+use iri_rs::{Iri, IriBuf};
 
 mod r#ref;
 pub use r#ref::*;
@@ -15,9 +15,9 @@ pub enum Id {
 }
 
 impl Id {
-    pub fn as_iri(&self) -> Option<&Iri> {
+    pub fn as_iri(&self) -> Option<Iri<&str>> {
         match self {
-            Self::Iri(iri) => Some(iri),
+            Self::Iri(iri) => Some(iri.as_ref()),
             _ => None,
         }
     }
@@ -25,7 +25,7 @@ impl Id {
     pub fn as_ref(&self) -> IdRef<'_> {
         match self {
             Self::BlankId(blank_id) => IdRef::BlankId(blank_id),
-            Self::Iri(iri) => IdRef::Iri(iri),
+            Self::Iri(iri) => IdRef::Iri(iri.as_ref()),
         }
     }
 

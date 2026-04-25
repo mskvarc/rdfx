@@ -12,7 +12,7 @@ categories.workspace = true
 
 [features]
 default = []
-serde = ["dep:serde", "iref/serde", "langtag/serde"]
+serde = ["dep:serde", "iri-rs/serde", "langtag/serde"]
 uuid-generator = ["uuid-generator-v3", "uuid-generator-v4", "uuid-generator-v5"]
 uuid-generator-v3 = ["uuid", "uuid/v3"]
 uuid-generator-v4 = ["uuid", "uuid/v4"]
@@ -23,7 +23,8 @@ contextual = { version = "0.1.6", optional = true }
 educe = "0.5.11"
 equivalent = "1.0.2"
 indexmap = "2.2.5"
-iref = { version = "3.2.2", features = ["macros"] }
+iri-rs = { version = "3.3.1", features = ["static"] }
+iri-rs-core = "3.3.1"
 langtag = "0.4.0"
 raw-btree = "0.2.0"
 replace_with = "0.1.7"

@@ -67,13 +67,14 @@ impl Uuid {
 }
 
 #[cfg(any(feature = "uuid-generator-v3", feature = "uuid-generator-v4", feature = "uuid-generator-v5"))]
-impl Generator for Uuid {
-    fn next(&mut self) -> Term {
+impl crate::Generator for Uuid {
+    fn next_term(&mut self) -> crate::Term {
         let mut buffer: Vec<u8> = vec![0; uuid::adapter::Urn::LENGTH];
         let uuid = self.next_uuid();
         let len = uuid.to_urn().encode_lower(buffer.as_mut()).len();
         buffer.truncate(len);
-        Term::Iri(IriBuf::new_unchecked(String::from_utf8_unchecked(buffer)).unwrap())
+        let s = unsafe { String::from_utf8_unchecked(buffer) };
+        crate::Term::Iri(iri_rs::IriBuf::parse(s).unwrap())
     }
 }
 
@@ -81,14 +82,15 @@ impl Generator for Uuid {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::Generator;
 
     #[cfg(feature = "uuid-generator-v3")]
     #[test]
     fn uuidv3_iri() {
         let mut uuid_gen = Uuid::V3(uuid::Uuid::parse_str("936DA01F9ABD4d9d80C702AF85C822A8").unwrap(), "test".to_string());
         for _ in 0..100 {
-            let reference: Id = uuid_gen.next(&mut ());
-            assert!(iref::Iri::new(reference.as_str()).is_ok())
+            let term = uuid_gen.next_term();
+            assert!(term.as_iri().is_some())
         }
     }
 
@@ -97,8 +99,8 @@ mod tests {
     fn uuidv4_iri() {
         let mut uuid_gen = Uuid::V4;
         for _ in 0..100 {
-            let reference: Id = uuid_gen.next(&mut ());
-            assert!(iref::Iri::new(reference.as_str()).is_ok())
+            let term = uuid_gen.next_term();
+            assert!(term.as_iri().is_some())
         }
     }
 
@@ -107,8 +109,8 @@ mod tests {
     fn uuidv5_iri() {
         let mut uuid_gen = Uuid::V5(uuid::Uuid::parse_str("936DA01F9ABD4d9d80C702AF85C822A8").unwrap(), "test".to_string());
         for _ in 0..100 {
-            let reference: Id = uuid_gen.next(&mut ());
-            assert!(iref::Iri::new(reference.as_str()).is_ok())
+            let term = uuid_gen.next_term();
+            assert!(term.as_iri().is_some())
         }
     }
 }

@@ -1,13 +1,13 @@
 use std::borrow::Cow;
 
-use iref::Iri;
+use iri_rs::IriBuf;
 
 use crate::CowLiteral;
 
 use super::Term;
 
 pub enum CowTerm<'a> {
-    Iri(Cow<'a, Iri>),
+    Iri(Cow<'a, IriBuf>),
 
     Literal(CowLiteral<'a>),
 }

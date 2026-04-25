@@ -1,7 +1,8 @@
 use core::fmt;
-use iref::{Iri, IriBuf};
+use iri_rs::IriBuf;
 use langtag::{LangTag, LangTagBuf};
-use std::{borrow::Cow, fmt::Write};
+use std::{borrow::Cow, fmt::Write, ops::Deref};
+use iri_rs::Iri;
 
 use crate::{RdfDisplay, XSD_STRING};
 
@@ -35,19 +36,19 @@ impl LiteralType {
     }
 
     pub fn is_xsd_string(&self) -> bool {
-        self.is_iri(XSD_STRING)
+        self.is_iri(&XSD_STRING)
     }
 
-    pub fn is_iri(&self, iri: &Iri) -> bool {
+    pub fn is_iri<T: Deref<Target = str>>(&self, iri: &Iri<T>) -> bool {
         match self {
-            Self::Any(i) => i == iri,
+            Self::Any(i) => i.as_str() == iri.as_str(),
             Self::LangString(_) => false,
         }
     }
 
     pub fn as_ref(&self) -> LiteralTypeRef<'_> {
         match self {
-            Self::Any(i) => LiteralTypeRef::Any(i),
+            Self::Any(i) => LiteralTypeRef::Any(i.as_ref()),
             Self::LangString(l) => LiteralTypeRef::LangString(l),
         }
     }

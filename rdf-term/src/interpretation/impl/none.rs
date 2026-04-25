@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use iref::Iri;
+use iri_rs::{Iri, IriBuf};
 
 use crate::{
     CowLiteral,
@@ -14,8 +14,8 @@ use crate::{
 impl Interpretation for () {
     type Resource = LocalTerm;
 
-    fn iri(&self, iri: &Iri) -> Option<LocalTerm> {
-        Some(LocalTerm::iri(iri.to_owned()))
+    fn iri(&self, iri: Iri<&str>) -> Option<LocalTerm> {
+        Some(LocalTerm::iri(iri.into()))
     }
 
     fn literal<'a>(&self, literal: impl Into<LiteralRef<'a>>) -> Option<LocalTerm> {
@@ -24,7 +24,7 @@ impl Interpretation for () {
 }
 
 impl InterpretationMut for () {
-    fn insert_iri<'a>(&mut self, iri: impl Into<Cow<'a, Iri>>) -> Self::Resource {
+    fn insert_iri<'a>(&mut self, iri: impl Into<Cow<'a, IriBuf>>) -> Self::Resource {
         LocalTerm::iri(iri.into().into_owned())
     }
 
@@ -34,12 +34,12 @@ impl InterpretationMut for () {
 }
 
 impl ReverseInterpretation for () {
-    type Iris<'a> = std::option::IntoIter<Cow<'a, Iri>>;
+    type Iris<'a> = std::option::IntoIter<Cow<'a, IriBuf>>;
     type Literals<'a> = std::option::IntoIter<CowLiteral<'a>>;
 
     fn iris_of<'a>(&'a self, resource: &'a Self::Resource) -> Self::Iris<'a> {
         match resource {
-            LocalTerm::Named(Term::Iri(iri)) => Some(Cow::Borrowed(iri.as_iri())).into_iter(),
+            LocalTerm::Named(Term::Iri(iri)) => Some(Cow::Borrowed(iri)).into_iter(),
             _ => None.into_iter(),
         }
     }

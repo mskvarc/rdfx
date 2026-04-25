@@ -11,7 +11,7 @@ use std::hint::black_box;
 const SIZES: &[usize] = &[32, 128, 512];
 
 fn iri_term(i: usize) -> LocalTerm {
-    LocalTerm::iri(iref::IriBuf::new(format!("http://example.org/r/{i}")).unwrap())
+    LocalTerm::iri(iri_rs::IriBuf::new(format!("http://example.org/r/{i}")).unwrap())
 }
 
 fn blank_term(label: &str) -> LocalTerm {
@@ -24,7 +24,7 @@ fn blank_term(label: &str) -> LocalTerm {
 /// `prefix` so two datasets can be built with distinct blank labels
 /// but identical structure (isomorphic).
 fn blank_chain(n: usize, prefix: &str) -> BTreeDataset {
-    let predicate = LocalTerm::iri(iri!("http://example.org/p").to_owned());
+    let predicate = LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.org/p")));
     let mut d = BTreeDataset::new();
     for k in 0..n {
         let s = blank_term(&format!("{prefix}{k}"));
@@ -36,7 +36,7 @@ fn blank_chain(n: usize, prefix: &str) -> BTreeDataset {
 
 /// Fully named chain — no blank nodes; isomorphism should short-circuit fast.
 fn iri_chain(n: usize) -> BTreeDataset {
-    let predicate = LocalTerm::iri(iri!("http://example.org/p").to_owned());
+    let predicate = LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.org/p")));
     let mut d = BTreeDataset::new();
     for k in 0..n {
         d.insert(Quad(iri_term(k), predicate.clone(), iri_term(k + 1), None));

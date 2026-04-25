@@ -9,70 +9,70 @@ fn test(a: BTreeDataset, b: BTreeDataset) {
 fn iso_e001() {
     let mut a = BTreeDataset::new();
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        None,
-    ));
-    a.insert(Quad(
-        LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        None,
-    ));
-    a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
+        None,
+    ));
+    a.insert(Quad(
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
+        None,
+    ));
+    a.insert(Quad(
+        LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         None,
     ));
     let mut b = BTreeDataset::new();
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        None,
-    ));
-    b.insert(Quad(
-        LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        None,
-    ));
-    b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
+        None,
+    ));
+    b.insert(Quad(
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
+        None,
+    ));
+    b.insert(Quad(
+        LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         None,
     ));
     test(a, b)
@@ -81,70 +81,70 @@ fn iso_e001() {
 fn iso_e002() {
     let mut a = BTreeDataset::new();
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     let mut b = BTreeDataset::new();
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     test(a, b)
@@ -154,69 +154,69 @@ fn iso_e003() {
     let mut a = BTreeDataset::new();
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     let mut b = BTreeDataset::new();
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     test(a, b)
@@ -226,68 +226,68 @@ fn iso_e004() {
     let mut a = BTreeDataset::new();
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
         None,
     ));
     let mut b = BTreeDataset::new();
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
         None,
     ));
@@ -297,70 +297,70 @@ fn iso_e004() {
 fn iso_e005() {
     let mut a = BTreeDataset::new();
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     let mut b = BTreeDataset::new();
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     test(a, b)
@@ -370,67 +370,67 @@ fn iso_e006() {
     let mut a = BTreeDataset::new();
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
         None,
     ));
     let mut b = BTreeDataset::new();
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
         None,
@@ -441,69 +441,69 @@ fn iso_e006() {
 fn iso_e007() {
     let mut a = BTreeDataset::new();
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         None,
     ));
     let mut b = BTreeDataset::new();
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         None,
     ));
@@ -513,70 +513,70 @@ fn iso_e007() {
 fn iso_e008() {
     let mut a = BTreeDataset::new();
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         None,
     ));
     let mut b = BTreeDataset::new();
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         None,
     ));
     test(a, b)
@@ -586,26 +586,26 @@ fn iso_e009() {
     let mut a = BTreeDataset::new();
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     a.insert(Quad(
@@ -616,33 +616,33 @@ fn iso_e009() {
     ));
     let mut b = BTreeDataset::new();
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     b.insert(Quad(
@@ -658,7 +658,7 @@ fn iso_e010() {
     let mut a = BTreeDataset::new();
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
         None,
     ));
@@ -669,33 +669,33 @@ fn iso_e010() {
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     let mut b = BTreeDataset::new();
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
         None,
     ));
@@ -706,21 +706,21 @@ fn iso_e010() {
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     test(a, b)
@@ -731,128 +731,128 @@ fn iso_e011() {
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     let mut b = BTreeDataset::new();
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     test(a, b)
@@ -863,128 +863,128 @@ fn iso_e012() {
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     let mut b = BTreeDataset::new();
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     test(a, b)
@@ -993,128 +993,128 @@ fn iso_e012() {
 fn iso_e013() {
     let mut a = BTreeDataset::new();
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
         None,
     ));
     let mut b = BTreeDataset::new();
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
         None,
@@ -1127,128 +1127,128 @@ fn iso_e014() {
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     let mut b = BTreeDataset::new();
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     test(a, b)
@@ -1257,129 +1257,129 @@ fn iso_e014() {
 fn iso_e015() {
     let mut a = BTreeDataset::new();
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         None,
     ));
     let mut b = BTreeDataset::new();
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         None,
     ));
@@ -1389,21 +1389,21 @@ fn iso_e015() {
 fn iso_e016() {
     let mut a = BTreeDataset::new();
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/9").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/9"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:5".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/9").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/9"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         None,
     ));
     a.insert(Quad(
@@ -1414,66 +1414,66 @@ fn iso_e016() {
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:7".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:5".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:4".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:3".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/9").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/9"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:8".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:6".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:9".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:4".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:9".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:9".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:6".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:8".to_string()).unwrap()),
         None,
@@ -1481,13 +1481,13 @@ fn iso_e016() {
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:3".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:3".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/9").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/9"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     a.insert(Quad(
@@ -1498,39 +1498,39 @@ fn iso_e016() {
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:6".to_string()).unwrap()),
         None,
     ));
     let mut b = BTreeDataset::new();
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/9").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/9"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s5".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/9").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/9"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         None,
     ));
     b.insert(Quad(
@@ -1541,66 +1541,66 @@ fn iso_e016() {
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s7".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s5".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s4".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s3".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/9").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/9"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s8".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s6".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s9".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s4".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s9".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s9".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s6".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s8".to_string()).unwrap()),
         None,
@@ -1608,13 +1608,13 @@ fn iso_e016() {
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s3".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s3".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/9").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/9"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     b.insert(Quad(
@@ -1625,13 +1625,13 @@ fn iso_e016() {
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s6".to_string()).unwrap()),
         None,
     ));
@@ -1641,31 +1641,31 @@ fn iso_e016() {
 fn iso_e017() {
     let mut a = BTreeDataset::new();
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:4".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:8".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:9".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:5".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/9").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/9"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:7".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/9").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/9"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
         None,
@@ -1683,116 +1683,116 @@ fn iso_e017() {
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:6".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/9").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/9"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:8".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:4".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:6".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/9").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/9"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:8".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/9").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/9"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:9".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:9".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:5".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:9".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
         None,
     ));
     let mut b = BTreeDataset::new();
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s4".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s8".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s9".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s5".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/9").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/9"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s7".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/9").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/9"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
         None,
@@ -1810,81 +1810,81 @@ fn iso_e017() {
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s6".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/9").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/9"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s8".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s4".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s6".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/9").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/9"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s8".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/9").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/9"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s9".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s9".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s5".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s9".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
         None,
     ));
     test(a, b)
@@ -1893,45 +1893,45 @@ fn iso_e017() {
 fn iso_e018() {
     let mut a = BTreeDataset::new();
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:7".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:8".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:9".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:5".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:5".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:6".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     a.insert(Quad(
@@ -1943,35 +1943,35 @@ fn iso_e018() {
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:5".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:5".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:5".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:7".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:3".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:6".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:5".to_string()).unwrap()),
         None,
@@ -1983,8 +1983,8 @@ fn iso_e018() {
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:9".to_string()).unwrap()),
         None,
     ));
@@ -2001,64 +2001,64 @@ fn iso_e018() {
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         None,
     ));
     let mut b = BTreeDataset::new();
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s7".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s8".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s9".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s5".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s5".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s6".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     b.insert(Quad(
@@ -2070,35 +2070,35 @@ fn iso_e018() {
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s5".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s5".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s5".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s7".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s3".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s6".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s5".to_string()).unwrap()),
         None,
@@ -2110,8 +2110,8 @@ fn iso_e018() {
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s9".to_string()).unwrap()),
         None,
     ));
@@ -2128,15 +2128,15 @@ fn iso_e018() {
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         None,
     ));
     test(a, b)
@@ -2146,19 +2146,19 @@ fn iso_e019() {
     let mut a = BTreeDataset::new();
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:4".to_string()).unwrap()),
         None,
     ));
@@ -2170,8 +2170,8 @@ fn iso_e019() {
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:4".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
         None,
     ));
     a.insert(Quad(
@@ -2182,44 +2182,44 @@ fn iso_e019() {
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:5".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:4".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:9".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:5".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:5".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:7".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:8".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         None,
     ));
     a.insert(Quad(
@@ -2230,7 +2230,7 @@ fn iso_e019() {
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:3".to_string()).unwrap()),
         None,
     ));
@@ -2243,49 +2243,49 @@ fn iso_e019() {
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:9".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:6".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:7".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         None,
     ));
     let mut b = BTreeDataset::new();
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s4".to_string()).unwrap()),
         None,
     ));
@@ -2297,8 +2297,8 @@ fn iso_e019() {
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s4".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
         None,
     ));
     b.insert(Quad(
@@ -2309,44 +2309,44 @@ fn iso_e019() {
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s5".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s4".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s9".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s5".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s5".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s7".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s8".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         None,
     ));
     b.insert(Quad(
@@ -2357,7 +2357,7 @@ fn iso_e019() {
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s3".to_string()).unwrap()),
         None,
     ));
@@ -2370,25 +2370,25 @@ fn iso_e019() {
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s9".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s6".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s7".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         None,
     ));
     test(a, b)
@@ -2404,86 +2404,86 @@ fn iso_e020() {
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:24".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/35").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/35"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:37".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:3".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/13").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/13"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:44".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:32".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:28".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/23").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/23"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/32").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/32"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:44".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/13").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/13"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/49").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/49"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:22".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/37").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/37"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/47").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/47"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:34".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:38".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/36").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/28").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/36"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/28"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:44".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:11".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/16").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/16"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/21").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/21"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:4".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:29".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:42".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/40").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/40"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/49").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/46").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/49"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/46"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:4".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/25").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/25"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:38".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/17").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/17"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:44".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/10").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/48").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/10"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/48"))),
         None,
     ));
     a.insert(Quad(
@@ -2499,8 +2499,8 @@ fn iso_e020() {
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/29").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/32").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/29"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/32"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:44".to_string()).unwrap()),
         None,
     ));
@@ -2513,90 +2513,90 @@ fn iso_e020() {
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:33".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:22".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/40").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/40"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:8".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/28").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/28"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:4".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/39").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/39"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:30".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/45").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/23").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/45"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/23"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:35".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/42").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/42"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:15".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:14".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/40").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/9").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/40"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/9"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:49".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/33").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/16").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/33"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/16"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:31".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/21").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/21"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:6".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/27").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/27"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:39".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/19").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/19"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/10").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/10"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:19".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:25".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:46".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:12".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/18").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/49").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/18"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/49"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:26".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:46".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/30").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/30"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:11".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:49".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/46").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/46").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/46"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/46"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:5".to_string()).unwrap()),
         None,
     ));
@@ -2608,44 +2608,44 @@ fn iso_e020() {
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:37".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/12").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/12"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/14").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/14"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:15".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:28".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/31").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/31"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:35".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:36".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/24").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/24"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/24").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/40").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/15").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/24"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/40"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/15"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/47").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/29").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/47"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/29"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:38".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:18".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/49").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/16").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/49"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/16"))),
         None,
     ));
     a.insert(Quad(
@@ -2656,126 +2656,126 @@ fn iso_e020() {
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:38".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/10").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/35").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/10"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/35"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:5".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:42".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/48").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/48"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/25").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/45").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/25"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/45"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:10".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:19".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/33").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/25").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/33"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/25"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:28".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:13".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/16").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/28").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/16"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/28"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:30".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:10".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:11".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:4".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/44").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/44"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:38".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:6".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:8".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/27").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/27"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/41").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/47").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/41"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/47"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/22").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/22"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:46".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/22").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/22"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/49").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/28").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/49"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/28"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:36".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/12").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/12"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:19".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/34").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/34"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/41").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/41"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:24".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/26").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/26"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:22".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/37").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/37"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:7".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/49").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/42").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/49"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/42"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:27".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:6".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/24").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/35").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/24"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/35"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:9".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/37").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/27").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/37"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/27"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/10").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/10"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:26".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/11").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/11"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/19").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/19"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:21".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/29").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/29"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/18").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/18"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:26".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:40".to_string()).unwrap()),
         None,
@@ -2788,7 +2788,7 @@ fn iso_e020() {
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:34".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/41").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/41"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
         None,
     ));
@@ -2801,30 +2801,30 @@ fn iso_e020() {
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:43".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:12".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/34").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/34"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/19").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/19"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:37".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:45".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:21".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:41".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:16".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:33".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/33").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/33"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:18".to_string()).unwrap()),
         None,
     ));
@@ -2835,9 +2835,9 @@ fn iso_e020() {
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/38").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/14").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/38"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/14"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     a.insert(Quad(
@@ -2848,80 +2848,80 @@ fn iso_e020() {
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:22".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/40").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/24").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/40"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/24"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/28").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/28"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:31".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/31").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/31"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:30".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:19".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/44").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/44"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:14".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:28".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/25").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/30").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/25"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/30"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/24").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/38").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/24"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/38"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:45".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/49").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/30").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/19").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/49"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/30"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/19"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/19").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/49").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/19"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/49"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:5".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:13".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:31".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/15").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/14").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/15"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/14"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/40").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/43").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/40"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/43"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:25".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:21".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/23").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/14").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/23"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/14"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     a.insert(Quad(
@@ -2931,76 +2931,76 @@ fn iso_e020() {
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/40").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/32").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/40"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/32"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:12".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:9".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/33").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/33"))),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:44".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/43").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/43"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:2".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:31".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/32").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/32"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:0".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:12".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/26").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/26"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:28".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/42").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/15").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/42"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/15"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:5".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:6".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:11".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/25").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/25"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:27".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:19".to_string()).unwrap()),
         None,
     ));
     a.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:6".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/36").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/36"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:13".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/29").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/29"))),
         None,
     ));
     a.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/25").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/15").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/25"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/15"))),
         None,
     ));
     let mut b = BTreeDataset::new();
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/fail").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/fail"))),
         None,
     ));
     b.insert(Quad(
@@ -3011,86 +3011,86 @@ fn iso_e020() {
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s24".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/35").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/35"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s37".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s3".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/13").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/13"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s44".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s32".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s28".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/23").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/23"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/32").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/32"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s44".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/13").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/13"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/49").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/49"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s22".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/37").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/37"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/47").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/47"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s34".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s38".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/36").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/28").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/36"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/28"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s44".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s11".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/16").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/16"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/21").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/21"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s4".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s29".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s42".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/40").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/40"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/49").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/46").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/49"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/46"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s4".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/25").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/25"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s38".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/17").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/17"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s44".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/10").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/48").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/10"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/48"))),
         None,
     ));
     b.insert(Quad(
@@ -3106,8 +3106,8 @@ fn iso_e020() {
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/29").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/32").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/29"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/32"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s44".to_string()).unwrap()),
         None,
     ));
@@ -3120,90 +3120,90 @@ fn iso_e020() {
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s33".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s22".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/40").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/40"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s8".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/28").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/28"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s4".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/39").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/39"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s30".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/45").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/23").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/45"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/23"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s35".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/42").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/42"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s15".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s14".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/40").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/9").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/40"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/9"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s49".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/33").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/16").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/33"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/16"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s31".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/21").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/21"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s6".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/27").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/27"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s39".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/19").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/19"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/10").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/10"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s19".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s25".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s46".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s12".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/18").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/49").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/18"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/49"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s26".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s46".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/30").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/30"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s11".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/8").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/8"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s49".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/46").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/46").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/46"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/46"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s5".to_string()).unwrap()),
         None,
     ));
@@ -3215,44 +3215,44 @@ fn iso_e020() {
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s37".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/12").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/12"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/14").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/14"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s15".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s28".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/31").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/31"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s35".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s36".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/24").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/24"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/24").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/40").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/15").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/24"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/40"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/15"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/47").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/29").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/47"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/29"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s38".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s18".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/49").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/16").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/49"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/16"))),
         None,
     ));
     b.insert(Quad(
@@ -3263,126 +3263,126 @@ fn iso_e020() {
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s38".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/10").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/35").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/10"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/35"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s5".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s42".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/48").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/48"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/25").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/45").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/25"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/45"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s10".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s19".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/33").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/25").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/33"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/25"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s28".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s13".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/16").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/28").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/16"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/28"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s30".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s10".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/4").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/4"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s11".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s4".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/44").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/44"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s38".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s6".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s8".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/27").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/27"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/41").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/47").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/41"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/47"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/22").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/22"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s46".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/22").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/22"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/49").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/28").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/49"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/28"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s36".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/12").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/12"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s19".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/34").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/34"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/41").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/41"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s24".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/26").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/26"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s22".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/37").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/37"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s7".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/49").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/42").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/49"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/42"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s27".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s6".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/24").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/35").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/24"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/35"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s9".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/37").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/27").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/37"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/27"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/10").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/10"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s26".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/11").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/11"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/19").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/19"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s21".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/29").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/29"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/18").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/18"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s26".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s40".to_string()).unwrap()),
         None,
@@ -3395,7 +3395,7 @@ fn iso_e020() {
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s34".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/41").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/41"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
         None,
     ));
@@ -3408,30 +3408,30 @@ fn iso_e020() {
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s43".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s12".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/34").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/34"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/19").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/19"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s37".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s45".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/0").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/0"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s21".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s41".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s16".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/2").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/2"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s33".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/33").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/33"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s18".to_string()).unwrap()),
         None,
     ));
@@ -3442,9 +3442,9 @@ fn iso_e020() {
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/38").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/14").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/38"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/14"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         None,
     ));
     b.insert(Quad(
@@ -3455,80 +3455,80 @@ fn iso_e020() {
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s22".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/40").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/24").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/40"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/24"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/28").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/28"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s31".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/31").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/31"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s30".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s19".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/44").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/44"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s14".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s28".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/25").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/30").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/25"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/30"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/24").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/38").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/24"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/38"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s45".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/49").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/30").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/19").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/49"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/30"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/19"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/19").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/49").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/19"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/49"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s5".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s13".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s31".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/15").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/14").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/15"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/14"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/40").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/43").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/40"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/43"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s25".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/3").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/3"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s21".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/23").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/14").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/5").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/23"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/14"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/5"))),
         None,
     ));
     b.insert(Quad(
@@ -3538,69 +3538,69 @@ fn iso_e020() {
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/40").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/32").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/40"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/32"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s12".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s9".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s1".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/33").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/33"))),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s44".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/43").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/43"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s2".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s31".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/32").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/32"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s0".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s12".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/26").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/26"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s28".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/42").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/15").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/42"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/15"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s5".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s6".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s11".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/25").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/25"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s27".to_string()).unwrap()),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s19".to_string()).unwrap()),
         None,
     ));
     b.insert(Quad(
         LocalTerm::Anonymous(BlankIdBuf::new("_:s6".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/6").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/7").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/6"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/7"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/36").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/36"))),
         LocalTerm::Anonymous(BlankIdBuf::new("_:s13".to_string()).unwrap()),
-        LocalTerm::iri(iri!("http://example.com/29").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/29"))),
         None,
     ));
     b.insert(Quad(
-        LocalTerm::iri(iri!("http://example.com/25").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/1").to_owned()),
-        LocalTerm::iri(iri!("http://example.com/15").to_owned()),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/25"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/1"))),
+        LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.com/15"))),
         None,
     ));
     test(a, b)

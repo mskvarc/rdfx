@@ -1,5 +1,5 @@
 use crate::{Literal, LiteralRef, RdfDisplay};
-use iref::{Iri, IriBuf};
+use iri_rs::{Iri, IriBuf};
 use std::{borrow::Cow, fmt, hash::Hash};
 
 mod r#ref;
@@ -56,9 +56,9 @@ impl Term {
         }
     }
 
-    pub fn as_iri(&self) -> Option<&Iri> {
+    pub fn as_iri(&self) -> Option<Iri<&str>> {
         match self {
-            Self::Iri(id) => Some(id),
+            Self::Iri(id) => Some(id.as_ref()),
             _ => None,
         }
     }
@@ -76,7 +76,7 @@ impl Term {
 
     pub fn as_ref(&self) -> TermRef<'_> {
         match self {
-            Self::Iri(id) => TermRef::Iri(id),
+            Self::Iri(id) => TermRef::Iri(id.as_ref()),
             Self::Literal(l) => TermRef::Literal(l.as_ref()),
         }
     }

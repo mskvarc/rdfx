@@ -13,7 +13,7 @@ const SIZES: &[usize] = &[100, 1000, 10_000];
 const BLANK_RATIO: usize = 5;
 
 fn iri_term(i: usize) -> LocalTerm {
-    LocalTerm::iri(iref::IriBuf::new(format!("http://example.org/r/{i}")).unwrap())
+    LocalTerm::iri(iri_rs::IriBuf::new(format!("http://example.org/r/{i}")).unwrap())
 }
 
 fn blank_term(i: usize) -> LocalTerm {
@@ -23,7 +23,7 @@ fn blank_term(i: usize) -> LocalTerm {
 /// N quads: `<http://example.org/r/i> <predicate> <http://example.org/r/(i+1)>`.
 /// Every `BLANK_RATIO`-th subject is a blank node.
 fn make_quads(n: usize) -> Vec<Quad<LocalTerm>> {
-    let predicate = LocalTerm::iri(iri!("http://example.org/p").to_owned());
+    let predicate = LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.org/p")));
     (0..n)
         .map(|i| {
             let s = if i % BLANK_RATIO == 0 { blank_term(i) } else { iri_term(i) };

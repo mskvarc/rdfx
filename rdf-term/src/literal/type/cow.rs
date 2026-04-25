@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use educe::Educe;
-use iref::{Iri, IriBuf};
+use iri_rs::{Iri, IriBuf};
 use langtag::{LangTag, LangTagBuf};
 
 use super::{LiteralType, LiteralTypeRef};
@@ -12,7 +12,7 @@ use super::{LiteralType, LiteralTypeRef};
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum CowLiteralType<'a> {
     /// Any type.
-    Any(Cow<'a, Iri>),
+    Any(Cow<'a, IriBuf>),
 
     /// Language string.
     LangString(Cow<'a, LangTag>),
@@ -21,7 +21,7 @@ pub enum CowLiteralType<'a> {
 impl CowLiteralType<'_> {
     pub fn as_ref(&self) -> LiteralTypeRef<'_> {
         match self {
-            Self::Any(i) => LiteralTypeRef::Any(i),
+            Self::Any(i) => LiteralTypeRef::Any(i.as_ref().into()),
             Self::LangString(l) => LiteralTypeRef::LangString(l),
         }
     }
@@ -43,14 +43,20 @@ impl<'a> From<CowLiteralType<'a>> for LiteralType {
 impl<'a> From<LiteralTypeRef<'a>> for CowLiteralType<'a> {
     fn from(value: LiteralTypeRef<'a>) -> Self {
         match value {
-            LiteralTypeRef::Any(i) => Self::Any(Cow::Borrowed(i)),
+            LiteralTypeRef::Any(i) => Self::Any(Cow::Owned(i.into())),
             LiteralTypeRef::LangString(t) => Self::LangString(Cow::Borrowed(t)),
         }
     }
 }
 
-impl<'a> From<&'a Iri> for CowLiteralType<'a> {
-    fn from(value: &'a Iri) -> Self {
+impl<'a> From<Iri<&'a str>> for CowLiteralType<'a> {
+    fn from(value: Iri<&'a str>) -> Self {
+        Self::Any(Cow::Owned(value.into()))
+    }
+}
+
+impl<'a> From<&'a IriBuf> for CowLiteralType<'a> {
+    fn from(value: &'a IriBuf) -> Self {
         Self::Any(Cow::Borrowed(value))
     }
 }
@@ -61,8 +67,8 @@ impl From<IriBuf> for CowLiteralType<'_> {
     }
 }
 
-impl<'a> From<Cow<'a, Iri>> for CowLiteralType<'a> {
-    fn from(value: Cow<'a, Iri>) -> Self {
+impl<'a> From<Cow<'a, IriBuf>> for CowLiteralType<'a> {
+    fn from(value: Cow<'a, IriBuf>) -> Self {
         Self::Any(value)
     }
 }

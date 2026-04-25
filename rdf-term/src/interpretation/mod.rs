@@ -9,13 +9,13 @@ pub use r#impl::*;
 pub mod fallible;
 pub use fallible::FallibleInterpretation;
 
-use iref::Iri;
+use iri_rs::{Iri, IriBuf};
 
 /// RDF resource interpretation.
 pub trait Interpretation {
     type Resource;
 
-    fn iri(&self, iri: &Iri) -> Option<Self::Resource>;
+    fn iri(&self, iri: Iri<&str>) -> Option<Self::Resource>;
 
     fn literal<'a>(&self, literal: impl Into<LiteralRef<'a>>) -> Option<Self::Resource>;
 
@@ -56,7 +56,7 @@ impl<I: ConstGenerativeInterpretation> GenerativeInterpretation for I {
 
 /// Mutable interpretation.
 pub trait InterpretationMut: Interpretation {
-    fn insert_iri<'a>(&mut self, iri: impl Into<Cow<'a, Iri>>) -> Self::Resource;
+    fn insert_iri<'a>(&mut self, iri: impl Into<Cow<'a, IriBuf>>) -> Self::Resource;
 
     fn insert_literal<'a>(&mut self, literal: impl Into<CowLiteral<'a>>) -> Self::Resource;
 
@@ -70,7 +70,7 @@ pub trait InterpretationMut: Interpretation {
 
 /// Reverse interpretation.
 pub trait ReverseInterpretation: Interpretation {
-    type Iris<'a>: Iterator<Item = Cow<'a, Iri>>
+    type Iris<'a>: Iterator<Item = Cow<'a, IriBuf>>
     where
         Self: 'a;
     type Literals<'a>: Iterator<Item = CowLiteral<'a>>

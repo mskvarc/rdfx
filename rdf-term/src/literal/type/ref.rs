@@ -1,8 +1,8 @@
 use core::fmt;
-use std::{cmp::Ordering, fmt::Write};
+use std::{cmp::Ordering, fmt::Write, ops::Deref};
 
 use educe::Educe;
-use iref::Iri;
+use iri_rs::Iri;
 use langtag::LangTag;
 
 use crate::{RdfDisplay, XSD_STRING};
@@ -15,7 +15,7 @@ use super::LiteralType;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum LiteralTypeRef<'a> {
     /// Any type.
-    Any(&'a Iri),
+    Any(Iri<&'a str>),
 
     /// Language string.
     LangString(&'a LangTag),
@@ -34,12 +34,12 @@ impl<'a> LiteralTypeRef<'a> {
     }
 
     pub fn is_xsd_string(&self) -> bool {
-        self.is_iri(XSD_STRING)
+        self.is_iri(&XSD_STRING)
     }
 
-    pub fn is_iri(&self, iri: &Iri) -> bool {
+    pub fn is_iri<T: Deref<Target = str>>(&self, iri: &Iri<T>) -> bool {
         match self {
-            Self::Any(i) => *i == iri,
+            Self::Any(i) => i.as_str() == iri.as_str(),
             Self::LangString(_) => false,
         }
     }
@@ -48,7 +48,7 @@ impl<'a> LiteralTypeRef<'a> {
 impl LiteralTypeRef<'_> {
     pub fn into_owned(self) -> LiteralType {
         match self {
-            Self::Any(i) => LiteralType::Any(i.to_owned()),
+            Self::Any(i) => LiteralType::Any(i.into()),
             Self::LangString(l) => LiteralType::LangString(l.to_owned()),
         }
     }
@@ -57,7 +57,7 @@ impl LiteralTypeRef<'_> {
 impl PartialEq<LiteralType> for LiteralTypeRef<'_> {
     fn eq(&self, other: &LiteralType) -> bool {
         match (*self, other) {
-            (Self::Any(a), LiteralType::Any(b)) => a == b,
+            (Self::Any(a), LiteralType::Any(b)) => a.as_str() == b.as_str(),
             (Self::LangString(a), LiteralType::LangString(b)) => a == b.as_lang_tag(),
             _ => false,
         }
@@ -67,7 +67,7 @@ impl PartialEq<LiteralType> for LiteralTypeRef<'_> {
 impl<'a> PartialEq<LiteralTypeRef<'a>> for LiteralType {
     fn eq(&self, other: &LiteralTypeRef<'a>) -> bool {
         match (self, other) {
-            (Self::Any(a), LiteralTypeRef::Any(b)) => a == *b,
+            (Self::Any(a), LiteralTypeRef::Any(b)) => a.as_str() == b.as_str(),
             (Self::LangString(a), LiteralTypeRef::LangString(b)) => a == *b,
             _ => false,
         }
@@ -77,7 +77,7 @@ impl<'a> PartialEq<LiteralTypeRef<'a>> for LiteralType {
 impl PartialOrd<LiteralType> for LiteralTypeRef<'_> {
     fn partial_cmp(&self, other: &LiteralType) -> Option<Ordering> {
         match (self, other) {
-            (Self::Any(a), LiteralType::Any(b)) => (*a).partial_cmp(b),
+            (Self::Any(a), LiteralType::Any(b)) => a.as_str().partial_cmp(b.as_str()),
             (Self::Any(_), LiteralType::LangString(_)) => Some(Ordering::Less),
             (Self::LangString(_), LiteralType::Any(_)) => Some(Ordering::Greater),
             (Self::LangString(a), LiteralType::LangString(b)) => (*a).partial_cmp(b),
@@ -88,7 +88,7 @@ impl PartialOrd<LiteralType> for LiteralTypeRef<'_> {
 impl<'a> PartialOrd<LiteralTypeRef<'a>> for LiteralType {
     fn partial_cmp(&self, other: &LiteralTypeRef<'a>) -> Option<Ordering> {
         match (self, other) {
-            (Self::Any(a), LiteralTypeRef::Any(b)) => (*a).partial_cmp(b),
+            (Self::Any(a), LiteralTypeRef::Any(b)) => a.as_str().partial_cmp(b.as_str()),
             (Self::Any(_), LiteralTypeRef::LangString(_)) => Some(Ordering::Less),
             (Self::LangString(_), LiteralTypeRef::Any(_)) => Some(Ordering::Greater),
             (Self::LangString(a), LiteralTypeRef::LangString(b)) => (*a).partial_cmp(b),

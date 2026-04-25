@@ -16,7 +16,7 @@ macro_rules! grdf_triple {
 	{
 		@from ($($acc:tt)*) < $iri:literal > $($rest:tt)*
 	} => {
-		$crate::grdf_triple!(@from ($($acc)* $crate::LocalTerm::iri($crate::iri!($iri).to_owned()),) $($rest)*)
+		$crate::grdf_triple!(@from ($($acc)* $crate::LocalTerm::iri($crate::IriBuf::from($crate::iri!($iri))),) $($rest)*)
 	};
 	{
 		@from ($($acc:tt)*) _ : $id:literal $($rest:tt)*
@@ -29,7 +29,7 @@ macro_rules! grdf_triple {
 		$crate::grdf_triple!(@from ($($acc)* $crate::LocalTerm::literal($crate::Literal::new(
 			$value.to_owned(),
 			$crate::LiteralType::Any(
-				$crate::iri!($ty).to_owned()
+				$crate::IriBuf::from($crate::iri!($ty))
 			)
 		)),) $($rest)*)
 	};
@@ -39,7 +39,7 @@ macro_rules! grdf_triple {
 		$crate::grdf_triple!(@from ($($acc)* $crate::LocalTerm::literal($crate::Literal::new(
 			$value.to_owned(),
 			$crate::LiteralType::Any(
-				$crate::XSD_STRING.to_owned()
+				$crate::IriBuf::from($crate::XSD_STRING)
 			)
 		)),) $($rest)*)
 	};
@@ -147,7 +147,7 @@ macro_rules! grdf_quad {
 	{
 		@from ($($acc:tt)*) < $iri:literal > $($rest:tt)*
 	} => {
-		$crate::grdf_quad!(@from ($($acc)* $crate::LocalTerm::iri($crate::iri!($iri).to_owned()),) $($rest)*)
+		$crate::grdf_quad!(@from ($($acc)* $crate::LocalTerm::iri($crate::IriBuf::from($crate::iri!($iri))),) $($rest)*)
 	};
 	{
 		@from ($($acc:tt)*) _ : $id:literal $($rest:tt)*
@@ -160,7 +160,7 @@ macro_rules! grdf_quad {
 		$crate::grdf_quad!(@from ($($acc)* $crate::LocalTerm::literal($crate::Literal::new(
 			$value.to_owned(),
 			$crate::LiteralType::Any(
-				$crate::iri!($ty).to_owned()
+				$crate::IriBuf::from($crate::iri!($ty))
 			)
 		)),) $($rest)*)
 	};
@@ -170,7 +170,7 @@ macro_rules! grdf_quad {
 		$crate::grdf_quad!(@from ($($acc)* $crate::LocalTerm::literal($crate::Literal::new(
 			$value.to_owned(),
 			$crate::LiteralType::Any(
-				$crate::XSD_STRING.to_owned()
+				$crate::IriBuf::from($crate::XSD_STRING)
 			)
 		)),) $($rest)*)
 	};
@@ -220,7 +220,7 @@ macro_rules! grdf_quad_pattern {
 	{
 		@from ($($acc:tt)*) < $iri:literal > $($rest:tt)*
 	} => {
-		$crate::grdf_quad_pattern!(@from ($($acc)* $crate::pattern::ResourceOrVar::Resource($crate::LocalTerm::iri($crate::static_iref::iri!($iri).to_owned())),) $($rest)*)
+		$crate::grdf_quad_pattern!(@from ($($acc)* $crate::pattern::ResourceOrVar::Resource($crate::LocalTerm::iri($crate::IriBuf::from($crate::iri!($iri)))),) $($rest)*)
 	};
 	{
 		@from ($($acc:tt)*) _ : $id:literal $($rest:tt)*
@@ -233,7 +233,7 @@ macro_rules! grdf_quad_pattern {
 		$crate::grdf_quad_pattern!(@from ($($acc)* $crate::pattern::ResourceOrVar::Resource($crate::LocalTerm::literal($crate::Literal::new(
 			$value.to_owned(),
 			$crate::LiteralType::Any(
-				$crate::static_iref::iri!($ty).to_owned()
+				$crate::IriBuf::from($crate::iri!($ty))
 			)
 		))),) $($rest)*)
 	};
@@ -243,7 +243,7 @@ macro_rules! grdf_quad_pattern {
 		$crate::grdf_quad_pattern!(@from ($($acc)* $crate::pattern::ResourceOrVar::Resource($crate::LocalTerm::literal($crate::Literal::new(
 			$value.to_owned(),
 			$crate::LiteralType::Any(
-				$crate::XSD_STRING.to_owned()
+				$crate::IriBuf::from($crate::XSD_STRING)
 			)
 		))),) $($rest)*)
 	};
@@ -346,7 +346,7 @@ macro_rules! grdf_quads {
 
 #[cfg(test)]
 mod tests {
-    use iref::iri;
+    use iri_rs::iri;
 
     #[test]
     fn grdf_triple_macro() {
@@ -357,7 +357,7 @@ mod tests {
 
     #[test]
     fn grdf_triples_macro() {
-        let term = iri!("https://example.org/#iri").to_owned();
+        let term = iri_rs::IriBuf::from(iri!("https://example.org/#iri"));
         let _ = grdf_triples! [
             _:"foo" <"https://example.org/#foo"> "foo" .
             <"https://example.org/#bar"> _:"bar" "bar"^^"https://example.org/#datatype" .
@@ -374,7 +374,7 @@ mod tests {
 
     #[test]
     fn grdf_quads_macro() {
-        let term = iri!("https://example.org/#iri").to_owned();
+        let term = iri_rs::IriBuf::from(iri!("https://example.org/#iri"));
         let _ = grdf_quads! [
             _:"foo" <"https://example.org/#foo"> "foo" .
             <"https://example.org/#bar"> _:"bar" "bar"^^"https://example.org/#datatype" .

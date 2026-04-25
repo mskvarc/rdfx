@@ -2,7 +2,7 @@ use crate::{BlankId, BlankIdBuf, Literal, LiteralRef, RdfDisplay};
 use std::{borrow::Cow, fmt, hash::Hash};
 
 mod r#ref;
-use iref::{Iri, IriBuf};
+use iri_rs::{Iri, IriBuf};
 pub use r#ref::*;
 
 mod cow;
@@ -47,7 +47,7 @@ impl LocalTerm {
         self.as_anonymous()
     }
 
-    pub fn as_iri(&self) -> Option<&Iri> {
+    pub fn as_iri(&self) -> Option<Iri<&str>> {
         match self {
             Self::Named(t) => t.as_iri(),
             Self::Anonymous(_) => None,

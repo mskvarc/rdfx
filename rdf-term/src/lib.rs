@@ -18,7 +18,7 @@
 #![recursion_limit = "1024"]
 
 #[doc(hidden)]
-pub use iref;
+pub use iri_rs;
 
 mod blankid;
 mod display;
@@ -46,6 +46,6 @@ pub mod utils;
 
 pub use dataset::Dataset;
 pub use interpretation::{Interpretation, InterpretationMut};
-pub use iref::{Iri, IriBuf, iri};
+pub use iri_rs::{Iri, IriBuf, iri};
 
-pub const XSD_STRING: &Iri = iri!("http://www.w3.org/2001/XMLSchema#string");
+pub const XSD_STRING: Iri<&'static str> = iri!("http://www.w3.org/2001/XMLSchema#string");

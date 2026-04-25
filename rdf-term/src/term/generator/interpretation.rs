@@ -1,6 +1,6 @@
 use std::{borrow::Cow, cell::RefCell};
 
-use iref::Iri;
+use iri_rs::{Iri, IriBuf};
 
 use crate::{
     BlankId,
@@ -29,8 +29,8 @@ impl<G> LocalGeneratorInterpretation<G> {
 impl<G> Interpretation for LocalGeneratorInterpretation<G> {
     type Resource = LocalTerm;
 
-    fn iri(&self, iri: &Iri) -> Option<Self::Resource> {
-        Some(iri.to_owned().into())
+    fn iri(&self, iri: Iri<&str>) -> Option<Self::Resource> {
+        Some(IriBuf::from(iri).into())
     }
 
     fn literal<'a>(&self, literal: impl Into<LiteralRef<'a>>) -> Option<Self::Resource> {
@@ -45,7 +45,7 @@ impl<G> LocalInterpretation for LocalGeneratorInterpretation<G> {
 }
 
 impl<G> InterpretationMut for LocalGeneratorInterpretation<G> {
-    fn insert_iri<'a>(&mut self, iri: impl Into<Cow<'a, Iri>>) -> Self::Resource {
+    fn insert_iri<'a>(&mut self, iri: impl Into<Cow<'a, IriBuf>>) -> Self::Resource {
         iri.into().into_owned().into()
     }
 
@@ -56,7 +56,7 @@ impl<G> InterpretationMut for LocalGeneratorInterpretation<G> {
 
 impl<G> ReverseInterpretation for LocalGeneratorInterpretation<G> {
     type Iris<'a>
-        = std::option::IntoIter<Cow<'a, Iri>>
+        = std::option::IntoIter<Cow<'a, IriBuf>>
     where
         Self: 'a;
     type Literals<'a>
@@ -65,7 +65,10 @@ impl<G> ReverseInterpretation for LocalGeneratorInterpretation<G> {
         Self: 'a;
 
     fn iris_of<'a>(&'a self, resource: &'a Self::Resource) -> Self::Iris<'a> {
-        resource.as_iri().map(Cow::Borrowed).into_iter()
+        match resource {
+            LocalTerm::Named(crate::Term::Iri(iri)) => Some(Cow::Borrowed(iri)).into_iter(),
+            _ => None.into_iter(),
+        }
     }
 
     fn literals_of<'a>(&'a self, resource: &'a Self::Resource) -> Self::Literals<'a> {

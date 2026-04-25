@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use iref::Iri;
+use iri_rs::{Iri, IriBuf};
 
 use crate::{
     BlankId,
@@ -75,7 +75,7 @@ impl<G, I> WithGenerator<G, I> {
 impl<I: Interpretation, G> Interpretation for WithGenerator<G, I> {
     type Resource = I::Resource;
 
-    fn iri(&self, iri: &Iri) -> Option<Self::Resource> {
+    fn iri(&self, iri: Iri<&str>) -> Option<Self::Resource> {
         self.interpretation.iri(iri)
     }
 
@@ -85,7 +85,7 @@ impl<I: Interpretation, G> Interpretation for WithGenerator<G, I> {
 }
 
 impl<I: InterpretationMut, G> InterpretationMut for WithGenerator<G, I> {
-    fn insert_iri<'a>(&mut self, iri: impl Into<Cow<'a, Iri>>) -> Self::Resource {
+    fn insert_iri<'a>(&mut self, iri: impl Into<Cow<'a, IriBuf>>) -> Self::Resource {
         self.interpretation.insert_iri(iri)
     }
 
@@ -162,7 +162,7 @@ impl<G, I> WithLocalGenerator<G, I> {
 impl<I: Interpretation, G> Interpretation for WithLocalGenerator<G, I> {
     type Resource = I::Resource;
 
-    fn iri(&self, iri: &Iri) -> Option<Self::Resource> {
+    fn iri(&self, iri: Iri<&str>) -> Option<Self::Resource> {
         self.interpretation.iri(iri)
     }
 
@@ -178,7 +178,7 @@ impl<I: LocalInterpretation, G> LocalInterpretation for WithLocalGenerator<G, I>
 }
 
 impl<I: InterpretationMut, G> InterpretationMut for WithLocalGenerator<G, I> {
-    fn insert_iri<'a>(&mut self, iri: impl Into<Cow<'a, Iri>>) -> Self::Resource {
+    fn insert_iri<'a>(&mut self, iri: impl Into<Cow<'a, IriBuf>>) -> Self::Resource {
         self.interpretation.insert_iri(iri)
     }
 

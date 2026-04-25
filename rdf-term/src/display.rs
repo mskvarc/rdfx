@@ -1,5 +1,6 @@
-use std::fmt;
+use std::{fmt, ops::Deref};
 
+use iri_rs::{Iri, IriRef};
 use langtag::{LangTag, LangTagBuf};
 
 /// Display method for RDF syntax elements.
@@ -39,7 +40,7 @@ impl RdfDisplay for String {
     }
 }
 
-impl RdfDisplay for iref::IriRef {
+impl<T: Deref<Target = str>> RdfDisplay for IriRef<T> {
     fn rdf_fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "<")?;
 
@@ -57,7 +58,7 @@ impl RdfDisplay for iref::IriRef {
     }
 }
 
-impl RdfDisplay for iref::Iri {
+impl<T: Deref<Target = str>> RdfDisplay for Iri<T> {
     #[inline(always)]
     fn rdf_fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.as_iri_ref().rdf_fmt(f)
@@ -65,35 +66,14 @@ impl RdfDisplay for iref::Iri {
 }
 
 #[cfg(feature = "contextual")]
-impl<C: ?Sized> RdfDisplayWithContext<C> for iref::Iri {
+impl<T: Deref<Target = str>, C: ?Sized> RdfDisplayWithContext<C> for Iri<T> {
     fn rdf_fmt_with(&self, _context: &C, f: &mut fmt::Formatter) -> fmt::Result {
         self.rdf_fmt(f)
     }
 }
 
-impl RdfDisplay for iref::IriBuf {
-    #[inline(always)]
-    fn rdf_fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.as_iri_ref().rdf_fmt(f)
-    }
-}
-
 #[cfg(feature = "contextual")]
-impl<C: ?Sized> RdfDisplayWithContext<C> for iref::IriBuf {
-    fn rdf_fmt_with(&self, _context: &C, f: &mut fmt::Formatter) -> fmt::Result {
-        self.rdf_fmt(f)
-    }
-}
-
-impl RdfDisplay for iref::IriRefBuf {
-    #[inline(always)]
-    fn rdf_fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.as_iri_ref().rdf_fmt(f)
-    }
-}
-
-#[cfg(feature = "contextual")]
-impl<C: ?Sized> RdfDisplayWithContext<C> for iref::IriRefBuf {
+impl<T: Deref<Target = str>, C: ?Sized> RdfDisplayWithContext<C> for IriRef<T> {
     fn rdf_fmt_with(&self, _context: &C, f: &mut fmt::Formatter) -> fmt::Result {
         self.rdf_fmt(f)
     }
