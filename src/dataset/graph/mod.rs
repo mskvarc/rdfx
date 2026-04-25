@@ -1,4 +1,4 @@
-use crate::{Triple, pattern::CanonicalTriplePattern};
+use crate::{IsObject, IsPredicate, IsSubject, Resource, Triple, pattern::CanonicalTriplePattern};
 
 pub mod fallible;
 pub use fallible::FallibleGraph;
@@ -7,12 +7,28 @@ mod r#impl;
 pub use r#impl::*;
 
 /// RDF graph.
+///
+/// Per [RDF 1.1 Concepts §3 Triples][s], terms are typed by their position:
+/// subjects must be IRIs or blank nodes (no literals), predicates must be
+/// IRIs (no blank nodes or literals), objects may be any term. The three
+/// associated types capture this invariant; uniform-resource graphs (where
+/// `Subject = Predicate = Object`) automatically satisfy [`UniformGraph<R>`]
+/// via blanket impl.
+///
+/// [s]: https://www.w3.org/TR/rdf11-concepts/#section-triples
 pub trait Graph {
-    type Resource;
+    type Subject: IsSubject;
+    type Predicate: IsPredicate;
+    type Object: IsObject;
 }
 
+/// Marker for graphs whose subject/predicate/object positions all carry the
+/// same resource type — typical for graphs storing opaque handles.
+pub trait UniformGraph<R: Resource>: Graph<Subject = R, Predicate = R, Object = R> {}
+impl<R: Resource, G: Graph<Subject = R, Predicate = R, Object = R>> UniformGraph<R> for G {}
+
 pub trait TraversableGraph: Graph {
-    type Triples<'a>: Iterator<Item = Triple<&'a Self::Resource>>
+    type Triples<'a>: Iterator<Item = Triple<&'a Self::Subject, &'a Self::Predicate, &'a Self::Object>>
     where
         Self: 'a;
 
@@ -24,7 +40,7 @@ pub trait TraversableGraph: Graph {
 }
 
 pub trait ResourceTraversableGraph: Graph {
-    type GraphResources<'a>: Iterator<Item = &'a Self::Resource>
+    type GraphResources<'a>: Iterator<Item = &'a Self::Subject>
     where
         Self: 'a;
 
@@ -36,7 +52,7 @@ pub trait ResourceTraversableGraph: Graph {
 }
 
 pub trait SubjectTraversableGraph: Graph {
-    type GraphSubjects<'a>: Iterator<Item = &'a Self::Resource>
+    type GraphSubjects<'a>: Iterator<Item = &'a Self::Subject>
     where
         Self: 'a;
 
@@ -48,7 +64,7 @@ pub trait SubjectTraversableGraph: Graph {
 }
 
 pub trait PredicateTraversableGraph: Graph {
-    type GraphPredicates<'a>: Iterator<Item = &'a Self::Resource>
+    type GraphPredicates<'a>: Iterator<Item = &'a Self::Predicate>
     where
         Self: 'a;
 
@@ -60,7 +76,7 @@ pub trait PredicateTraversableGraph: Graph {
 }
 
 pub trait ObjectTraversableGraph: Graph {
-    type GraphObjects<'a>: Iterator<Item = &'a Self::Resource>
+    type GraphObjects<'a>: Iterator<Item = &'a Self::Object>
     where
         Self: 'a;
 
@@ -71,21 +87,25 @@ pub trait ObjectTraversableGraph: Graph {
     }
 }
 
-/// Pattern-matching-capable dataset.
-pub trait PatternMatchingGraph: Graph {
-    type TriplePatternMatching<'a, 'p>: Iterator<Item = Triple<&'a Self::Resource>>
+/// Pattern-matching-capable graph. Restricted to uniform graphs whose
+/// resource type implements [`Resource`] (granting all four position traits).
+pub trait PatternMatchingGraph: Graph<Predicate = <Self as Graph>::Subject, Object = <Self as Graph>::Subject>
+where
+    <Self as Graph>::Subject: Resource,
+{
+    type TriplePatternMatching<'a, 'p>: Iterator<Item = Triple<&'a Self::Subject, &'a Self::Subject, &'a Self::Subject>>
     where
         Self: 'a,
-        Self::Resource: 'p;
+        Self::Subject: 'p;
 
-    fn triple_pattern_matching<'p>(&self, pattern: CanonicalTriplePattern<&'p Self::Resource>) -> Self::TriplePatternMatching<'_, 'p>;
+    fn triple_pattern_matching<'p>(&self, pattern: CanonicalTriplePattern<&'p Self::Subject>) -> Self::TriplePatternMatching<'_, 'p>;
 
-    fn contains_triple(&self, triple: Triple<&Self::Resource>) -> bool {
+    fn contains_triple(&self, triple: Triple<&Self::Subject, &Self::Subject, &Self::Subject>) -> bool {
         self.triple_pattern_matching(triple.into()).next().is_some()
     }
 
     /// Checks if the graph contains the given subject.
-    fn contains_triple_subject(&self, subject: &Self::Resource) -> bool {
+    fn contains_triple_subject(&self, subject: &Self::Subject) -> bool {
         use crate::pattern::triple::canonical::{GivenSubject, GivenSubjectAnyPredicate};
         self.triple_pattern_matching(CanonicalTriplePattern::GivenSubject(
             subject,
@@ -96,7 +116,7 @@ pub trait PatternMatchingGraph: Graph {
     }
 
     /// Checks if the graph contains the given predicate.
-    fn contains_triple_predicate(&self, predicate: &Self::Resource) -> bool {
+    fn contains_triple_predicate(&self, predicate: &Self::Subject) -> bool {
         use crate::pattern::triple::canonical::{AnySubject, AnySubjectGivenPredicate};
         self.triple_pattern_matching(CanonicalTriplePattern::AnySubject(AnySubject::GivenPredicate(
             predicate,
@@ -107,7 +127,7 @@ pub trait PatternMatchingGraph: Graph {
     }
 
     /// Checks if the graph contains the given object.
-    fn contains_triple_object(&self, object: &Self::Resource) -> bool {
+    fn contains_triple_object(&self, object: &Self::Subject) -> bool {
         use crate::pattern::triple::canonical::{AnySubject, AnySubjectAnyPredicate};
         self.triple_pattern_matching(CanonicalTriplePattern::AnySubject(AnySubject::AnyPredicate(
             AnySubjectAnyPredicate::GivenObject(object),
@@ -117,7 +137,7 @@ pub trait PatternMatchingGraph: Graph {
     }
 
     /// Returns an iterator over all the predicates `p` matching the triple `subject p o` present in the graph, for some `o`.
-    fn triple_predicates_objects<'p>(&self, subject: &'p Self::Resource) -> TriplePredicatesObjects<'_, 'p, Self>
+    fn triple_predicates_objects<'p>(&self, subject: &'p Self::Subject) -> TriplePredicatesObjects<'_, 'p, Self>
     where
         Self: PredicateTraversableGraph,
     {
@@ -129,7 +149,7 @@ pub trait PatternMatchingGraph: Graph {
     }
 
     /// Returns an iterator over all the objects `o` matching the triple `subject predicate o` present in the graph.
-    fn triple_objects<'p>(&self, subject: &'p Self::Resource, predicate: &'p Self::Resource) -> TripleObjects<'_, 'p, Self> {
+    fn triple_objects<'p>(&self, subject: &'p Self::Subject, predicate: &'p Self::Subject) -> TripleObjects<'_, 'p, Self> {
         TripleObjects {
             first: None,
             inner: self.triple_pattern_matching(CanonicalTriplePattern::from_option_triple(Triple(Some(subject), Some(predicate), None))),
@@ -137,17 +157,20 @@ pub trait PatternMatchingGraph: Graph {
     }
 }
 
-pub struct TriplePredicatesObjects<'a, 'p, G: 'a + ?Sized + PredicateTraversableGraph + PatternMatchingGraph> {
-    subject: &'p G::Resource,
+pub struct TriplePredicatesObjects<'a, 'p, G: 'a + ?Sized + PredicateTraversableGraph + PatternMatchingGraph>
+where
+    G::Subject: Resource,
+{
+    subject: &'p G::Subject,
     predicates: G::GraphPredicates<'a>,
     graph: &'a G,
 }
 
 impl<'a: 'p, 'p, G: 'a + ?Sized + PredicateTraversableGraph + PatternMatchingGraph> Iterator for TriplePredicatesObjects<'a, 'p, G>
 where
-    G::Resource: 'p,
+    G::Subject: Resource + 'p,
 {
-    type Item = (&'a G::Resource, TripleObjects<'p, 'p, G>);
+    type Item = (&'a G::Subject, TripleObjects<'p, 'p, G>);
 
     fn next(&mut self) -> Option<Self::Item> {
         for predicate in &mut self.predicates {
@@ -166,32 +189,32 @@ where
 
 pub struct TripleObjects<'a, 'p, D: 'a + ?Sized + PatternMatchingGraph>
 where
-    D::Resource: 'p,
+    D::Subject: Resource + 'p,
 {
-    first: Option<&'a D::Resource>,
+    first: Option<&'a D::Subject>,
     inner: D::TriplePatternMatching<'a, 'p>,
 }
 
 impl<'a, 'p, D: 'a + ?Sized + PatternMatchingGraph> Iterator for TripleObjects<'a, 'p, D>
 where
-    D::Resource: 'p,
+    D::Subject: Resource + 'p,
 {
-    type Item = &'a D::Resource;
+    type Item = &'a D::Subject;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.first.take().or_else(|| self.inner.next().map(Triple::into_object))
     }
 }
 
-/// Mutable dataset.
+/// Mutable graph.
 pub trait GraphMut: Graph {
-    fn insert(&mut self, triple: Triple<Self::Resource>);
+    fn insert(&mut self, triple: Triple<Self::Subject, Self::Predicate, Self::Object>);
 
-    fn remove(&mut self, triple: Triple<&Self::Resource>);
+    fn remove(&mut self, triple: Triple<&Self::Subject, &Self::Predicate, &Self::Object>);
 }
 
 /// Graph view focusing on a given resource.
 pub struct GraphView<'a, G: Graph> {
     pub graph: &'a G,
-    pub resource: &'a G::Resource,
+    pub resource: &'a G::Subject,
 }

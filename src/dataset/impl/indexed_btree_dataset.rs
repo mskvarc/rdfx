@@ -4,18 +4,16 @@ use educe::Educe;
 use raw_btree::RawBTree;
 use slab::Slab;
 
-use super::{
-    super::{Dataset, PatternMatchingDataset},
-    BTreeDataset,
-};
+use super::{super::PatternMatchingDataset, BTreeDataset};
 use crate::{
-    BlankIdBuf,
-    LocalTerm,
     Quad,
     RdfDisplay,
+    Resource,
     dataset::{
         BTreeGraph,
+        Dataset,
         DatasetMut,
+        Graph,
         MultiPatternMatchingDataset,
         NamedGraphTraversableDataset,
         ObjectTraversableDataset,
@@ -23,7 +21,6 @@ use crate::{
         ResourceTraversableDataset,
         SubjectTraversableDataset,
         TraversableDataset,
-        isomorphism::{Bijection, are_isomorphic, find_bijection},
     },
     pattern::{
         CanonicalQuadPattern,
@@ -31,15 +28,15 @@ use crate::{
     },
 };
 
-fn resource_cmp<R: Ord>(resources: &Slab<Resource<R>>) -> impl '_ + Fn(&usize, &R) -> Ordering {
+fn resource_cmp<R: Ord>(resources: &Slab<Entry<R>>) -> impl '_ + Fn(&usize, &R) -> Ordering {
     |&i, resource| resources[i].value.cmp(resource)
 }
 
-fn resource_index_cmp<R: Ord>(resources: &Slab<Resource<R>>) -> impl '_ + Fn(&usize, &usize) -> Ordering {
+fn resource_index_cmp<R: Ord>(resources: &Slab<Entry<R>>) -> impl '_ + Fn(&usize, &usize) -> Ordering {
     |&i, &j| resources[i].value.cmp(&resources[j].value)
 }
 
-fn quad_with_resources<R>(resources: &Slab<Resource<R>>, Quad(s, p, o, g): Quad<usize>) -> Quad<&R> {
+fn quad_with_resources<R: Resource>(resources: &Slab<Entry<R>>, Quad(s, p, o, g): Quad<usize, usize, usize, usize>) -> Quad<&R, &R, &R, &R> {
     // Safety: resource indexes in stored quads always point to live entries in `resources`.
     unsafe {
         Quad(
@@ -51,19 +48,19 @@ fn quad_with_resources<R>(resources: &Slab<Resource<R>>, Quad(s, p, o, g): Quad<
     }
 }
 
-fn quad_cmp<'a, R: Ord>(resources: &'a Slab<Resource<R>>, quads: &'a Slab<Quad<usize>>) -> impl 'a + Fn(&usize, &Quad<&R>) -> Ordering {
+fn quad_cmp<'a, R: Resource + Ord>(resources: &'a Slab<Entry<R>>, quads: &'a Slab<Quad<usize, usize, usize, usize>>) -> impl 'a + Fn(&usize, &Quad<&R, &R, &R, &R>) -> Ordering {
     |&i, quad| quad_with_resources(resources, quads[i]).cmp(quad)
 }
 
-fn quad_index_cmp<'a, R: Ord>(resources: &'a Slab<Resource<R>>, quads: &'a Slab<Quad<usize>>) -> impl 'a + Fn(&usize, &usize) -> Ordering {
+fn quad_index_cmp<'a, R: Resource + Ord>(resources: &'a Slab<Entry<R>>, quads: &'a Slab<Quad<usize, usize, usize, usize>>) -> impl 'a + Fn(&usize, &usize) -> Ordering {
     |&i, &j| quad_with_resources(resources, quads[i]).cmp(&quad_with_resources(resources, quads[j]))
 }
 
 /// Indexed BTree-based RDF dataset, optimized for pattern matching operations.
 #[derive(Clone)]
-pub struct IndexedBTreeDataset<R = LocalTerm> {
-    resources: Slab<Resource<R>>,
-    quads: Slab<Quad<usize>>,
+pub struct IndexedBTreeDataset<R> {
+    resources: Slab<Entry<R>>,
+    quads: Slab<Quad<usize, usize, usize, usize>>,
     resources_indexes: RawBTree<usize>,
     quads_indexes: RawBTree<usize>,
     subjects: BTreeSet<usize>,
@@ -89,7 +86,7 @@ impl<R> Default for IndexedBTreeDataset<R> {
     }
 }
 
-impl<R> IndexedBTreeDataset<R> {
+impl<R: Resource> IndexedBTreeDataset<R> {
     /// Creates a new empty dataset.
     pub fn new() -> Self {
         Self::default()
@@ -97,11 +94,11 @@ impl<R> IndexedBTreeDataset<R> {
 
     /// Creates a new indexed dataset from a non-indexed one.
     pub fn from_non_indexed(dataset: BTreeDataset<R>) -> Self {
-        let mut resources: Slab<Resource<R>> = dataset
+        let mut resources: Slab<Entry<R>> = dataset
             .resources
             .into_iter()
             .map(|(i, r)| {
-                let indexed_r = Resource {
+                let indexed_r = Entry {
                     value: r.value,
                     as_subject: BTreeSet::new(),
                     as_predicate: BTreeSet::new(),
@@ -215,17 +212,17 @@ impl<R> IndexedBTreeDataset<R> {
     }
 }
 
-impl<R: Ord> IndexedBTreeDataset<R> {
+impl<R: Resource + Ord> IndexedBTreeDataset<R> {
     fn index_of_resource(&self, resource: &R) -> Option<usize> {
         self.resources_indexes.get(resource_cmp(&self.resources), resource).copied()
     }
 
-    fn get_resource(&self, resource: &R) -> Option<&Resource<R>> {
+    fn get_resource(&self, resource: &R) -> Option<&Entry<R>> {
         self.resources.get(self.index_of_resource(resource)?)
     }
 
     /// Returns the index of the given quad in the dataset, if any.
-    fn index_of_quad(&self, quad: Quad<&R>) -> Option<usize> {
+    fn index_of_quad(&self, quad: Quad<&R, &R, &R, &R>) -> Option<usize> {
         self.quads_indexes.get(quad_cmp(&self.resources, &self.quads), &quad).copied()
     }
 
@@ -235,7 +232,7 @@ impl<R: Ord> IndexedBTreeDataset<R> {
     }
 
     /// Checks if the provided quad is in the dataset.
-    pub fn contains(&self, quad: Quad<&R>) -> bool {
+    pub fn contains(&self, quad: Quad<&R, &R, &R, &R>) -> bool {
         self.index_of_quad(quad).is_some()
     }
 
@@ -243,7 +240,7 @@ impl<R: Ord> IndexedBTreeDataset<R> {
     ///
     /// Returns `true` if the quad was not already in the dataset, and `false`
     /// if it was.
-    pub fn insert(&mut self, quad: Quad<R>) -> bool {
+    pub fn insert(&mut self, quad: Quad<R, R, R, R>) -> bool {
         if self.contains(quad.as_ref()) {
             false
         } else {
@@ -264,7 +261,7 @@ impl<R: Ord> IndexedBTreeDataset<R> {
                     s_i
                 }
                 None => {
-                    let s_i = self.resources.insert(Resource::subject(quad.0, i));
+                    let s_i = self.resources.insert(Entry::subject(quad.0, i));
                     self.resources_indexes.insert(resource_index_cmp(&self.resources), s_i);
                     s_i
                 }
@@ -276,7 +273,7 @@ impl<R: Ord> IndexedBTreeDataset<R> {
                     p_i
                 }
                 None => {
-                    let p_i = self.resources.insert(Resource::predicate(quad.1, i));
+                    let p_i = self.resources.insert(Entry::predicate(quad.1, i));
                     self.resources_indexes.insert(resource_index_cmp(&self.resources), p_i);
                     p_i
                 }
@@ -288,7 +285,7 @@ impl<R: Ord> IndexedBTreeDataset<R> {
                     o_i
                 }
                 None => {
-                    let o_i = self.resources.insert(Resource::object(quad.2, i));
+                    let o_i = self.resources.insert(Entry::object(quad.2, i));
                     self.resources_indexes.insert(resource_index_cmp(&self.resources), o_i);
                     o_i
                 }
@@ -300,7 +297,7 @@ impl<R: Ord> IndexedBTreeDataset<R> {
                     Some(g_i)
                 }
                 Some((g, None)) => {
-                    let g_i = self.resources.insert(Resource::graph(g, i));
+                    let g_i = self.resources.insert(Entry::graph(g, i));
                     self.resources_indexes.insert(resource_index_cmp(&self.resources), g_i);
                     Some(g_i)
                 }
@@ -329,7 +326,7 @@ impl<R: Ord> IndexedBTreeDataset<R> {
     ///
     /// Returns whether or not the quad was in the dataset.
     /// Does nothing if the quad was not in the dataset.
-    pub fn remove(&mut self, quad: Quad<&R>) -> bool {
+    pub fn remove(&mut self, quad: Quad<&R, &R, &R, &R>) -> bool {
         match self.quads_indexes.remove(quad_cmp(&self.resources, &self.quads), &quad) {
             Some(i) => {
                 self.remove_by_index(i, false);
@@ -472,36 +469,36 @@ impl<R: Ord> IndexedBTreeDataset<R> {
     }
 }
 
-impl From<BTreeDataset> for IndexedBTreeDataset {
-    fn from(value: BTreeDataset) -> Self {
+impl<R: Resource> From<BTreeDataset<R>> for IndexedBTreeDataset<R> {
+    fn from(value: BTreeDataset<R>) -> Self {
         Self::from_non_indexed(value)
     }
 }
 
-impl<R: Clone + Ord> FromIterator<Quad<R>> for IndexedBTreeDataset<R> {
-    fn from_iter<T: IntoIterator<Item = Quad<R>>>(iter: T) -> Self {
+impl<R: Resource + Clone + Ord> FromIterator<Quad<R, R, R, R>> for IndexedBTreeDataset<R> {
+    fn from_iter<T: IntoIterator<Item = Quad<R, R, R, R>>>(iter: T) -> Self {
         let mut result = Self::new();
         result.extend(iter);
         result
     }
 }
 
-impl<R: Clone + Ord> Extend<Quad<R>> for IndexedBTreeDataset<R> {
-    fn extend<T: IntoIterator<Item = Quad<R>>>(&mut self, iter: T) {
+impl<R: Resource + Clone + Ord> Extend<Quad<R, R, R, R>> for IndexedBTreeDataset<R> {
+    fn extend<T: IntoIterator<Item = Quad<R, R, R, R>>>(&mut self, iter: T) {
         for quad in iter {
             self.insert(quad);
         }
     }
 }
 
-impl<R: Clone + Ord> IndexedBTreeDataset<R> {
+impl<R: Resource + Clone + Ord> IndexedBTreeDataset<R> {
     /// Inserts every quad of `iter` in the dataset.
-    pub fn absorb<I: IntoIterator<Item = Quad<R>>>(&mut self, iter: I) {
+    pub fn absorb<I: IntoIterator<Item = Quad<R, R, R, R>>>(&mut self, iter: I) {
         self.extend(iter);
     }
 
     /// Removes the given quad and returns it if it was present.
-    pub fn take(&mut self, quad: Quad<&R>) -> Option<Quad<R>> {
+    pub fn take(&mut self, quad: Quad<&R, &R, &R, &R>) -> Option<Quad<R, R, R, R>> {
         let i = self.index_of_quad(quad)?;
         let value = quad_with_resources(&self.resources, self.quads[i]).cloned();
         self.remove_by_index(i, true);
@@ -509,43 +506,23 @@ impl<R: Clone + Ord> IndexedBTreeDataset<R> {
     }
 
     /// Removes and returns the first quad matching the given option-pattern, if any.
-    pub fn take_match(&mut self, pattern: Quad<Option<&R>, Option<&R>, Option<&R>, Option<&R>>) -> Option<Quad<R>> {
+    pub fn take_match(&mut self, pattern: Quad<Option<&R>, Option<&R>, Option<&R>, Option<&R>>) -> Option<Quad<R, R, R, R>> {
         let canonical = CanonicalQuadPattern::from_option_quad(pattern);
         self.extract_pattern_matching(canonical).next()
     }
 }
 
-impl IndexedBTreeDataset<LocalTerm> {
-    /// Returns a blank-node bijection from `self` to `other` if one exists.
-    pub fn find_blank_id_bijection<'a, 'b>(&'a self, other: &'b Self) -> Option<Bijection<'a, 'b>> {
-        find_bijection(self, other)
-    }
-
-    /// Checks if `self` and `other` are isomorphic.
-    pub fn is_isomorphic_to(&self, other: &Self) -> bool {
-        are_isomorphic(self, other)
-    }
-
-    /// Returns a copy of `self` with each blank node identifier replaced by the
-    /// result of `f`.
-    pub fn substitute_blank_ids(self, mut f: impl FnMut(BlankIdBuf) -> BlankIdBuf) -> Self {
-        self.into_iter()
-            .map(|q| {
-                q.map(|t| match t {
-                    LocalTerm::BlankId(b) => LocalTerm::BlankId(f(b)),
-                    named => named,
-                })
-            })
-            .collect::<crate::dataset::BTreeDataset<LocalTerm>>()
-            .into_indexed()
-    }
+impl<R: Resource> Graph for IndexedBTreeDataset<R> {
+    type Subject = R;
+    type Predicate = R;
+    type Object = R;
 }
 
-impl<R> Dataset for IndexedBTreeDataset<R> {
-    type Resource = R;
+impl<R: Resource> Dataset for IndexedBTreeDataset<R> {
+    type Graph = R;
 }
 
-impl<R> TraversableDataset for IndexedBTreeDataset<R> {
+impl<R: Resource> TraversableDataset for IndexedBTreeDataset<R> {
     type Quads<'a>
         = Quads<'a, R>
     where
@@ -560,7 +537,7 @@ impl<R> TraversableDataset for IndexedBTreeDataset<R> {
     }
 }
 
-impl<R> ResourceTraversableDataset for IndexedBTreeDataset<R> {
+impl<R: Resource> ResourceTraversableDataset for IndexedBTreeDataset<R> {
     type Resources<'a>
         = Resources<'a, R>
     where
@@ -575,7 +552,7 @@ impl<R> ResourceTraversableDataset for IndexedBTreeDataset<R> {
     }
 }
 
-impl<R> SubjectTraversableDataset for IndexedBTreeDataset<R> {
+impl<R: Resource> SubjectTraversableDataset for IndexedBTreeDataset<R> {
     type Subjects<'a>
         = Subjects<'a, R>
     where
@@ -590,7 +567,7 @@ impl<R> SubjectTraversableDataset for IndexedBTreeDataset<R> {
     }
 }
 
-impl<R> PredicateTraversableDataset for IndexedBTreeDataset<R> {
+impl<R: Resource> PredicateTraversableDataset for IndexedBTreeDataset<R> {
     type Predicates<'a>
         = Predicates<'a, R>
     where
@@ -605,7 +582,7 @@ impl<R> PredicateTraversableDataset for IndexedBTreeDataset<R> {
     }
 }
 
-impl<R> ObjectTraversableDataset for IndexedBTreeDataset<R> {
+impl<R: Resource> ObjectTraversableDataset for IndexedBTreeDataset<R> {
     type Objects<'a>
         = Objects<'a, R>
     where
@@ -620,7 +597,7 @@ impl<R> ObjectTraversableDataset for IndexedBTreeDataset<R> {
     }
 }
 
-impl<R> NamedGraphTraversableDataset for IndexedBTreeDataset<R> {
+impl<R: Resource> NamedGraphTraversableDataset for IndexedBTreeDataset<R> {
     type NamedGraphs<'a>
         = NamedGraphs<'a, R>
     where
@@ -635,38 +612,38 @@ impl<R> NamedGraphTraversableDataset for IndexedBTreeDataset<R> {
     }
 }
 
-impl<R: Clone + Ord> DatasetMut for IndexedBTreeDataset<R> {
-    fn insert(&mut self, quad: Quad<Self::Resource>) {
+impl<R: Resource + Clone + Ord> DatasetMut for IndexedBTreeDataset<R> {
+    fn insert(&mut self, quad: Quad<Self::Subject, Self::Predicate, Self::Object, <Self as Dataset>::Graph>) {
         self.insert(quad);
     }
 
-    fn remove(&mut self, quad: Quad<&Self::Resource>) {
+    fn remove(&mut self, quad: Quad<&Self::Subject, &Self::Predicate, &Self::Object, &<Self as Dataset>::Graph>) {
         self.remove(quad);
     }
 }
 
-impl<R: Ord> PatternMatchingDataset for IndexedBTreeDataset<R> {
+impl<R: Resource + Ord> PatternMatchingDataset for IndexedBTreeDataset<R> {
     type QuadPatternMatching<'a, 'p>
         = PatternMatching<'a, R>
     where
         R: 'a,
-        Self::Resource: 'p;
+        Self::Subject: 'p;
 
-    fn quad_pattern_matching<'p>(&self, pattern: CanonicalQuadPattern<&'p Self::Resource>) -> Self::QuadPatternMatching<'_, 'p> {
+    fn quad_pattern_matching<'p>(&self, pattern: CanonicalQuadPattern<&'p Self::Subject>) -> Self::QuadPatternMatching<'_, 'p> {
         self.pattern_matching(pattern)
     }
 
-    fn contains_quad(&self, quad: Quad<&Self::Resource>) -> bool {
+    fn contains_quad(&self, quad: Quad<&Self::Subject, &Self::Subject, &Self::Subject, &Self::Subject>) -> bool {
         self.contains(quad)
     }
 }
 
-impl<R: Ord> MultiPatternMatchingDataset for IndexedBTreeDataset<R> {
+impl<R: Resource + Ord> MultiPatternMatchingDataset for IndexedBTreeDataset<R> {
     type QuadMultiPatternMatching<'a, 'p>
         = MultiPatternMatching<'a, R>
     where
         R: 'a,
-        Self::Resource: 'p;
+        Self::Subject: 'p;
 
     fn quad_multi_pattern_matching<'p, P>(&self, pattern: CanonicalQuadPattern<P>) -> Self::QuadMultiPatternMatching<'_, 'p>
     where
@@ -681,13 +658,13 @@ impl<R: Ord> MultiPatternMatchingDataset for IndexedBTreeDataset<R> {
 #[derive(Educe)]
 #[educe(Clone, Copy)]
 pub struct Quads<'a, R> {
-    resources: &'a Slab<Resource<R>>,
-    quads: &'a Slab<Quad<usize>>,
+    resources: &'a Slab<Entry<R>>,
+    quads: &'a Slab<Quad<usize, usize, usize, usize>>,
     indexes: raw_btree::Iter<'a, usize>,
 }
 
-impl<'a, R> Iterator for Quads<'a, R> {
-    type Item = Quad<&'a R>;
+impl<'a, R: Resource> Iterator for Quads<'a, R> {
+    type Item = Quad<&'a R, &'a R, &'a R, &'a R>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.indexes.next().map(|&i| quad_with_resources(self.resources, self.quads[i]))
@@ -696,21 +673,21 @@ impl<'a, R> Iterator for Quads<'a, R> {
 
 /// Iterator over the quads of an [`IndexedBTreeDataset`].
 pub struct IntoQuads<R> {
-    resources: Slab<Resource<R>>,
-    quads: Slab<Quad<usize>>,
+    resources: Slab<Entry<R>>,
+    quads: Slab<Quad<usize, usize, usize, usize>>,
     indexes: raw_btree::IntoIter<usize>,
 }
 
-impl<R: Clone> Iterator for IntoQuads<R> {
-    type Item = Quad<R>;
+impl<R: Resource + Clone> Iterator for IntoQuads<R> {
+    type Item = Quad<R, R, R, R>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.indexes.next().map(|i| quad_with_resources(&self.resources, self.quads.remove(i)).cloned())
     }
 }
 
-impl<'a, R> IntoIterator for &'a IndexedBTreeDataset<R> {
-    type Item = Quad<&'a R>;
+impl<'a, R: Resource> IntoIterator for &'a IndexedBTreeDataset<R> {
+    type Item = Quad<&'a R, &'a R, &'a R, &'a R>;
     type IntoIter = Quads<'a, R>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -718,8 +695,8 @@ impl<'a, R> IntoIterator for &'a IndexedBTreeDataset<R> {
     }
 }
 
-impl<R: Clone> IntoIterator for IndexedBTreeDataset<R> {
-    type Item = Quad<R>;
+impl<R: Resource + Clone> IntoIterator for IndexedBTreeDataset<R> {
+    type Item = Quad<R, R, R, R>;
     type IntoIter = IntoQuads<R>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -732,7 +709,7 @@ impl<R: Clone> IntoIterator for IndexedBTreeDataset<R> {
 }
 
 pub struct Resources<'a, R> {
-    resources: &'a Slab<Resource<R>>,
+    resources: &'a Slab<Entry<R>>,
     indexes: raw_btree::Iter<'a, usize>,
 }
 
@@ -745,7 +722,7 @@ impl<'a, R> Iterator for Resources<'a, R> {
 }
 
 pub struct Subjects<'a, R> {
-    resources: &'a Slab<Resource<R>>,
+    resources: &'a Slab<Entry<R>>,
     indexes: std::collections::btree_set::Iter<'a, usize>,
 }
 
@@ -758,7 +735,7 @@ impl<'a, R> Iterator for Subjects<'a, R> {
 }
 
 pub struct Predicates<'a, R> {
-    resources: &'a Slab<Resource<R>>,
+    resources: &'a Slab<Entry<R>>,
     indexes: std::collections::btree_set::Iter<'a, usize>,
 }
 
@@ -771,7 +748,7 @@ impl<'a, R> Iterator for Predicates<'a, R> {
 }
 
 pub struct Objects<'a, R> {
-    resources: &'a Slab<Resource<R>>,
+    resources: &'a Slab<Entry<R>>,
     indexes: std::collections::btree_set::Iter<'a, usize>,
 }
 
@@ -784,7 +761,7 @@ impl<'a, R> Iterator for Objects<'a, R> {
 }
 
 pub struct NamedGraphs<'a, R> {
-    resources: &'a Slab<Resource<R>>,
+    resources: &'a Slab<Entry<R>>,
     indexes: std::collections::btree_set::Iter<'a, usize>,
 }
 
@@ -796,27 +773,27 @@ impl<'a, R> Iterator for NamedGraphs<'a, R> {
     }
 }
 
-impl<R: PartialEq> PartialEq for IndexedBTreeDataset<R> {
+impl<R: Resource + PartialEq> PartialEq for IndexedBTreeDataset<R> {
     fn eq(&self, other: &Self) -> bool {
         self.len() == other.len() && self.iter().zip(other).all(|(a, b)| a == b)
     }
 }
 
-impl<R: Eq> Eq for IndexedBTreeDataset<R> {}
+impl<R: Resource + Eq> Eq for IndexedBTreeDataset<R> {}
 
-impl<R: PartialOrd> PartialOrd for IndexedBTreeDataset<R> {
+impl<R: Resource + PartialOrd> PartialOrd for IndexedBTreeDataset<R> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.iter().partial_cmp(other)
     }
 }
 
-impl<R: Ord> Ord for IndexedBTreeDataset<R> {
+impl<R: Resource + Ord> Ord for IndexedBTreeDataset<R> {
     fn cmp(&self, other: &Self) -> Ordering {
         self.iter().cmp(other)
     }
 }
 
-impl<R: Hash> Hash for IndexedBTreeDataset<R> {
+impl<R: Resource + Hash> Hash for IndexedBTreeDataset<R> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         state.write_usize(self.len());
         for elt in self {
@@ -827,8 +804,8 @@ impl<R: Hash> Hash for IndexedBTreeDataset<R> {
 
 /// Iterator over the quads of an [`IndexedBTreeDataset`] matching some given pattern.
 pub struct PatternMatching<'a, R> {
-    resources: &'a Slab<Resource<R>>,
-    quads: &'a Slab<Quad<usize>>,
+    resources: &'a Slab<Entry<R>>,
+    quads: &'a Slab<Quad<usize, usize, usize, usize>>,
     subject: SubjectConstraints<TripleIndexes<'a>>,
     predicate: PredicateConstraints<TripleIndexes<'a>>,
     object: ObjectConstraints<TripleIndexes<'a>>,
@@ -836,8 +813,8 @@ pub struct PatternMatching<'a, R> {
     i: usize,
 }
 
-impl<'a, R> Iterator for PatternMatching<'a, R> {
-    type Item = Quad<&'a R>;
+impl<'a, R: Resource> Iterator for PatternMatching<'a, R> {
+    type Item = Quad<&'a R, &'a R, &'a R, &'a R>;
 
     fn next(&mut self) -> Option<Self::Item> {
         while self.i < self.quads.capacity() {
@@ -864,8 +841,8 @@ impl<'a, R> Iterator for PatternMatching<'a, R> {
 
 /// Iterator over the quads of an [`IndexedBTreeDataset`] matching some given pattern.
 pub struct MultiPatternMatching<'a, R> {
-    resources: &'a Slab<Resource<R>>,
-    quads: &'a Slab<Quad<usize>>,
+    resources: &'a Slab<Entry<R>>,
+    quads: &'a Slab<Quad<usize, usize, usize, usize>>,
     subject: SubjectConstraints<OwnedTripleIndexes>,
     predicate: PredicateConstraints<OwnedTripleIndexes>,
     object: ObjectConstraints<OwnedTripleIndexes>,
@@ -873,8 +850,8 @@ pub struct MultiPatternMatching<'a, R> {
     i: usize,
 }
 
-impl<'a, R> Iterator for MultiPatternMatching<'a, R> {
-    type Item = Quad<&'a R>;
+impl<'a, R: Resource> Iterator for MultiPatternMatching<'a, R> {
+    type Item = Quad<&'a R, &'a R, &'a R, &'a R>;
 
     fn next(&mut self) -> Option<Self::Item> {
         while self.i < self.quads.capacity() {
@@ -909,8 +886,8 @@ pub struct ExtractPatternMatching<'a, R> {
     i: usize,
 }
 
-impl<R: Clone + Ord> Iterator for ExtractPatternMatching<'_, R> {
-    type Item = Quad<R>;
+impl<R: Resource + Clone + Ord> Iterator for ExtractPatternMatching<'_, R> {
+    type Item = Quad<R, R, R, R>;
 
     fn next(&mut self) -> Option<Self::Item> {
         while self.i < self.dataset.quads.capacity() {
@@ -947,7 +924,7 @@ enum SubjectConstraints<I: Iterator> {
 }
 
 impl<'a> SubjectConstraints<TripleIndexes<'a>> {
-    fn new<R: Ord>(dataset: &'a IndexedBTreeDataset<R>, s: PatternSubject<&R>) -> Self {
+    fn new<R: Resource + Ord>(dataset: &'a IndexedBTreeDataset<R>, s: PatternSubject<&R>) -> Self {
         match s {
             PatternSubject::Any => Self::Any,
             PatternSubject::Given(s) => match dataset.get_resource(s) {
@@ -959,7 +936,7 @@ impl<'a> SubjectConstraints<TripleIndexes<'a>> {
 }
 
 impl SubjectConstraints<OwnedTripleIndexes> {
-    fn new_owned<R: Ord>(dataset: &IndexedBTreeDataset<R>, s: PatternSubject<&R>) -> Self {
+    fn new_owned<R: Resource + Ord>(dataset: &IndexedBTreeDataset<R>, s: PatternSubject<&R>) -> Self {
         match s {
             PatternSubject::Any => Self::Any,
             PatternSubject::Given(s) => match dataset.get_resource(s) {
@@ -972,7 +949,7 @@ impl SubjectConstraints<OwnedTripleIndexes> {
     fn new_multi<'p, R, P>(dataset: &IndexedBTreeDataset<R>, s: PatternSubject<P>) -> Self
     where
         P: IntoIterator<Item = &'p R>,
-        R: 'p + Ord,
+        R: Resource + 'p + Ord,
     {
         match s {
             PatternSubject::Any => Self::Any,
@@ -1023,7 +1000,7 @@ enum PredicateConstraints<I: Iterator> {
 }
 
 impl<'a> PredicateConstraints<TripleIndexes<'a>> {
-    fn new<R: Ord>(dataset: &'a IndexedBTreeDataset<R>, p: PatternPredicate<&R>) -> Self {
+    fn new<R: Resource + Ord>(dataset: &'a IndexedBTreeDataset<R>, p: PatternPredicate<&R>) -> Self {
         match p {
             PatternPredicate::Any => Self::Any,
             PatternPredicate::SameAsSubject => Self::SameAsSubject,
@@ -1036,7 +1013,7 @@ impl<'a> PredicateConstraints<TripleIndexes<'a>> {
 }
 
 impl PredicateConstraints<OwnedTripleIndexes> {
-    fn new_owned<R: Ord>(dataset: &IndexedBTreeDataset<R>, p: PatternPredicate<&R>) -> Self {
+    fn new_owned<R: Resource + Ord>(dataset: &IndexedBTreeDataset<R>, p: PatternPredicate<&R>) -> Self {
         match p {
             PatternPredicate::Any => Self::Any,
             PatternPredicate::SameAsSubject => Self::SameAsSubject,
@@ -1050,7 +1027,7 @@ impl PredicateConstraints<OwnedTripleIndexes> {
     fn new_multi<'p, R, P>(dataset: &IndexedBTreeDataset<R>, p: PatternPredicate<P>) -> Self
     where
         P: IntoIterator<Item = &'p R>,
-        R: 'p + Ord,
+        R: Resource + 'p + Ord,
     {
         match p {
             PatternPredicate::Any => Self::Any,
@@ -1075,7 +1052,7 @@ impl PredicateConstraints<OwnedTripleIndexes> {
 }
 
 impl<I: Iterator<Item = usize>> PredicateConstraints<I> {
-    fn next(&mut self, i: usize, quad: Quad<usize>) -> Result<(), Option<usize>> {
+    fn next(&mut self, i: usize, quad: Quad<usize, usize, usize, usize>) -> Result<(), Option<usize>> {
         match self {
             Self::None => Err(None),
             Self::Any => Ok(()),
@@ -1112,7 +1089,7 @@ enum ObjectConstraints<I: Iterator> {
 }
 
 impl<'a> ObjectConstraints<TripleIndexes<'a>> {
-    fn new<R: Ord>(dataset: &'a IndexedBTreeDataset<R>, p: PatternObject<&R>) -> Self {
+    fn new<R: Resource + Ord>(dataset: &'a IndexedBTreeDataset<R>, p: PatternObject<&R>) -> Self {
         match p {
             PatternObject::Any => Self::Any,
             PatternObject::SameAsSubject => Self::SameAsSubject,
@@ -1126,7 +1103,7 @@ impl<'a> ObjectConstraints<TripleIndexes<'a>> {
 }
 
 impl ObjectConstraints<OwnedTripleIndexes> {
-    fn new_owned<R: Ord>(dataset: &IndexedBTreeDataset<R>, p: PatternObject<&R>) -> Self {
+    fn new_owned<R: Resource + Ord>(dataset: &IndexedBTreeDataset<R>, p: PatternObject<&R>) -> Self {
         match p {
             PatternObject::Any => Self::Any,
             PatternObject::SameAsSubject => Self::SameAsSubject,
@@ -1141,7 +1118,7 @@ impl ObjectConstraints<OwnedTripleIndexes> {
     fn new_multi<'p, R, P>(dataset: &IndexedBTreeDataset<R>, o: PatternObject<P>) -> Self
     where
         P: IntoIterator<Item = &'p R>,
-        R: 'p + Ord,
+        R: Resource + 'p + Ord,
     {
         match o {
             PatternObject::Any => Self::Any,
@@ -1167,7 +1144,7 @@ impl ObjectConstraints<OwnedTripleIndexes> {
 }
 
 impl<I: Iterator<Item = usize>> ObjectConstraints<I> {
-    fn next(&mut self, i: usize, quad: Quad<usize>) -> Result<(), Option<usize>> {
+    fn next(&mut self, i: usize, quad: Quad<usize, usize, usize, usize>) -> Result<(), Option<usize>> {
         match self {
             Self::None => Err(None),
             Self::Any => Ok(()),
@@ -1212,7 +1189,7 @@ enum GraphConstraints<I: Iterator> {
 }
 
 impl<'a> GraphConstraints<TripleIndexes<'a>> {
-    fn new<R: Ord>(dataset: &'a IndexedBTreeDataset<R>, g: PatternGraph<&R>) -> Self {
+    fn new<R: Resource + Ord>(dataset: &'a IndexedBTreeDataset<R>, g: PatternGraph<&R>) -> Self {
         match g {
             PatternGraph::Any => Self::Any,
             PatternGraph::SameAsSubject => Self::SameAsSubject,
@@ -1228,7 +1205,7 @@ impl<'a> GraphConstraints<TripleIndexes<'a>> {
 }
 
 impl GraphConstraints<OwnedTripleIndexes> {
-    fn new_owned<R: Ord>(dataset: &IndexedBTreeDataset<R>, g: PatternGraph<&R>) -> Self {
+    fn new_owned<R: Resource + Ord>(dataset: &IndexedBTreeDataset<R>, g: PatternGraph<&R>) -> Self {
         match g {
             PatternGraph::Any => Self::Any,
             PatternGraph::SameAsSubject => Self::SameAsSubject,
@@ -1245,7 +1222,7 @@ impl GraphConstraints<OwnedTripleIndexes> {
     fn new_multi<'p, R, P>(dataset: &IndexedBTreeDataset<R>, g: PatternGraph<P>) -> Self
     where
         P: IntoIterator<Item = &'p R>,
-        R: 'p + Ord,
+        R: Resource + 'p + Ord,
     {
         match g {
             PatternGraph::Any => Self::Any,
@@ -1273,7 +1250,7 @@ impl GraphConstraints<OwnedTripleIndexes> {
 }
 
 impl<I: Iterator<Item = usize>> GraphConstraints<I> {
-    fn next(&mut self, i: usize, quad: Quad<usize>) -> Result<(), Option<usize>> {
+    fn next(&mut self, i: usize, quad: Quad<usize, usize, usize, usize>) -> Result<(), Option<usize>> {
         match self {
             Self::None => Err(None),
             Self::Any => Ok(()),
@@ -1316,7 +1293,7 @@ impl<I: Iterator<Item = usize>> GraphConstraints<I> {
 }
 
 #[derive(Default, Clone)]
-struct Resource<R> {
+struct Entry<R> {
     value: R,
     as_subject: BTreeSet<usize>,
     as_predicate: BTreeSet<usize>,
@@ -1324,7 +1301,7 @@ struct Resource<R> {
     as_graph: BTreeSet<usize>,
 }
 
-impl<R> Resource<R> {
+impl<R> Entry<R> {
     pub fn subject(value: R, i: usize) -> Self {
         Self {
             value,
@@ -1370,13 +1347,13 @@ impl<R> Resource<R> {
     }
 }
 
-impl<R: Debug> Debug for IndexedBTreeDataset<R> {
+impl<R: Resource + Debug> Debug for IndexedBTreeDataset<R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_set().entries(self.iter()).finish()
     }
 }
 
-impl<R: RdfDisplay> RdfDisplay for IndexedBTreeDataset<R> {
+impl<R: Resource + RdfDisplay> RdfDisplay for IndexedBTreeDataset<R> {
     fn rdf_fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         for t in self {
             writeln!(f, "{} .", t.rdf_display())?;
@@ -1387,7 +1364,7 @@ impl<R: RdfDisplay> RdfDisplay for IndexedBTreeDataset<R> {
 }
 
 #[cfg(feature = "serde")]
-impl<R: serde::Serialize> serde::Serialize for IndexedBTreeDataset<R> {
+impl<R: Resource + serde::Serialize> serde::Serialize for IndexedBTreeDataset<R> {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         use serde::ser::SerializeSeq;
         let mut seq = serializer.serialize_seq(Some(self.len()))?;
@@ -1401,11 +1378,11 @@ impl<R: serde::Serialize> serde::Serialize for IndexedBTreeDataset<R> {
 }
 
 #[cfg(feature = "serde")]
-impl<'de, R: Clone + Ord + serde::Deserialize<'de>> serde::Deserialize<'de> for IndexedBTreeDataset<R> {
+impl<'de, R: Resource + Clone + Ord + serde::Deserialize<'de>> serde::Deserialize<'de> for IndexedBTreeDataset<R> {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         struct Visitor<R>(std::marker::PhantomData<R>);
 
-        impl<'de, R: Clone + Ord + serde::Deserialize<'de>> serde::de::Visitor<'de> for Visitor<R> {
+        impl<'de, R: Resource + Clone + Ord + serde::Deserialize<'de>> serde::de::Visitor<'de> for Visitor<R> {
             type Value = IndexedBTreeDataset<R>;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {

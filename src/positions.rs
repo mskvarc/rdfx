@@ -56,8 +56,11 @@ pub trait IsGraph: sealed::Sealed {}
 /// Marker trait for opaque resource handles (e.g. interpretation indices).
 ///
 /// Implement via [`impl_resource!`], which also emits the four position-trait
-/// impls so the type is usable in every position.
-pub trait Resource {}
+/// impls so the type is usable in every position. The supertraits make
+/// `R: Resource` propagate position-trait bounds automatically — concrete
+/// `Resource` impls must also satisfy [`IsSubject`], [`IsPredicate`],
+/// [`IsObject`], and [`IsGraph`], which `impl_resource!` handles.
+pub trait Resource: IsSubject + IsPredicate + IsObject + IsGraph {}
 
 impl<T: sealed::Sealed + ?Sized> sealed::Sealed for &T {}
 impl<T: IsSubject + ?Sized> IsSubject for &T {}
@@ -65,6 +68,14 @@ impl<T: IsPredicate + ?Sized> IsPredicate for &T {}
 impl<T: IsObject + ?Sized> IsObject for &T {}
 impl<T: IsGraph + ?Sized> IsGraph for &T {}
 impl<T: Resource + ?Sized> Resource for &T {}
+
+// Option-of-position is also a position — used by canonical pattern types
+// where `None` denotes "any".
+impl<T: sealed::Sealed> sealed::Sealed for Option<T> {}
+impl<T: IsSubject> IsSubject for Option<T> {}
+impl<T: IsPredicate> IsPredicate for Option<T> {}
+impl<T: IsObject> IsObject for Option<T> {}
+impl<T: IsGraph> IsGraph for Option<T> {}
 
 macro_rules! impl_iri_positions {
     ($t:ty) => {

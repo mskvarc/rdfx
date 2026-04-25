@@ -4,30 +4,22 @@ use educe::Educe;
 use raw_btree::RawBTree;
 use slab::Slab;
 
-use super::super::Dataset;
 use crate::{
-    BlankIdBuf,
-    LocalTerm,
     Quad,
     RdfDisplay,
-    dataset::{
-        DatasetMut,
-        IndexedBTreeDataset,
-        ResourceTraversableDataset,
-        TraversableDataset,
-        isomorphism::{Bijection, are_isomorphic, find_bijection},
-    },
+    Resource,
+    dataset::{DatasetMut, Graph, IndexedBTreeDataset, ResourceTraversableDataset, TraversableDataset},
 };
 
-fn resource_cmp<R: Ord>(resources: &Slab<Resource<R>>) -> impl '_ + Fn(&usize, &R) -> Ordering {
+fn resource_cmp<R: Ord>(resources: &Slab<Entry<R>>) -> impl '_ + Fn(&usize, &R) -> Ordering {
     |&i, resource| resources[i].value.cmp(resource)
 }
 
-fn resource_index_cmp<R: Ord>(resources: &Slab<Resource<R>>) -> impl '_ + Fn(&usize, &usize) -> Ordering {
+fn resource_index_cmp<R: Ord>(resources: &Slab<Entry<R>>) -> impl '_ + Fn(&usize, &usize) -> Ordering {
     |&i, &j| resources[i].value.cmp(&resources[j].value)
 }
 
-fn quad_with_resources<R>(resources: &Slab<Resource<R>>, Quad(s, p, o, g): Quad<usize>) -> Quad<&R> {
+fn quad_with_resources<R: Resource>(resources: &Slab<Entry<R>>, Quad(s, p, o, g): Quad<usize, usize, usize, usize>) -> Quad<&R, &R, &R, &R> {
     // Safety: resource indexes in stored quads always point to live entries in `resources`.
     // The slab key remains valid until the quad referencing it is removed, which only happens
     // before the corresponding resource entry is freed.
@@ -41,19 +33,19 @@ fn quad_with_resources<R>(resources: &Slab<Resource<R>>, Quad(s, p, o, g): Quad<
     }
 }
 
-fn quad_cmp<'a, R: Ord>(resources: &'a Slab<Resource<R>>, quads: &'a Slab<Quad<usize>>) -> impl 'a + Fn(&usize, &Quad<&R>) -> Ordering {
+fn quad_cmp<'a, R: Resource + Ord>(resources: &'a Slab<Entry<R>>, quads: &'a Slab<Quad<usize, usize, usize, usize>>) -> impl 'a + Fn(&usize, &Quad<&R, &R, &R, &R>) -> Ordering {
     |&i, quad| quad_with_resources(resources, quads[i]).cmp(quad)
 }
 
-fn quad_index_cmp<'a, R: Ord>(resources: &'a Slab<Resource<R>>, quads: &'a Slab<Quad<usize>>) -> impl 'a + Fn(&usize, &usize) -> Ordering {
+fn quad_index_cmp<'a, R: Resource + Ord>(resources: &'a Slab<Entry<R>>, quads: &'a Slab<Quad<usize, usize, usize, usize>>) -> impl 'a + Fn(&usize, &usize) -> Ordering {
     |&i, &j| quad_with_resources(resources, quads[i]).cmp(&quad_with_resources(resources, quads[j]))
 }
 
 /// BTree-based RDF dataset.
 #[derive(Clone)]
-pub struct BTreeDataset<R = LocalTerm> {
-    pub(crate) resources: Slab<Resource<R>>,
-    pub(crate) quads: Slab<Quad<usize>>,
+pub struct BTreeDataset<R> {
+    pub(crate) resources: Slab<Entry<R>>,
+    pub(crate) quads: Slab<Quad<usize, usize, usize, usize>>,
     pub(crate) resources_indexes: RawBTree<usize>,
     pub(crate) quads_indexes: RawBTree<usize>,
 }
@@ -84,7 +76,9 @@ impl<R> BTreeDataset<R> {
     pub fn is_empty(&self) -> bool {
         self.quads.is_empty()
     }
+}
 
+impl<R: Resource> BTreeDataset<R> {
     /// Returns an iterator over the quads of the dataset.
     pub fn iter(&self) -> Quads<'_, R> {
         Quads {
@@ -111,13 +105,13 @@ impl<R> BTreeDataset<R> {
     }
 }
 
-impl<R: Ord> BTreeDataset<R> {
+impl<R: Resource + Ord> BTreeDataset<R> {
     fn index_of_resource(&self, resource: &R) -> Option<usize> {
         self.resources_indexes.get(resource_cmp(&self.resources), resource).copied()
     }
 
     /// Returns the index of the given quad in the dataset, if any.
-    fn index_of_quad(&self, quad: Quad<&R>) -> Option<usize> {
+    fn index_of_quad(&self, quad: Quad<&R, &R, &R, &R>) -> Option<usize> {
         self.quads_indexes.get(quad_cmp(&self.resources, &self.quads), &quad).copied()
     }
 
@@ -127,7 +121,7 @@ impl<R: Ord> BTreeDataset<R> {
     }
 
     /// Checks if the provided quad is in the dataset.
-    pub fn contains(&self, quad: Quad<&R>) -> bool {
+    pub fn contains(&self, quad: Quad<&R, &R, &R, &R>) -> bool {
         self.index_of_quad(quad).is_some()
     }
 
@@ -135,7 +129,7 @@ impl<R: Ord> BTreeDataset<R> {
     ///
     /// Returns `true` if the quad was not already in the dataset, and `false`
     /// if it was.
-    pub fn insert(&mut self, quad: Quad<R>) -> bool {
+    pub fn insert(&mut self, quad: Quad<R, R, R, R>) -> bool {
         // Resolve resources first. If any is missing, the quad cannot exist,
         // so we skip the dedup check that walks `quads_indexes`.
         let s_i_pre = self.index_of_resource(&quad.0);
@@ -153,7 +147,7 @@ impl<R: Ord> BTreeDataset<R> {
             let target = Quad(s_i, p_i, o_i, g_slot);
             let resources = &self.resources;
             let quads = &self.quads;
-            let cmp = |i: &usize, t: &Quad<usize>| quad_with_resources(resources, quads[*i]).cmp(&quad_with_resources(resources, *t));
+            let cmp = |i: &usize, t: &Quad<usize, usize, usize, usize>| quad_with_resources(resources, quads[*i]).cmp(&quad_with_resources(resources, *t));
             if self.quads_indexes.get(cmp, &target).is_some() {
                 return false;
             }
@@ -168,7 +162,7 @@ impl<R: Ord> BTreeDataset<R> {
                 s_i
             }
             None => {
-                let s_i = self.resources.insert(Resource::new(quad.0));
+                let s_i = self.resources.insert(Entry::new(quad.0));
                 self.resources_indexes.insert(resource_index_cmp(&self.resources), s_i);
                 s_i
             }
@@ -180,7 +174,7 @@ impl<R: Ord> BTreeDataset<R> {
                 p_i
             }
             None => {
-                let p_i = self.resources.insert(Resource::new(quad.1));
+                let p_i = self.resources.insert(Entry::new(quad.1));
                 self.resources_indexes.insert(resource_index_cmp(&self.resources), p_i);
                 p_i
             }
@@ -192,7 +186,7 @@ impl<R: Ord> BTreeDataset<R> {
                 o_i
             }
             None => {
-                let o_i = self.resources.insert(Resource::new(quad.2));
+                let o_i = self.resources.insert(Entry::new(quad.2));
                 self.resources_indexes.insert(resource_index_cmp(&self.resources), o_i);
                 o_i
             }
@@ -204,7 +198,7 @@ impl<R: Ord> BTreeDataset<R> {
                 Some(g_i)
             }
             (Some(g), Some(None)) => {
-                let g_i = self.resources.insert(Resource::new(g));
+                let g_i = self.resources.insert(Entry::new(g));
                 self.resources_indexes.insert(resource_index_cmp(&self.resources), g_i);
                 Some(g_i)
             }
@@ -223,7 +217,7 @@ impl<R: Ord> BTreeDataset<R> {
     ///
     /// Returns whether or not the quad was in the dataset.
     /// Does nothing if the quad was not in the dataset.
-    pub fn remove(&mut self, quad: Quad<&R>) -> bool {
+    pub fn remove(&mut self, quad: Quad<&R, &R, &R, &R>) -> bool {
         match self.quads_indexes.remove(quad_cmp(&self.resources, &self.quads), &quad) {
             Some(i) => {
                 let Quad(s_i, p_i, o_i, g_i) = self.quads.remove(i);
@@ -265,59 +259,40 @@ impl<R: Ord> BTreeDataset<R> {
     }
 }
 
-impl<R: Clone + Ord> FromIterator<Quad<R>> for BTreeDataset<R> {
-    fn from_iter<T: IntoIterator<Item = Quad<R>>>(iter: T) -> Self {
+impl<R: Resource + Clone + Ord> FromIterator<Quad<R, R, R, R>> for BTreeDataset<R> {
+    fn from_iter<T: IntoIterator<Item = Quad<R, R, R, R>>>(iter: T) -> Self {
         let mut result = Self::new();
         result.extend(iter);
         result
     }
 }
 
-impl<R: Clone + Ord> Extend<Quad<R>> for BTreeDataset<R> {
-    fn extend<T: IntoIterator<Item = Quad<R>>>(&mut self, iter: T) {
+impl<R: Resource + Clone + Ord> Extend<Quad<R, R, R, R>> for BTreeDataset<R> {
+    fn extend<T: IntoIterator<Item = Quad<R, R, R, R>>>(&mut self, iter: T) {
         for quad in iter {
             self.insert(quad);
         }
     }
 }
 
-impl<R: Clone + Ord> BTreeDataset<R> {
+impl<R: Resource + Clone + Ord> BTreeDataset<R> {
     /// Inserts every quad of `iter` in the dataset.
-    pub fn absorb<I: IntoIterator<Item = Quad<R>>>(&mut self, iter: I) {
+    pub fn absorb<I: IntoIterator<Item = Quad<R, R, R, R>>>(&mut self, iter: I) {
         self.extend(iter);
     }
 }
 
-impl BTreeDataset<LocalTerm> {
-    /// Returns a blank-node bijection from `self` to `other` if one exists.
-    pub fn find_blank_id_bijection<'a, 'b>(&'a self, other: &'b Self) -> Option<Bijection<'a, 'b>> {
-        find_bijection(self, other)
-    }
-
-    /// Checks if `self` and `other` are isomorphic.
-    pub fn is_isomorphic_to(&self, other: &Self) -> bool {
-        are_isomorphic(self, other)
-    }
-
-    /// Returns a copy of `self` with each blank node identifier replaced by the
-    /// result of `f`.
-    pub fn substitute_blank_ids(self, mut f: impl FnMut(BlankIdBuf) -> BlankIdBuf) -> Self {
-        self.into_iter()
-            .map(|q| {
-                q.map(|t| match t {
-                    LocalTerm::BlankId(b) => LocalTerm::BlankId(f(b)),
-                    named => named,
-                })
-            })
-            .collect()
-    }
+impl<R: Resource> Graph for BTreeDataset<R> {
+    type Subject = R;
+    type Predicate = R;
+    type Object = R;
 }
 
-impl<R> Dataset for BTreeDataset<R> {
-    type Resource = R;
+impl<R: Resource> crate::dataset::Dataset for BTreeDataset<R> {
+    type Graph = R;
 }
 
-impl<R> TraversableDataset for BTreeDataset<R> {
+impl<R: Resource> TraversableDataset for BTreeDataset<R> {
     type Quads<'a>
         = Quads<'a, R>
     where
@@ -332,7 +307,7 @@ impl<R> TraversableDataset for BTreeDataset<R> {
     }
 }
 
-impl<R> ResourceTraversableDataset for BTreeDataset<R> {
+impl<R: Resource> ResourceTraversableDataset for BTreeDataset<R> {
     type Resources<'a>
         = Resources<'a, R>
     where
@@ -347,12 +322,12 @@ impl<R> ResourceTraversableDataset for BTreeDataset<R> {
     }
 }
 
-impl<R: Clone + Ord> DatasetMut for BTreeDataset<R> {
-    fn insert(&mut self, quad: Quad<Self::Resource>) {
+impl<R: Resource + Clone + Ord> DatasetMut for BTreeDataset<R> {
+    fn insert(&mut self, quad: Quad<Self::Subject, Self::Predicate, Self::Object, <Self as crate::dataset::Dataset>::Graph>) {
         self.insert(quad);
     }
 
-    fn remove(&mut self, quad: Quad<&Self::Resource>) {
+    fn remove(&mut self, quad: Quad<&Self::Subject, &Self::Predicate, &Self::Object, &<Self as crate::dataset::Dataset>::Graph>) {
         self.remove(quad);
     }
 }
@@ -361,13 +336,13 @@ impl<R: Clone + Ord> DatasetMut for BTreeDataset<R> {
 #[derive(Educe)]
 #[educe(Clone, Copy)]
 pub struct Quads<'a, R> {
-    resources: &'a Slab<Resource<R>>,
-    quads: &'a Slab<Quad<usize>>,
+    resources: &'a Slab<Entry<R>>,
+    quads: &'a Slab<Quad<usize, usize, usize, usize>>,
     indexes: raw_btree::Iter<'a, usize>,
 }
 
-impl<'a, R> Iterator for Quads<'a, R> {
-    type Item = Quad<&'a R>;
+impl<'a, R: Resource> Iterator for Quads<'a, R> {
+    type Item = Quad<&'a R, &'a R, &'a R, &'a R>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.indexes.next().map(|&i| quad_with_resources(self.resources, self.quads[i]))
@@ -376,21 +351,21 @@ impl<'a, R> Iterator for Quads<'a, R> {
 
 /// Iterator over the quads of a [`BTreeDataset`].
 pub struct IntoQuads<R> {
-    resources: Slab<Resource<R>>,
-    quads: Slab<Quad<usize>>,
+    resources: Slab<Entry<R>>,
+    quads: Slab<Quad<usize, usize, usize, usize>>,
     indexes: raw_btree::IntoIter<usize>,
 }
 
-impl<R: Clone> Iterator for IntoQuads<R> {
-    type Item = Quad<R>;
+impl<R: Resource + Clone> Iterator for IntoQuads<R> {
+    type Item = Quad<R, R, R, R>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.indexes.next().map(|i| quad_with_resources(&self.resources, self.quads.remove(i)).cloned())
     }
 }
 
-impl<'a, R> IntoIterator for &'a BTreeDataset<R> {
-    type Item = Quad<&'a R>;
+impl<'a, R: Resource> IntoIterator for &'a BTreeDataset<R> {
+    type Item = Quad<&'a R, &'a R, &'a R, &'a R>;
     type IntoIter = Quads<'a, R>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -398,8 +373,8 @@ impl<'a, R> IntoIterator for &'a BTreeDataset<R> {
     }
 }
 
-impl<R: Clone> IntoIterator for BTreeDataset<R> {
-    type Item = Quad<R>;
+impl<R: Resource + Clone> IntoIterator for BTreeDataset<R> {
+    type Item = Quad<R, R, R, R>;
     type IntoIter = IntoQuads<R>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -412,7 +387,7 @@ impl<R: Clone> IntoIterator for BTreeDataset<R> {
 }
 
 pub struct Resources<'a, R> {
-    resources: &'a Slab<Resource<R>>,
+    resources: &'a Slab<Entry<R>>,
     indexes: raw_btree::Iter<'a, usize>,
 }
 
@@ -424,27 +399,27 @@ impl<'a, R> Iterator for Resources<'a, R> {
     }
 }
 
-impl<A: PartialEq<B>, B> PartialEq<BTreeDataset<B>> for BTreeDataset<A> {
+impl<A: Resource + PartialEq<B>, B: Resource> PartialEq<BTreeDataset<B>> for BTreeDataset<A> {
     fn eq(&self, other: &BTreeDataset<B>) -> bool {
         self.len() == other.len() && self.iter().zip(other).all(|(a, b)| a == b)
     }
 }
 
-impl<R: Eq> Eq for BTreeDataset<R> {}
+impl<R: Resource + Eq> Eq for BTreeDataset<R> {}
 
-impl<R: PartialOrd> PartialOrd for BTreeDataset<R> {
+impl<R: Resource + PartialOrd> PartialOrd for BTreeDataset<R> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.iter().partial_cmp(other)
     }
 }
 
-impl<R: Ord> Ord for BTreeDataset<R> {
+impl<R: Resource + Ord> Ord for BTreeDataset<R> {
     fn cmp(&self, other: &Self) -> Ordering {
         self.iter().cmp(other)
     }
 }
 
-impl<R: Hash> Hash for BTreeDataset<R> {
+impl<R: Resource + Hash> Hash for BTreeDataset<R> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         state.write_usize(self.len());
         for elt in self {
@@ -454,12 +429,12 @@ impl<R: Hash> Hash for BTreeDataset<R> {
 }
 
 #[derive(Default, Clone)]
-pub(crate) struct Resource<R> {
+pub(crate) struct Entry<R> {
     pub value: R,
     pub(crate) occurrences: usize,
 }
 
-impl<R> Resource<R> {
+impl<R> Entry<R> {
     pub const fn new(value: R) -> Self {
         Self { value, occurrences: 1 }
     }
@@ -469,13 +444,13 @@ impl<R> Resource<R> {
     }
 }
 
-impl<R: Debug> Debug for BTreeDataset<R> {
+impl<R: Resource + Debug> Debug for BTreeDataset<R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_set().entries(self.iter()).finish()
     }
 }
 
-impl<R: RdfDisplay> RdfDisplay for BTreeDataset<R> {
+impl<R: Resource + RdfDisplay> RdfDisplay for BTreeDataset<R> {
     fn rdf_fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         for t in self {
             writeln!(f, "{} .", t.rdf_display())?;
@@ -486,7 +461,7 @@ impl<R: RdfDisplay> RdfDisplay for BTreeDataset<R> {
 }
 
 #[cfg(feature = "serde")]
-impl<R: serde::Serialize> serde::Serialize for BTreeDataset<R> {
+impl<R: Resource + serde::Serialize> serde::Serialize for BTreeDataset<R> {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         use serde::ser::SerializeSeq;
         let mut seq = serializer.serialize_seq(Some(self.len()))?;
@@ -500,11 +475,11 @@ impl<R: serde::Serialize> serde::Serialize for BTreeDataset<R> {
 }
 
 #[cfg(feature = "serde")]
-impl<'de, R: Clone + Ord + serde::Deserialize<'de>> serde::Deserialize<'de> for BTreeDataset<R> {
+impl<'de, R: Resource + Clone + Ord + serde::Deserialize<'de>> serde::Deserialize<'de> for BTreeDataset<R> {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         struct Visitor<R>(std::marker::PhantomData<R>);
 
-        impl<'de, R: Clone + Ord + serde::Deserialize<'de>> serde::de::Visitor<'de> for Visitor<R> {
+        impl<'de, R: Resource + Clone + Ord + serde::Deserialize<'de>> serde::de::Visitor<'de> for Visitor<R> {
             type Value = BTreeDataset<R>;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {

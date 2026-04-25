@@ -1,42 +1,71 @@
+//! Blank-node bijection between datasets — RDF 1.1 §3.6 / §4.4 graph and
+//! dataset equivalence under blank-node renaming.
+//!
+//! Per [RDF 1.1 Concepts §3.6][s3] / [§4.4][s4], two graphs (datasets) are
+//! equivalent iff there exists a bijection between their blank node
+//! identifiers that maps one to the other. [`find_bijection`] computes that
+//! bijection if it exists; [`graph_equivalent`] / [`dataset_equivalent`] are
+//! convenience predicates.
+//!
+//! Implementation: signature-bucket pre-filter (split by neighbourhood
+//! signature size, then by per-quad match-set) followed by augmenting-path
+//! bipartite matching. Not RDFC-1.0; just structural bijection.
+//!
+//! [s3]: https://www.w3.org/TR/rdf11-concepts/#section-graph-equality
+//! [s4]: https://www.w3.org/TR/rdf11-concepts/#section-dataset-equality
 use std::collections::{BTreeMap, BTreeSet, btree_map::Entry};
 
-use crate::{LocalTerm, Quad, dataset::TraversableDataset, interpretation::ReverseInterpretation};
+use crate::{
+    Quad,
+    Resource,
+    dataset::{TraversableDataset, TraversableGraph},
+    interpretation::ReverseInterpretation,
+};
 
-/// Checks that there is an isomorphism between the datasets `a` and `b`.
-///
-/// There is an isomorphism if there exists a blank node identifier bijection
-/// between `a` and `b`.
-/// This is equivalent to `find_bijection(a, b).is_some()`.
-pub fn are_isomorphic<A, B>(a: &A, b: &B) -> bool
+/// RDF 1.1 §3.6 graph equivalence: graphs are equal iff a blank-node
+/// bijection exists between them. Wraps [`find_bijection_graph_with`].
+pub fn graph_equivalent<I, A, B>(interpretation: &I, a: &A, b: &B) -> bool
 where
-    A: TraversableDataset<Resource = LocalTerm>,
-    B: TraversableDataset<Resource = LocalTerm>,
+    I: ReverseInterpretation,
+    I::Resource: Resource + Ord,
+    A: TraversableGraph<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource>,
+    B: TraversableGraph<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource>,
 {
-    are_isomorphic_with(&(), a, b)
+    are_isomorphic_graph_with(interpretation, a, b)
+}
+
+/// RDF 1.1 §4.4 dataset equivalence: datasets are equal iff a blank-node
+/// bijection exists between them. Wraps [`find_bijection_with`].
+pub fn dataset_equivalent<I, A, B>(interpretation: &I, a: &A, b: &B) -> bool
+where
+    I: ReverseInterpretation,
+    I::Resource: Resource + Ord,
+    A: TraversableDataset<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource, Graph = I::Resource>,
+    B: TraversableDataset<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource, Graph = I::Resource>,
+{
+    are_isomorphic_with(interpretation, a, b)
 }
 
 /// Checks that there is an isomorphism between the datasets `a` and `b`.
-///
-/// There is an isomorphism if there exists a blank node identifier bijection
-/// between `a` and `b`.
 pub fn are_isomorphic_with<I, A, B>(interpretation: &I, a: &A, b: &B) -> bool
 where
     I: ReverseInterpretation,
-    I::Resource: Ord,
-    A: TraversableDataset<Resource = I::Resource>,
-    B: TraversableDataset<Resource = I::Resource>,
+    I::Resource: Resource + Ord,
+    A: TraversableDataset<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource, Graph = I::Resource>,
+    B: TraversableDataset<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource, Graph = I::Resource>,
 {
     find_bijection_with(interpretation, a, b).is_some()
 }
 
-/// Finds a blank node identifier bijection from `a` to `b`.
-/// If such bijection exists, there is an isomorphism between `a` and `b`.
-pub fn find_bijection<'a, 'b, A, B>(a: &'a A, b: &'b B) -> Option<Bijection<'a, 'b>>
+/// Graph-flavoured variant of [`are_isomorphic_with`].
+pub fn are_isomorphic_graph_with<I, A, B>(interpretation: &I, a: &A, b: &B) -> bool
 where
-    A: TraversableDataset<Resource = LocalTerm>,
-    B: TraversableDataset<Resource = LocalTerm>,
+    I: ReverseInterpretation,
+    I::Resource: Resource + Ord,
+    A: TraversableGraph<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource>,
+    B: TraversableGraph<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource>,
 {
-    find_bijection_with(&(), a, b)
+    find_bijection_graph_with(interpretation, a, b).is_some()
 }
 
 /// Finds a blank node identifier bijection from `a` to `b`.
@@ -44,9 +73,9 @@ where
 pub fn find_bijection_with<'a, 'b, I, A, B>(interpretation: &I, a: &'a A, b: &'b B) -> Option<Bijection<'a, 'b, I::Resource>>
 where
     I: ReverseInterpretation,
-    I::Resource: Ord,
-    A: TraversableDataset<Resource = I::Resource>,
-    B: TraversableDataset<Resource = I::Resource>,
+    I::Resource: Resource + Ord,
+    A: TraversableDataset<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource, Graph = I::Resource>,
+    B: TraversableDataset<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource, Graph = I::Resource>,
 {
     if a.quads_count() != b.quads_count() {
         return None;
@@ -113,6 +142,102 @@ where
     }
 }
 
+/// Graph-flavoured variant of [`find_bijection_with`]. Wraps each triple as a
+/// quad with default graph (`None`) and reuses the dataset bijection logic.
+pub fn find_bijection_graph_with<'a, 'b, I, A, B>(interpretation: &I, a: &'a A, b: &'b B) -> Option<Bijection<'a, 'b, I::Resource>>
+where
+    I: ReverseInterpretation,
+    I::Resource: Resource + Ord,
+    A: TraversableGraph<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource>,
+    B: TraversableGraph<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource>,
+{
+    // Project triples as quads with default graph (None).
+    let a_quads: Vec<Quad<&I::Resource, &I::Resource, &I::Resource, &I::Resource>> = a.triples().map(|t| Quad(t.0, t.1, t.2, None)).collect();
+    let b_quads: Vec<Quad<&I::Resource, &I::Resource, &I::Resource, &I::Resource>> = b.triples().map(|t| Quad(t.0, t.1, t.2, None)).collect();
+
+    if a_quads.len() != b_quads.len() {
+        return None;
+    }
+
+    let a_blank_count = a_quads.iter().fold(0, |c, q| c + blank_count(interpretation, *q));
+    let b_blank_count = b_quads.iter().fold(0, |c, q| c + blank_count(interpretation, *q));
+
+    if a_blank_count != b_blank_count {
+        return None;
+    }
+
+    let mut a_blanks_map: BTreeMap<&I::Resource, BlankSignature<I::Resource>> = BTreeMap::new();
+    let mut b_blanks_map: BTreeMap<&I::Resource, BlankSignature<I::Resource>> = BTreeMap::new();
+    for q in &a_quads {
+        let q = *q;
+        if interpretation.is_blank_id(q.0) {
+            a_blanks_map.entry(q.0).or_default().insert(q);
+        }
+        if interpretation.is_blank_id(q.1) {
+            a_blanks_map.entry(q.1).or_default().insert(q);
+        }
+        if interpretation.is_blank_id(q.2) {
+            a_blanks_map.entry(q.2).or_default().insert(q);
+        }
+    }
+    for q in &b_quads {
+        let q = *q;
+        if interpretation.is_blank_id(q.0) {
+            b_blanks_map.entry(q.0).or_default().insert(q);
+        }
+        if interpretation.is_blank_id(q.1) {
+            b_blanks_map.entry(q.1).or_default().insert(q);
+        }
+        if interpretation.is_blank_id(q.2) {
+            b_blanks_map.entry(q.2).or_default().insert(q);
+        }
+    }
+
+    if a_blanks_map.len() != b_blanks_map.len() {
+        return None;
+    }
+
+    let a_groups = split_by_size(&a_blanks_map);
+    let b_groups = split_by_size(&b_blanks_map);
+
+    if a_groups.len() != b_groups.len() {
+        return None;
+    }
+
+    if !a_groups.iter().all(|(len, _)| b_groups.contains_key(len)) {
+        return None;
+    }
+
+    let mut candidates: Vec<(&'a I::Resource, BTreeSet<&'b I::Resource>)> = Vec::new();
+    for (len, a_group) in a_groups {
+        let b_group = &b_groups[&len];
+
+        for (a_blank_id, a_sig) in a_group {
+            let mut a_blank_id_candidates = BTreeSet::new();
+            for (b_blank_id, b_sig) in b_group {
+                if a_sig.matches(interpretation, b_sig) {
+                    a_blank_id_candidates.insert(*b_blank_id);
+                }
+            }
+
+            if a_blank_id_candidates.is_empty() {
+                return None;
+            }
+
+            candidates.push((a_blank_id, a_blank_id_candidates));
+        }
+    }
+
+    candidates.sort_by_key(|(_, set)| set.len());
+
+    let mut bijection = Bijection::new();
+    if bijection.find_from_candidates(interpretation, &candidates, 0, &a_blanks_map, &b_blanks_map) {
+        Some(bijection)
+    } else {
+        None
+    }
+}
+
 fn resource_matches<I>(interpretation: &I, a: &I::Resource, b: &I::Resource) -> bool
 where
     I: ReverseInterpretation,
@@ -136,9 +261,10 @@ where
     interpretation.is_blank_id(a) && interpretation.is_blank_id(b)
 }
 
-fn quad_matches<I>(interpretation: &I, a: Quad<&I::Resource>, b: Quad<&I::Resource>) -> bool
+fn quad_matches<I>(interpretation: &I, a: Quad<&I::Resource, &I::Resource, &I::Resource, &I::Resource>, b: Quad<&I::Resource, &I::Resource, &I::Resource, &I::Resource>) -> bool
 where
     I: ReverseInterpretation,
+    I::Resource: Resource,
 {
     resource_matches(interpretation, a.0, b.0)
         && resource_matches(interpretation, a.1, b.1)
@@ -150,9 +276,10 @@ where
         }
 }
 
-fn blank_count<I>(interpretation: &I, Quad(s, p, o, g): Quad<&I::Resource>) -> usize
+fn blank_count<I>(interpretation: &I, Quad(s, p, o, g): Quad<&I::Resource, &I::Resource, &I::Resource, &I::Resource>) -> usize
 where
     I: ReverseInterpretation,
+    I::Resource: Resource,
 {
     let mut r = 0;
 
@@ -180,8 +307,8 @@ where
 fn collect_signatures<'d, I, D>(interpretation: &I, map: &mut BTreeMap<&'d I::Resource, BlankSignature<'d, I::Resource>>, ds: &'d D)
 where
     I: ReverseInterpretation,
-    I::Resource: Ord,
-    D: TraversableDataset<Resource = I::Resource>,
+    I::Resource: Resource + Ord,
+    D: TraversableDataset<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource, Graph = I::Resource>,
 {
     for quad in ds.quads() {
         if interpretation.is_blank_id(quad.0) {
@@ -206,7 +333,7 @@ where
 
 fn split_by_size<'s, 'd, R>(blanks: &'s BTreeMap<&'d R, BlankSignature<'d, R>>) -> BTreeMap<usize, BTreeMap<&'d R, &'s BlankSignature<'d, R>>>
 where
-    R: Ord,
+    R: Resource + Ord,
 {
     let mut result = BTreeMap::new();
 
@@ -228,7 +355,7 @@ where
 
 /// Blank node identifier bijection
 /// between two (isomorphic) datasets.
-pub struct Bijection<'a, 'b, R = LocalTerm> {
+pub struct Bijection<'a, 'b, R> {
     pub forward: BTreeMap<&'a R, &'b R>,
     pub backward: BTreeMap<&'b R, &'a R>,
 }
@@ -242,7 +369,7 @@ impl<R> Bijection<'_, '_, R> {
     }
 }
 
-impl<'a, 'b, R: Ord> Bijection<'a, 'b, R> {
+impl<'a, 'b, R: Resource + Ord> Bijection<'a, 'b, R> {
     fn resource_matches_with<I>(&self, interpretation: &I, a: &'a R, b: &'b R) -> bool
     where
         I: ReverseInterpretation<Resource = R>,
@@ -272,7 +399,7 @@ impl<'a, 'b, R: Ord> Bijection<'a, 'b, R> {
         }
     }
 
-    fn quad_matches_with<I>(&self, interpretation: &I, a: Quad<&'a R>, b: Quad<&'b R>) -> bool
+    fn quad_matches_with<I>(&self, interpretation: &I, a: Quad<&'a R, &'a R, &'a R, &'a R>, b: Quad<&'b R, &'b R, &'b R, &'b R>) -> bool
     where
         I: ReverseInterpretation<Resource = R>,
     {
@@ -337,16 +464,16 @@ impl<'a, 'b, R: Ord> Bijection<'a, 'b, R> {
 }
 
 /// Signature of a blank node identifier.
-struct BlankSignature<'a, R>(Vec<Quad<&'a R>>);
+struct BlankSignature<'a, R: Resource>(Vec<Quad<&'a R, &'a R, &'a R, &'a R>>);
 
-impl<R> Default for BlankSignature<'_, R> {
+impl<R: Resource> Default for BlankSignature<'_, R> {
     fn default() -> Self {
         Self(Vec::new())
     }
 }
 
-impl<'a, R> BlankSignature<'a, R> {
-    fn insert(&mut self, quad: Quad<&'a R>) {
+impl<'a, R: Resource> BlankSignature<'a, R> {
+    fn insert(&mut self, quad: Quad<&'a R, &'a R, &'a R, &'a R>) {
         self.0.push(quad)
     }
 
@@ -362,9 +489,9 @@ impl<'a, R> BlankSignature<'a, R> {
     }
 }
 
-fn match_quad_lists<R, F>(a: &[Quad<&R>], b: &[Quad<&R>], mut matches: F) -> bool
+fn match_quad_lists<R: Resource, F>(a: &[Quad<&R, &R, &R, &R>], b: &[Quad<&R, &R, &R, &R>], mut matches: F) -> bool
 where
-    F: FnMut(Quad<&R>, Quad<&R>) -> bool,
+    F: FnMut(Quad<&R, &R, &R, &R>, Quad<&R, &R, &R, &R>) -> bool,
 {
     if a.len() != b.len() {
         return false;
@@ -380,16 +507,16 @@ where
     true
 }
 
-fn try_augment<R, F>(
+fn try_augment<R: Resource, F>(
     ai: usize,
-    a: &[Quad<&R>],
-    b: &[Quad<&R>],
+    a: &[Quad<&R, &R, &R, &R>],
+    b: &[Quad<&R, &R, &R, &R>],
     matched_b: &mut [Option<usize>],
     visited: &mut [bool],
     matches: &mut F,
 ) -> bool
 where
-    F: FnMut(Quad<&R>, Quad<&R>) -> bool,
+    F: FnMut(Quad<&R, &R, &R, &R>, Quad<&R, &R, &R, &R>) -> bool,
 {
     for bi in 0..b.len() {
         if visited[bi] {
@@ -428,8 +555,8 @@ mod tests {
         let r = "r";
         let z = "z";
 
-        let a: Vec<Quad<&&str>> = vec![Quad(&x, &r, &z, None), Quad(&y, &r, &z, None)];
-        let b: Vec<Quad<&&str>> = vec![Quad(&cap_x, &r, &z, None), Quad(&cap_y, &r, &z, None)];
+        let a: Vec<Quad<&&str, &&str, &&str, &&str>> = vec![Quad(&x, &r, &z, None), Quad(&y, &r, &z, None)];
+        let b: Vec<Quad<&&str, &&str, &&str, &&str>> = vec![Quad(&cap_x, &r, &z, None), Quad(&cap_y, &r, &z, None)];
 
         let result = match_quad_lists(&a, &b, |qa, qb| {
             // x matches both X and Y; y matches only X.
@@ -456,8 +583,8 @@ mod tests {
         let r = "r";
         let z = "z";
 
-        let a: Vec<Quad<&&str>> = vec![Quad(&x, &r, &z, None), Quad(&y, &r, &z, None)];
-        let b: Vec<Quad<&&str>> = vec![Quad(&cap_x, &r, &z, None), Quad(&cap_y, &r, &z, None)];
+        let a: Vec<Quad<&&str, &&str, &&str, &&str>> = vec![Quad(&x, &r, &z, None), Quad(&y, &r, &z, None)];
+        let b: Vec<Quad<&&str, &&str, &&str, &&str>> = vec![Quad(&cap_x, &r, &z, None), Quad(&cap_y, &r, &z, None)];
 
         let result = match_quad_lists(&a, &b, |qa, qb| (*qa.0 == "x" || *qa.0 == "y") && *qb.0 == "X");
         assert!(!result, "no perfect matching when both a-nodes only match same b-node");

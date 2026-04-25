@@ -6,6 +6,12 @@ pub enum ResourceOrVar<T, X> {
     Var(X),
 }
 
+impl<T: crate::sealed::Sealed, X> crate::sealed::Sealed for ResourceOrVar<T, X> {}
+impl<T: crate::IsSubject, X> crate::IsSubject for ResourceOrVar<T, X> {}
+impl<T: crate::IsPredicate, X> crate::IsPredicate for ResourceOrVar<T, X> {}
+impl<T: crate::IsObject, X> crate::IsObject for ResourceOrVar<T, X> {}
+impl<T: crate::IsGraph, X> crate::IsGraph for ResourceOrVar<T, X> {}
+
 impl<T, X> ResourceOrVar<T, X> {
     pub fn map<U>(self, f: impl Fn(T) -> U) -> ResourceOrVar<U, X> {
         match self {

@@ -6,22 +6,15 @@ use std::{
 use hashbrown::{DefaultHashBuilder, HashTable};
 use slab::Slab;
 
-use super::{super::Dataset, btree_dataset::Resource};
+use super::btree_dataset::Entry;
 use crate::{
-    BlankIdBuf,
-    LocalTerm,
     Quad,
     RdfDisplay,
-    dataset::{
-        DatasetMut,
-        IndexedHashDataset,
-        ResourceTraversableDataset,
-        TraversableDataset,
-        isomorphism::{Bijection, are_isomorphic, find_bijection},
-    },
+    Resource,
+    dataset::{Dataset, DatasetMut, Graph, IndexedHashDataset, ResourceTraversableDataset, TraversableDataset},
 };
 
-fn quad_with_resources<R>(resources: &Slab<Resource<R>>, Quad(s, p, o, g): Quad<usize>) -> Quad<&R> {
+fn quad_with_resources<R: Resource>(resources: &Slab<Entry<R>>, Quad(s, p, o, g): Quad<usize, usize, usize, usize>) -> Quad<&R, &R, &R, &R> {
     // Safety: resource indexes in stored quads always point to live entries in `resources`.
     // The slab key remains valid until the quad referencing it is removed, which only happens
     // before the corresponding resource entry is freed.
@@ -37,9 +30,9 @@ fn quad_with_resources<R>(resources: &Slab<Resource<R>>, Quad(s, p, o, g): Quad<
 
 /// Hash-based RDF dataset.
 #[derive(Clone)]
-pub struct HashDataset<R = LocalTerm> {
-    pub(crate) resources: Slab<Resource<R>>,
-    pub(crate) quads: Slab<Quad<usize>>,
+pub struct HashDataset<R> {
+    pub(crate) resources: Slab<Entry<R>>,
+    pub(crate) quads: Slab<Quad<usize, usize, usize, usize>>,
     pub(crate) hasher: DefaultHashBuilder,
     pub(crate) resources_indexes: HashTable<usize>,
     pub(crate) quads_indexes: HashTable<usize>,
@@ -72,7 +65,9 @@ impl<R> HashDataset<R> {
     pub fn is_empty(&self) -> bool {
         self.quads.is_empty()
     }
+}
 
+impl<R: Resource> HashDataset<R> {
     /// Returns an iterator over the quads of the dataset.
     pub fn iter(&self) -> Quads<'_, R> {
         Quads {
@@ -91,7 +86,7 @@ impl<R> HashDataset<R> {
     }
 }
 
-impl<R: Eq + Hash> HashDataset<R> {
+impl<R: Resource + Eq + Hash> HashDataset<R> {
     /// Indexes the quads to allow more operation on this dataset, such as
     /// pattern matching using the [`PatternMatchingDataset`] trait.
     ///
@@ -104,7 +99,7 @@ impl<R: Eq + Hash> HashDataset<R> {
         self.hasher.hash_one(r)
     }
 
-    fn hash_quad(&self, q: &Quad<&R>) -> u64 {
+    fn hash_quad(&self, q: &Quad<&R, &R, &R, &R>) -> u64 {
         self.hasher.hash_one(q)
     }
 
@@ -114,7 +109,7 @@ impl<R: Eq + Hash> HashDataset<R> {
         self.resources_indexes.find(h, |&i| &resources[i].value == r).copied()
     }
 
-    fn index_of_quad(&self, quad: Quad<&R>) -> Option<usize> {
+    fn index_of_quad(&self, quad: Quad<&R, &R, &R, &R>) -> Option<usize> {
         let h = self.hash_quad(&quad);
         let resources = &self.resources;
         let quads = &self.quads;
@@ -127,12 +122,12 @@ impl<R: Eq + Hash> HashDataset<R> {
     }
 
     /// Checks if the provided quad is in the dataset.
-    pub fn contains(&self, q: Quad<&R>) -> bool {
+    pub fn contains(&self, q: Quad<&R, &R, &R, &R>) -> bool {
         self.index_of_quad(q).is_some()
     }
 }
 
-impl<R: Clone + Eq + Hash> HashDataset<R> {
+impl<R: Resource + Clone + Eq + Hash> HashDataset<R> {
     fn intern_resource(&mut self, r: R, pre: Option<usize>) -> usize {
         match pre {
             Some(i) => {
@@ -141,7 +136,7 @@ impl<R: Clone + Eq + Hash> HashDataset<R> {
             }
             None => {
                 let h = self.hasher.hash_one(&r);
-                let i = self.resources.insert(Resource::new(r));
+                let i = self.resources.insert(Entry::new(r));
                 let hasher = self.hasher.clone();
                 let resources = &self.resources;
                 self.resources_indexes.insert_unique(h, i, |&j| hasher.hash_one(&resources[j].value));
@@ -154,7 +149,7 @@ impl<R: Clone + Eq + Hash> HashDataset<R> {
     ///
     /// Returns `true` if the quad was not already in the dataset, and `false`
     /// if it was.
-    pub fn insert(&mut self, quad: Quad<R>) -> bool {
+    pub fn insert(&mut self, quad: Quad<R, R, R, R>) -> bool {
         let s_pre = self.index_of_resource(&quad.0);
         let p_pre = self.index_of_resource(&quad.1);
         let o_pre = self.index_of_resource(&quad.2);
@@ -220,7 +215,7 @@ impl<R: Clone + Eq + Hash> HashDataset<R> {
     ///
     /// Returns whether or not the quad was in the dataset.
     /// Does nothing if the quad was not in the dataset.
-    pub fn remove(&mut self, quad: Quad<&R>) -> bool {
+    pub fn remove(&mut self, quad: Quad<&R, &R, &R, &R>) -> bool {
         let h = self.hash_quad(&quad);
         let resources = &self.resources;
         let quads = &self.quads;
@@ -245,59 +240,40 @@ impl<R: Clone + Eq + Hash> HashDataset<R> {
     }
 }
 
-impl<R: Clone + Eq + Hash> FromIterator<Quad<R>> for HashDataset<R> {
-    fn from_iter<T: IntoIterator<Item = Quad<R>>>(iter: T) -> Self {
+impl<R: Resource + Clone + Eq + Hash> FromIterator<Quad<R, R, R, R>> for HashDataset<R> {
+    fn from_iter<T: IntoIterator<Item = Quad<R, R, R, R>>>(iter: T) -> Self {
         let mut result = Self::new();
         result.extend(iter);
         result
     }
 }
 
-impl<R: Clone + Eq + Hash> Extend<Quad<R>> for HashDataset<R> {
-    fn extend<T: IntoIterator<Item = Quad<R>>>(&mut self, iter: T) {
+impl<R: Resource + Clone + Eq + Hash> Extend<Quad<R, R, R, R>> for HashDataset<R> {
+    fn extend<T: IntoIterator<Item = Quad<R, R, R, R>>>(&mut self, iter: T) {
         for quad in iter {
             self.insert(quad);
         }
     }
 }
 
-impl<R: Clone + Eq + Hash> HashDataset<R> {
+impl<R: Resource + Clone + Eq + Hash> HashDataset<R> {
     /// Inserts every quad of `iter` in the dataset.
-    pub fn absorb<I: IntoIterator<Item = Quad<R>>>(&mut self, iter: I) {
+    pub fn absorb<I: IntoIterator<Item = Quad<R, R, R, R>>>(&mut self, iter: I) {
         self.extend(iter);
     }
 }
 
-impl HashDataset<LocalTerm> {
-    /// Returns a blank-node bijection from `self` to `other` if one exists.
-    pub fn find_blank_id_bijection<'a, 'b>(&'a self, other: &'b Self) -> Option<Bijection<'a, 'b>> {
-        find_bijection(self, other)
-    }
-
-    /// Checks if `self` and `other` are isomorphic.
-    pub fn is_isomorphic_to(&self, other: &Self) -> bool {
-        are_isomorphic(self, other)
-    }
-
-    /// Returns a copy of `self` with each blank node identifier replaced by the
-    /// result of `f`.
-    pub fn substitute_blank_ids(self, mut f: impl FnMut(BlankIdBuf) -> BlankIdBuf) -> Self {
-        self.into_iter()
-            .map(|q| {
-                q.map(|t| match t {
-                    LocalTerm::BlankId(b) => LocalTerm::BlankId(f(b)),
-                    named => named,
-                })
-            })
-            .collect()
-    }
+impl<R: Resource> Graph for HashDataset<R> {
+    type Subject = R;
+    type Predicate = R;
+    type Object = R;
 }
 
-impl<R> Dataset for HashDataset<R> {
-    type Resource = R;
+impl<R: Resource> Dataset for HashDataset<R> {
+    type Graph = R;
 }
 
-impl<R> TraversableDataset for HashDataset<R> {
+impl<R: Resource> TraversableDataset for HashDataset<R> {
     type Quads<'a>
         = Quads<'a, R>
     where
@@ -312,7 +288,7 @@ impl<R> TraversableDataset for HashDataset<R> {
     }
 }
 
-impl<R> ResourceTraversableDataset for HashDataset<R> {
+impl<R: Resource> ResourceTraversableDataset for HashDataset<R> {
     type Resources<'a>
         = Resources<'a, R>
     where
@@ -327,24 +303,24 @@ impl<R> ResourceTraversableDataset for HashDataset<R> {
     }
 }
 
-impl<R: Clone + Eq + Hash> DatasetMut for HashDataset<R> {
-    fn insert(&mut self, quad: Quad<Self::Resource>) {
+impl<R: Resource + Clone + Eq + Hash> DatasetMut for HashDataset<R> {
+    fn insert(&mut self, quad: Quad<Self::Subject, Self::Predicate, Self::Object, <Self as Dataset>::Graph>) {
         self.insert(quad);
     }
 
-    fn remove(&mut self, quad: Quad<&Self::Resource>) {
+    fn remove(&mut self, quad: Quad<&Self::Subject, &Self::Predicate, &Self::Object, &<Self as Dataset>::Graph>) {
         self.remove(quad);
     }
 }
 
 pub struct Quads<'a, R> {
-    resources: &'a Slab<Resource<R>>,
-    quads: &'a Slab<Quad<usize>>,
+    resources: &'a Slab<Entry<R>>,
+    quads: &'a Slab<Quad<usize, usize, usize, usize>>,
     indexes: hashbrown::hash_table::Iter<'a, usize>,
 }
 
-impl<'a, R> Iterator for Quads<'a, R> {
-    type Item = Quad<&'a R>;
+impl<'a, R: Resource> Iterator for Quads<'a, R> {
+    type Item = Quad<&'a R, &'a R, &'a R, &'a R>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.indexes.next().map(|&i| quad_with_resources(self.resources, self.quads[i]))
@@ -352,21 +328,21 @@ impl<'a, R> Iterator for Quads<'a, R> {
 }
 
 pub struct IntoQuads<R> {
-    resources: Slab<Resource<R>>,
-    quads: Slab<Quad<usize>>,
+    resources: Slab<Entry<R>>,
+    quads: Slab<Quad<usize, usize, usize, usize>>,
     indexes: hashbrown::hash_table::IntoIter<usize>,
 }
 
-impl<R: Clone> Iterator for IntoQuads<R> {
-    type Item = Quad<R>;
+impl<R: Resource + Clone> Iterator for IntoQuads<R> {
+    type Item = Quad<R, R, R, R>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.indexes.next().map(|i| quad_with_resources(&self.resources, self.quads.remove(i)).cloned())
     }
 }
 
-impl<'a, R> IntoIterator for &'a HashDataset<R> {
-    type Item = Quad<&'a R>;
+impl<'a, R: Resource> IntoIterator for &'a HashDataset<R> {
+    type Item = Quad<&'a R, &'a R, &'a R, &'a R>;
     type IntoIter = Quads<'a, R>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -374,8 +350,8 @@ impl<'a, R> IntoIterator for &'a HashDataset<R> {
     }
 }
 
-impl<R: Clone> IntoIterator for HashDataset<R> {
-    type Item = Quad<R>;
+impl<R: Resource + Clone> IntoIterator for HashDataset<R> {
+    type Item = Quad<R, R, R, R>;
     type IntoIter = IntoQuads<R>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -388,7 +364,7 @@ impl<R: Clone> IntoIterator for HashDataset<R> {
 }
 
 pub struct Resources<'a, R> {
-    resources: &'a Slab<Resource<R>>,
+    resources: &'a Slab<Entry<R>>,
     indexes: hashbrown::hash_table::Iter<'a, usize>,
 }
 
@@ -400,15 +376,15 @@ impl<'a, R> Iterator for Resources<'a, R> {
     }
 }
 
-impl<A: PartialEq<B>, B> PartialEq<HashDataset<B>> for HashDataset<A> {
+impl<A: Resource + PartialEq<B>, B: Resource> PartialEq<HashDataset<B>> for HashDataset<A> {
     fn eq(&self, other: &HashDataset<B>) -> bool {
         self.len() == other.len() && self.iter().all(|a| other.iter().any(|b| a == b))
     }
 }
 
-impl<R: Eq + Hash> Eq for HashDataset<R> {}
+impl<R: Resource + Eq + Hash> Eq for HashDataset<R> {}
 
-impl<R: Hash> Hash for HashDataset<R> {
+impl<R: Resource + Hash> Hash for HashDataset<R> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         state.write_usize(self.len());
         let mut acc: u64 = 0;
@@ -421,13 +397,13 @@ impl<R: Hash> Hash for HashDataset<R> {
     }
 }
 
-impl<R: Debug> Debug for HashDataset<R> {
+impl<R: Resource + Debug> Debug for HashDataset<R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_set().entries(self.iter()).finish()
     }
 }
 
-impl<R: RdfDisplay> RdfDisplay for HashDataset<R> {
+impl<R: Resource + RdfDisplay> RdfDisplay for HashDataset<R> {
     fn rdf_fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         for t in self {
             writeln!(f, "{} .", t.rdf_display())?;
@@ -438,7 +414,7 @@ impl<R: RdfDisplay> RdfDisplay for HashDataset<R> {
 }
 
 #[cfg(feature = "serde")]
-impl<R: serde::Serialize> serde::Serialize for HashDataset<R> {
+impl<R: Resource + serde::Serialize> serde::Serialize for HashDataset<R> {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         use serde::ser::SerializeSeq;
         let mut seq = serializer.serialize_seq(Some(self.len()))?;
@@ -452,11 +428,11 @@ impl<R: serde::Serialize> serde::Serialize for HashDataset<R> {
 }
 
 #[cfg(feature = "serde")]
-impl<'de, R: Clone + Eq + Hash + serde::Deserialize<'de>> serde::Deserialize<'de> for HashDataset<R> {
+impl<'de, R: Resource + Clone + Eq + Hash + serde::Deserialize<'de>> serde::Deserialize<'de> for HashDataset<R> {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         struct Visitor<R>(std::marker::PhantomData<R>);
 
-        impl<'de, R: Clone + Eq + Hash + serde::Deserialize<'de>> serde::de::Visitor<'de> for Visitor<R> {
+        impl<'de, R: Resource + Clone + Eq + Hash + serde::Deserialize<'de>> serde::de::Visitor<'de> for Visitor<R> {
             type Value = HashDataset<R>;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {

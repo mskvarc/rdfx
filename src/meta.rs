@@ -32,7 +32,7 @@
 //! assert_eq!(d.len(), 2);
 //! ```
 
-use crate::{BlankIdBuf, Id, Literal, LiteralType, LocalTerm, Quad, Term, Triple};
+use crate::{BlankIdBuf, Datatype, Id, IsGraph, IsObject, IsPredicate, IsSubject, Literal, LiteralType, LocalTerm, Quad, Resource, Term, Triple};
 use iri_rs::IriBuf;
 
 #[doc(no_inline)]
@@ -41,6 +41,13 @@ pub use locspan::{Location, Span};
 /// A value of type `T` annotated with metadata `M`.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct Meta<T, M>(pub T, pub M);
+
+impl<T: crate::sealed::Sealed, M> crate::sealed::Sealed for Meta<T, M> {}
+impl<T: IsSubject, M> IsSubject for Meta<T, M> {}
+impl<T: IsPredicate, M> IsPredicate for Meta<T, M> {}
+impl<T: IsObject, M> IsObject for Meta<T, M> {}
+impl<T: IsGraph, M> IsGraph for Meta<T, M> {}
+impl<T: Resource, M> Resource for Meta<T, M> {}
 
 impl<T, M> Meta<T, M> {
     pub const fn new(value: T, metadata: M) -> Self {
@@ -97,9 +104,17 @@ macro_rules! identity_strip {
     };
 }
 
-identity_strip!(BlankIdBuf, IriBuf, Id, Literal, LiteralType, Term, LocalTerm);
+identity_strip!(BlankIdBuf, IriBuf, Id, Datatype, Literal, LiteralType, Term, LocalTerm);
 
-impl<S: Strip, P: Strip, O: Strip> Strip for Triple<S, P, O> {
+impl<S, P, O> Strip for Triple<S, P, O>
+where
+    S: IsSubject + Strip,
+    P: IsPredicate + Strip,
+    O: IsObject + Strip,
+    S::Stripped: IsSubject,
+    P::Stripped: IsPredicate,
+    O::Stripped: IsObject,
+{
     type Stripped = Triple<S::Stripped, P::Stripped, O::Stripped>;
 
     fn strip(self) -> Self::Stripped {
@@ -107,7 +122,17 @@ impl<S: Strip, P: Strip, O: Strip> Strip for Triple<S, P, O> {
     }
 }
 
-impl<S: Strip, P: Strip, O: Strip, G: Strip> Strip for Quad<S, P, O, G> {
+impl<S, P, O, G> Strip for Quad<S, P, O, G>
+where
+    S: IsSubject + Strip,
+    P: IsPredicate + Strip,
+    O: IsObject + Strip,
+    G: IsGraph + Strip,
+    S::Stripped: IsSubject,
+    P::Stripped: IsPredicate,
+    O::Stripped: IsObject,
+    G::Stripped: IsGraph,
+{
     type Stripped = Quad<S::Stripped, P::Stripped, O::Stripped, G::Stripped>;
 
     fn strip(self) -> Self::Stripped {
@@ -138,14 +163,30 @@ pub type MetaTripleFull<S, P, O, M> = Meta<Triple<Meta<S, M>, Meta<P, M>, Meta<O
 /// the whole quad itself wrapped in metadata.
 pub type MetaQuadFull<S, P, O, G, M> = Meta<Quad<Meta<S, M>, Meta<P, M>, Meta<O, M>, Meta<G, M>>, M>;
 
-impl<S: Strip, P, O: Strip> Triple<S, P, O> {
+impl<S, P, O> Triple<S, P, O>
+where
+    S: IsSubject + Strip,
+    P: IsPredicate,
+    O: IsObject + Strip,
+    S::Stripped: IsSubject,
+    O::Stripped: IsObject,
+{
     /// Strips metadata from subject and object, leaving the predicate untouched.
     pub fn strip_all_but_predicate(self) -> Triple<S::Stripped, P, O::Stripped> {
         Triple(self.0.strip(), self.1, self.2.strip())
     }
 }
 
-impl<S: Strip, P, O: Strip, G: Strip> Quad<S, P, O, G> {
+impl<S, P, O, G> Quad<S, P, O, G>
+where
+    S: IsSubject + Strip,
+    P: IsPredicate,
+    O: IsObject + Strip,
+    G: IsGraph + Strip,
+    S::Stripped: IsSubject,
+    O::Stripped: IsObject,
+    G::Stripped: IsGraph,
+{
     /// Strips metadata from subject, object, and graph, leaving the predicate untouched.
     pub fn strip_all_but_predicate(self) -> Quad<S::Stripped, P, O::Stripped, G::Stripped> {
         Quad(self.0.strip(), self.1, self.2.strip(), self.3.map(Strip::strip))

@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::{Quad, Triple};
+use crate::{IsGraph, IsObject, IsPredicate, IsSubject, Quad, Triple};
 
 pub struct InfallibleIterator<I>(pub I);
 
@@ -20,7 +20,14 @@ impl<I, G> TripleToQuadIterator<I, G> {
     }
 }
 
-impl<S, P, O, G, I: Iterator<Item = Triple<S, P, O>>> Iterator for TripleToQuadIterator<I, G> {
+impl<S, P, O, G, I> Iterator for TripleToQuadIterator<I, G>
+where
+    S: IsSubject,
+    P: IsPredicate,
+    O: IsObject,
+    G: IsGraph,
+    I: Iterator<Item = Triple<S, P, O>>,
+{
     type Item = Quad<S, P, O, G>;
 
     fn next(&mut self) -> Option<Self::Item> {

@@ -1,6 +1,7 @@
 use replace_with::replace_with_or_abort_and_return;
 
 use crate::{
+    Resource,
     Triple,
     pattern::{CanonicalQuadPattern, ResourceOrVar, TriplePattern, quad},
 };
@@ -12,26 +13,26 @@ pub enum CanonicalTriplePattern<T> {
     GivenSubject(T, GivenSubject<T>),
 }
 
-impl<T> From<Triple<T>> for CanonicalTriplePattern<T> {
-    fn from(value: Triple<T>) -> Self {
+impl<T: Resource> From<Triple<T, T, T>> for CanonicalTriplePattern<T> {
+    fn from(value: Triple<T, T, T>) -> Self {
         Self::from_triple(value)
     }
 }
 
-impl<T> From<Triple<Option<T>, Option<T>, Option<T>>> for CanonicalTriplePattern<T> {
+impl<T: Resource> From<Triple<Option<T>, Option<T>, Option<T>>> for CanonicalTriplePattern<T> {
     fn from(value: Triple<Option<T>, Option<T>, Option<T>>) -> Self {
         Self::from_option_triple(value)
     }
 }
 
-impl<T, X: PartialEq> From<TriplePattern<T, X>> for CanonicalTriplePattern<T> {
+impl<T: Resource, X: PartialEq> From<TriplePattern<T, X>> for CanonicalTriplePattern<T> {
     fn from(value: TriplePattern<T, X>) -> Self {
         Self::from_pattern(value)
     }
 }
 
-impl<T> CanonicalTriplePattern<T> {
-    pub fn from_triple(triple: Triple<T>) -> Self {
+impl<T: Resource> CanonicalTriplePattern<T> {
+    pub fn from_triple(triple: Triple<T, T, T>) -> Self {
         Self::GivenSubject(
             triple.0,
             GivenSubject::GivenPredicate(triple.1, GivenSubjectGivenPredicate::GivenObject(triple.2)),
@@ -356,8 +357,8 @@ impl<T> PatternObject<&T> {
     }
 }
 
-impl<T: PartialEq> PatternObject<T> {
-    pub fn filter_triple(&self, triple: Triple<T>) -> bool {
+impl<T: Resource + PartialEq> PatternObject<T> {
+    pub fn filter_triple(&self, triple: Triple<T, T, T>) -> bool {
         match self {
             Self::Any => true,
             Self::SameAsSubject => triple.2 == triple.0,

@@ -7,29 +7,21 @@ use hashbrown::{DefaultHashBuilder, HashTable};
 use slab::Slab;
 
 use crate::{
-    BlankIdBuf,
-    LocalTerm,
     RdfDisplay,
+    Resource,
     Triple,
-    dataset::{
-        Graph,
-        GraphMut,
-        IndexedHashGraph,
-        ResourceTraversableGraph,
-        TraversableGraph,
-        isomorphism::{Bijection, are_isomorphic, find_bijection},
-    },
+    dataset::{Graph, GraphMut, IndexedHashGraph, ResourceTraversableGraph, TraversableGraph},
 };
 
-fn triple_with_resources<R>(resources: &Slab<Resource<R>>, Triple(s, p, o): Triple<usize>) -> Triple<&R> {
+fn triple_with_resources<R: Resource>(resources: &Slab<Entry<R>>, Triple(s, p, o): Triple<usize, usize, usize>) -> Triple<&R, &R, &R> {
     Triple(&resources[s].value, &resources[p].value, &resources[o].value)
 }
 
-/// Hash-based RDF graph.
+/// Hash-based RDF graph holding a uniform resource handle type `R`.
 #[derive(Clone)]
-pub struct HashGraph<R = LocalTerm> {
-    pub(crate) resources: Slab<Resource<R>>,
-    pub(crate) triples: Slab<Triple<usize>>,
+pub struct HashGraph<R> {
+    pub(crate) resources: Slab<Entry<R>>,
+    pub(crate) triples: Slab<Triple<usize, usize, usize>>,
     pub(crate) hasher: DefaultHashBuilder,
     pub(crate) resources_indexes: HashTable<usize>,
     pub(crate) triples_indexes: HashTable<usize>,
@@ -62,7 +54,9 @@ impl<R> HashGraph<R> {
     pub fn is_empty(&self) -> bool {
         self.triples.is_empty()
     }
+}
 
+impl<R: Resource> HashGraph<R> {
     /// Returns an iterator over the triples of the graph.
     pub fn iter(&self) -> Triples<'_, R> {
         Triples {
@@ -81,7 +75,7 @@ impl<R> HashGraph<R> {
     }
 }
 
-impl<R: Eq + Hash> HashGraph<R> {
+impl<R: Resource + Eq + Hash> HashGraph<R> {
     /// Indexes the triples to allow more operation on this graph, such as
     /// pattern matching using the [`PatternMatchingGraph`] trait.
     ///
@@ -89,14 +83,12 @@ impl<R: Eq + Hash> HashGraph<R> {
     pub fn into_indexed(self) -> IndexedHashGraph<R> {
         IndexedHashGraph::from_non_indexed(self)
     }
-}
 
-impl<R: Eq + Hash> HashGraph<R> {
     fn hash_resource(&self, r: &R) -> u64 {
         self.hasher.hash_one(r)
     }
 
-    fn hash_triple(&self, t: &Triple<&R>) -> u64 {
+    fn hash_triple(&self, t: &Triple<&R, &R, &R>) -> u64 {
         self.hasher.hash_one(t)
     }
 
@@ -106,7 +98,7 @@ impl<R: Eq + Hash> HashGraph<R> {
         self.resources_indexes.find(h, |&i| &resources[i].value == r).copied()
     }
 
-    fn index_of_triple(&self, triple: Triple<&R>) -> Option<usize> {
+    fn index_of_triple(&self, triple: Triple<&R, &R, &R>) -> Option<usize> {
         let h = self.hash_triple(&triple);
         let resources = &self.resources;
         let triples = &self.triples;
@@ -121,12 +113,12 @@ impl<R: Eq + Hash> HashGraph<R> {
     }
 
     /// Checks if the provided triple is in the graph.
-    pub fn contains(&self, triple: Triple<&R>) -> bool {
+    pub fn contains(&self, triple: Triple<&R, &R, &R>) -> bool {
         self.index_of_triple(triple).is_some()
     }
 }
 
-impl<R: Clone + Eq + Hash> HashGraph<R> {
+impl<R: Resource + Clone + Eq + Hash> HashGraph<R> {
     fn intern_resource(&mut self, r: R, pre: Option<usize>) -> usize {
         match pre {
             Some(i) => {
@@ -135,7 +127,7 @@ impl<R: Clone + Eq + Hash> HashGraph<R> {
             }
             None => {
                 let h = self.hasher.hash_one(&r);
-                let i = self.resources.insert(Resource::new(r));
+                let i = self.resources.insert(Entry::new(r));
                 let hasher = self.hasher.clone();
                 let resources = &self.resources;
                 self.resources_indexes.insert_unique(h, i, |&j| hasher.hash_one(&resources[j].value));
@@ -148,7 +140,7 @@ impl<R: Clone + Eq + Hash> HashGraph<R> {
     ///
     /// Returns `true` if the triple was not already in the graph, and `false`
     /// if it was.
-    pub fn insert(&mut self, triple: Triple<R>) -> bool {
+    pub fn insert(&mut self, triple: Triple<R, R, R>) -> bool {
         let s_pre = self.index_of_resource(&triple.0);
         let p_pre = self.index_of_resource(&triple.1);
         let o_pre = self.index_of_resource(&triple.2);
@@ -206,7 +198,7 @@ impl<R: Clone + Eq + Hash> HashGraph<R> {
     ///
     /// Returns whether or not the triple was in the graph.
     /// Does nothing if the triple was not in the graph.
-    pub fn remove(&mut self, triple: Triple<&R>) -> bool {
+    pub fn remove(&mut self, triple: Triple<&R, &R, &R>) -> bool {
         let h = self.hash_triple(&triple);
         let resources = &self.resources;
         let triples = &self.triples;
@@ -228,59 +220,36 @@ impl<R: Clone + Eq + Hash> HashGraph<R> {
     }
 }
 
-impl<R: Clone + Eq + Hash> FromIterator<Triple<R>> for HashGraph<R> {
-    fn from_iter<T: IntoIterator<Item = Triple<R>>>(iter: T) -> Self {
+impl<R: Resource + Clone + Eq + Hash> FromIterator<Triple<R, R, R>> for HashGraph<R> {
+    fn from_iter<T: IntoIterator<Item = Triple<R, R, R>>>(iter: T) -> Self {
         let mut result = Self::new();
         result.extend(iter);
         result
     }
 }
 
-impl<R: Clone + Eq + Hash> Extend<Triple<R>> for HashGraph<R> {
-    fn extend<T: IntoIterator<Item = Triple<R>>>(&mut self, iter: T) {
+impl<R: Resource + Clone + Eq + Hash> Extend<Triple<R, R, R>> for HashGraph<R> {
+    fn extend<T: IntoIterator<Item = Triple<R, R, R>>>(&mut self, iter: T) {
         for triple in iter {
             self.insert(triple);
         }
     }
 }
 
-impl<R: Clone + Eq + Hash> HashGraph<R> {
+impl<R: Resource + Clone + Eq + Hash> HashGraph<R> {
     /// Inserts every triple of `iter` in the graph.
-    pub fn absorb<I: IntoIterator<Item = Triple<R>>>(&mut self, iter: I) {
+    pub fn absorb<I: IntoIterator<Item = Triple<R, R, R>>>(&mut self, iter: I) {
         self.extend(iter);
     }
 }
 
-impl HashGraph<LocalTerm> {
-    /// Returns a blank-node bijection from `self` to `other` if one exists.
-    pub fn find_blank_id_bijection<'a, 'b>(&'a self, other: &'b Self) -> Option<Bijection<'a, 'b>> {
-        find_bijection(self, other)
-    }
-
-    /// Checks if `self` and `other` are isomorphic.
-    pub fn is_isomorphic_to(&self, other: &Self) -> bool {
-        are_isomorphic(self, other)
-    }
-
-    /// Returns a copy of `self` with each blank node identifier replaced by the
-    /// result of `f`.
-    pub fn substitute_blank_ids(self, mut f: impl FnMut(BlankIdBuf) -> BlankIdBuf) -> Self {
-        self.into_iter()
-            .map(|t| {
-                t.map(|x| match x {
-                    LocalTerm::BlankId(b) => LocalTerm::BlankId(f(b)),
-                    named => named,
-                })
-            })
-            .collect()
-    }
+impl<R: Resource> Graph for HashGraph<R> {
+    type Subject = R;
+    type Predicate = R;
+    type Object = R;
 }
 
-impl<R> Graph for HashGraph<R> {
-    type Resource = R;
-}
-
-impl<R> TraversableGraph for HashGraph<R> {
+impl<R: Resource> TraversableGraph for HashGraph<R> {
     type Triples<'a>
         = Triples<'a, R>
     where
@@ -295,7 +264,7 @@ impl<R> TraversableGraph for HashGraph<R> {
     }
 }
 
-impl<R> ResourceTraversableGraph for HashGraph<R> {
+impl<R: Resource> ResourceTraversableGraph for HashGraph<R> {
     type GraphResources<'a>
         = Resources<'a, R>
     where
@@ -310,24 +279,24 @@ impl<R> ResourceTraversableGraph for HashGraph<R> {
     }
 }
 
-impl<R: Clone + Eq + Hash> GraphMut for HashGraph<R> {
-    fn insert(&mut self, triple: Triple<Self::Resource>) {
+impl<R: Resource + Clone + Eq + Hash> GraphMut for HashGraph<R> {
+    fn insert(&mut self, triple: Triple<Self::Subject, Self::Predicate, Self::Object>) {
         self.insert(triple);
     }
 
-    fn remove(&mut self, triple: Triple<&Self::Resource>) {
+    fn remove(&mut self, triple: Triple<&Self::Subject, &Self::Predicate, &Self::Object>) {
         self.remove(triple);
     }
 }
 
 pub struct Triples<'a, R> {
-    resources: &'a Slab<Resource<R>>,
-    triples: &'a Slab<Triple<usize>>,
+    resources: &'a Slab<Entry<R>>,
+    triples: &'a Slab<Triple<usize, usize, usize>>,
     indexes: hashbrown::hash_table::Iter<'a, usize>,
 }
 
-impl<'a, R> Iterator for Triples<'a, R> {
-    type Item = Triple<&'a R>;
+impl<'a, R: Resource> Iterator for Triples<'a, R> {
+    type Item = Triple<&'a R, &'a R, &'a R>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.indexes.next().map(|&i| triple_with_resources(self.resources, self.triples[i]))
@@ -335,13 +304,13 @@ impl<'a, R> Iterator for Triples<'a, R> {
 }
 
 pub struct IntoTriples<R> {
-    resources: Slab<Resource<R>>,
-    triples: Slab<Triple<usize>>,
+    resources: Slab<Entry<R>>,
+    triples: Slab<Triple<usize, usize, usize>>,
     indexes: hashbrown::hash_table::IntoIter<usize>,
 }
 
-impl<R: Clone> Iterator for IntoTriples<R> {
-    type Item = Triple<R>;
+impl<R: Resource + Clone> Iterator for IntoTriples<R> {
+    type Item = Triple<R, R, R>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.indexes
@@ -350,8 +319,8 @@ impl<R: Clone> Iterator for IntoTriples<R> {
     }
 }
 
-impl<'a, R> IntoIterator for &'a HashGraph<R> {
-    type Item = Triple<&'a R>;
+impl<'a, R: Resource> IntoIterator for &'a HashGraph<R> {
+    type Item = Triple<&'a R, &'a R, &'a R>;
     type IntoIter = Triples<'a, R>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -359,8 +328,8 @@ impl<'a, R> IntoIterator for &'a HashGraph<R> {
     }
 }
 
-impl<R: Clone> IntoIterator for HashGraph<R> {
-    type Item = Triple<R>;
+impl<R: Resource + Clone> IntoIterator for HashGraph<R> {
+    type Item = Triple<R, R, R>;
     type IntoIter = IntoTriples<R>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -373,7 +342,7 @@ impl<R: Clone> IntoIterator for HashGraph<R> {
 }
 
 pub struct Resources<'a, R> {
-    resources: &'a Slab<Resource<R>>,
+    resources: &'a Slab<Entry<R>>,
     indexes: hashbrown::hash_table::Iter<'a, usize>,
 }
 
@@ -385,21 +354,21 @@ impl<'a, R> Iterator for Resources<'a, R> {
     }
 }
 
-impl<R: Eq + Hash> PartialEq for HashGraph<R> {
+impl<R: Resource + Eq + Hash> PartialEq for HashGraph<R> {
     fn eq(&self, other: &Self) -> bool {
         self.len() == other.len() && self.iter().all(|t| other.contains(t))
     }
 }
 
-impl<R: Eq + Hash> Eq for HashGraph<R> {}
+impl<R: Resource + Eq + Hash> Eq for HashGraph<R> {}
 
 #[derive(Default, Clone)]
-pub(crate) struct Resource<R> {
+pub(crate) struct Entry<R> {
     pub value: R,
     occurrences: usize,
 }
 
-impl<R> Resource<R> {
+impl<R> Entry<R> {
     pub const fn new(value: R) -> Self {
         Self { value, occurrences: 1 }
     }
@@ -409,13 +378,13 @@ impl<R> Resource<R> {
     }
 }
 
-impl<R: Debug> Debug for HashGraph<R> {
+impl<R: Resource + Debug> Debug for HashGraph<R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_set().entries(self.iter()).finish()
     }
 }
 
-impl<R: RdfDisplay> RdfDisplay for HashGraph<R> {
+impl<R: Resource + RdfDisplay> RdfDisplay for HashGraph<R> {
     fn rdf_fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         for t in self {
             writeln!(f, "{} .", t.rdf_display())?;
@@ -426,7 +395,7 @@ impl<R: RdfDisplay> RdfDisplay for HashGraph<R> {
 }
 
 #[cfg(feature = "serde")]
-impl<R: serde::Serialize> serde::Serialize for HashGraph<R> {
+impl<R: Resource + serde::Serialize> serde::Serialize for HashGraph<R> {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         use serde::ser::SerializeSeq;
         let mut seq = serializer.serialize_seq(Some(self.len()))?;
@@ -440,11 +409,11 @@ impl<R: serde::Serialize> serde::Serialize for HashGraph<R> {
 }
 
 #[cfg(feature = "serde")]
-impl<'de, R: Clone + Eq + Hash + serde::Deserialize<'de>> serde::Deserialize<'de> for HashGraph<R> {
+impl<'de, R: Resource + Clone + Eq + Hash + serde::Deserialize<'de>> serde::Deserialize<'de> for HashGraph<R> {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         struct Visitor<R>(std::marker::PhantomData<R>);
 
-        impl<'de, R: Clone + Eq + Hash + serde::Deserialize<'de>> serde::de::Visitor<'de> for Visitor<R> {
+        impl<'de, R: Resource + Clone + Eq + Hash + serde::Deserialize<'de>> serde::de::Visitor<'de> for Visitor<R> {
             type Value = HashGraph<R>;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -483,7 +452,7 @@ mod tests {
         let mut triples = Vec::new();
         triples.resize_with(n, || Triple(rng.next_u32(), rng.next_u32(), rng.next_u32()));
 
-        let mut graph = HashGraph::new();
+        let mut graph = HashGraph::<u32>::new();
         for &t in &triples {
             graph.insert(t);
         }
@@ -500,7 +469,7 @@ mod tests {
         let mut triples = Vec::new();
         triples.resize_with(n, || Triple(rng.next_u32(), rng.next_u32(), rng.next_u32()));
 
-        let mut graph = HashGraph::new();
+        let mut graph = HashGraph::<u32>::new();
         for &t in &triples {
             graph.insert(t);
         }

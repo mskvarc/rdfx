@@ -10,7 +10,7 @@ pub mod triple;
 pub use triple::{CanonicalTriplePattern, TriplePatternMap};
 
 /// Triple pattern.
-pub type TriplePattern<T, X> = Triple<ResourceOrVar<T, X>>;
+pub type TriplePattern<T, X> = Triple<ResourceOrVar<T, X>, ResourceOrVar<T, X>, ResourceOrVar<T, X>>;
 
-/// Triple pattern.
-pub type QuadPattern<T, X> = Quad<ResourceOrVar<T, X>>;
+/// Quad pattern.
+pub type QuadPattern<T, X> = Quad<ResourceOrVar<T, X>, ResourceOrVar<T, X>, ResourceOrVar<T, X>, ResourceOrVar<T, X>>;

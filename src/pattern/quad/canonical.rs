@@ -1,5 +1,6 @@
 use crate::{
     Quad,
+    Resource,
     Triple,
     pattern::{
         QuadPattern,
@@ -16,44 +17,44 @@ pub enum CanonicalQuadPattern<T> {
     GivenSubject(T, GivenSubject<T>),
 }
 
-impl<T> From<Triple<T>> for CanonicalQuadPattern<T> {
-    fn from(value: Triple<T>) -> Self {
+impl<T: Resource> From<Triple<T, T, T>> for CanonicalQuadPattern<T> {
+    fn from(value: Triple<T, T, T>) -> Self {
         Self::from_triple(value)
     }
 }
 
-impl<T> From<Quad<T>> for CanonicalQuadPattern<T> {
-    fn from(value: Quad<T>) -> Self {
+impl<T: Resource> From<Quad<T, T, T, T>> for CanonicalQuadPattern<T> {
+    fn from(value: Quad<T, T, T, T>) -> Self {
         Self::from_quad(value)
     }
 }
 
-impl<T> From<Triple<Option<T>>> for CanonicalQuadPattern<T> {
-    fn from(value: Triple<Option<T>>) -> Self {
+impl<T: Resource> From<Triple<Option<T>, Option<T>, Option<T>>> for CanonicalQuadPattern<T> {
+    fn from(value: Triple<Option<T>, Option<T>, Option<T>>) -> Self {
         Self::from_option_triple(value)
     }
 }
 
-impl<T> From<Quad<Option<T>>> for CanonicalQuadPattern<T> {
-    fn from(value: Quad<Option<T>>) -> Self {
+impl<T: Resource> From<Quad<Option<T>, Option<T>, Option<T>, Option<T>>> for CanonicalQuadPattern<T> {
+    fn from(value: Quad<Option<T>, Option<T>, Option<T>, Option<T>>) -> Self {
         Self::from_option_quad(value)
     }
 }
 
-impl<T, X: PartialEq> From<TriplePattern<T, X>> for CanonicalQuadPattern<T> {
+impl<T: Resource, X: PartialEq> From<TriplePattern<T, X>> for CanonicalQuadPattern<T> {
     fn from(value: TriplePattern<T, X>) -> Self {
         Self::from_triple_pattern(value)
     }
 }
 
-impl<T, X: PartialEq> From<QuadPattern<T, X>> for CanonicalQuadPattern<T> {
+impl<T: Resource, X: PartialEq> From<QuadPattern<T, X>> for CanonicalQuadPattern<T> {
     fn from(value: QuadPattern<T, X>) -> Self {
         Self::from_pattern(value)
     }
 }
 
-impl<T> CanonicalQuadPattern<T> {
-    pub fn from_triple(triple: Triple<T>) -> Self {
+impl<T: Resource> CanonicalQuadPattern<T> {
+    pub fn from_triple(triple: Triple<T, T, T>) -> Self {
         Self::GivenSubject(
             triple.0,
             GivenSubject::GivenPredicate(
@@ -63,7 +64,7 @@ impl<T> CanonicalQuadPattern<T> {
         )
     }
 
-    pub fn from_quad(quad: Quad<T>) -> Self {
+    pub fn from_quad(quad: Quad<T, T, T, T>) -> Self {
         Self::GivenSubject(
             quad.0,
             GivenSubject::GivenPredicate(
@@ -73,14 +74,14 @@ impl<T> CanonicalQuadPattern<T> {
         )
     }
 
-    pub fn from_option_triple(triple: Triple<Option<T>>) -> Self {
+    pub fn from_option_triple(triple: Triple<Option<T>, Option<T>, Option<T>>) -> Self {
         match triple.0 {
             Some(s) => Self::GivenSubject(s, GivenSubject::from_option_quad(triple.1, triple.2, None)),
             None => Self::AnySubject(AnySubject::from_option_quad(triple.1, triple.2, None)),
         }
     }
 
-    pub fn from_option_quad(quad: Quad<Option<T>>) -> Self {
+    pub fn from_option_quad(quad: Quad<Option<T>, Option<T>, Option<T>, Option<T>>) -> Self {
         match quad.0 {
             Some(s) => Self::GivenSubject(s, GivenSubject::from_option_quad(quad.1, quad.2, quad.3)),
             None => Self::AnySubject(AnySubject::from_option_quad(quad.1, quad.2, quad.3)),
@@ -100,7 +101,9 @@ impl<T> CanonicalQuadPattern<T> {
             ResourceOrVar::Var(s) => Self::AnySubject(AnySubject::from_pattern(s, pattern.1, pattern.2, pattern.3)),
         }
     }
+}
 
+impl<T> CanonicalQuadPattern<T> {
     pub const fn subject(&self) -> PatternSubject<&T> {
         match self {
             Self::AnySubject(_) => PatternSubject::Any,
@@ -322,8 +325,8 @@ impl<T> PatternObject<&T> {
     }
 }
 
-impl<T: PartialEq> PatternObject<T> {
-    pub fn filter_triple(&self, triple: Triple<T>) -> bool {
+impl<T: Resource + PartialEq> PatternObject<T> {
+    pub fn filter_triple(&self, triple: Triple<T, T, T>) -> bool {
         match self {
             Self::Any => true,
             Self::SameAsSubject => triple.2 == triple.0,

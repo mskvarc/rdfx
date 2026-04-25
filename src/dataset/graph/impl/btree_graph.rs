@@ -6,43 +6,37 @@ use slab::Slab;
 
 use super::{super::Graph, IndexedBTreeGraph};
 use crate::{
-    BlankIdBuf,
-    LocalTerm,
     RdfDisplay,
+    Resource,
     Triple,
-    dataset::{
-        GraphMut,
-        ResourceTraversableGraph,
-        TraversableGraph,
-        isomorphism::{Bijection, are_isomorphic, find_bijection},
-    },
+    dataset::{GraphMut, ResourceTraversableGraph, TraversableGraph},
 };
 
-fn resource_cmp<R: Ord>(resources: &Slab<Resource<R>>) -> impl '_ + Fn(&usize, &R) -> Ordering {
+fn resource_cmp<R: Ord>(resources: &Slab<Entry<R>>) -> impl '_ + Fn(&usize, &R) -> Ordering {
     |&i, resource| resources[i].value.cmp(resource)
 }
 
-fn resource_index_cmp<R: Ord>(resources: &Slab<Resource<R>>) -> impl '_ + Fn(&usize, &usize) -> Ordering {
+fn resource_index_cmp<R: Ord>(resources: &Slab<Entry<R>>) -> impl '_ + Fn(&usize, &usize) -> Ordering {
     |&i, &j| resources[i].value.cmp(&resources[j].value)
 }
 
-fn triple_with_resources<R>(resources: &Slab<Resource<R>>, Triple(s, p, o): Triple<usize>) -> Triple<&R> {
+fn triple_with_resources<R: Resource>(resources: &Slab<Entry<R>>, Triple(s, p, o): Triple<usize, usize, usize>) -> Triple<&R, &R, &R> {
     Triple(&resources[s].value, &resources[p].value, &resources[o].value)
 }
 
-fn triple_cmp<'a, R: Ord>(resources: &'a Slab<Resource<R>>, triples: &'a Slab<Triple<usize>>) -> impl 'a + Fn(&usize, &Triple<&R>) -> Ordering {
+fn triple_cmp<'a, R: Resource + Ord>(resources: &'a Slab<Entry<R>>, triples: &'a Slab<Triple<usize, usize, usize>>) -> impl 'a + Fn(&usize, &Triple<&R, &R, &R>) -> Ordering {
     |&i, triple| triple_with_resources(resources, triples[i]).cmp(triple)
 }
 
-fn triple_index_cmp<'a, R: Ord>(resources: &'a Slab<Resource<R>>, triples: &'a Slab<Triple<usize>>) -> impl 'a + Fn(&usize, &usize) -> Ordering {
+fn triple_index_cmp<'a, R: Resource + Ord>(resources: &'a Slab<Entry<R>>, triples: &'a Slab<Triple<usize, usize, usize>>) -> impl 'a + Fn(&usize, &usize) -> Ordering {
     |&i, &j| triple_with_resources(resources, triples[i]).cmp(&triple_with_resources(resources, triples[j]))
 }
 
-/// BTree-based RDF graph.
+/// BTree-based RDF graph holding a uniform resource handle type `R`.
 #[derive(Clone)]
-pub struct BTreeGraph<R = LocalTerm> {
-    pub(crate) resources: Slab<Resource<R>>,
-    pub(crate) triples: Slab<Triple<usize>>,
+pub struct BTreeGraph<R> {
+    pub(crate) resources: Slab<Entry<R>>,
+    pub(crate) triples: Slab<Triple<usize, usize, usize>>,
     pub(crate) resources_indexes: RawBTree<usize>,
     pub(crate) triples_indexes: RawBTree<usize>,
 }
@@ -73,7 +67,9 @@ impl<R> BTreeGraph<R> {
     pub fn is_empty(&self) -> bool {
         self.triples.is_empty()
     }
+}
 
+impl<R: Resource> BTreeGraph<R> {
     /// Returns an iterator over the triples of the graph.
     pub fn iter(&self) -> Triples<'_, R> {
         Triples {
@@ -100,13 +96,13 @@ impl<R> BTreeGraph<R> {
     }
 }
 
-impl<R: Ord> BTreeGraph<R> {
+impl<R: Resource + Ord> BTreeGraph<R> {
     fn index_of_resource(&self, resource: &R) -> Option<usize> {
         self.resources_indexes.get(resource_cmp(&self.resources), resource).copied()
     }
 
     /// Returns the index of the given triple in the graph, if any.
-    fn index_of_triple(&self, triple: Triple<&R>) -> Option<usize> {
+    fn index_of_triple(&self, triple: Triple<&R, &R, &R>) -> Option<usize> {
         self.triples_indexes.get(triple_cmp(&self.resources, &self.triples), &triple).copied()
     }
 
@@ -116,7 +112,7 @@ impl<R: Ord> BTreeGraph<R> {
     }
 
     /// Checks if the provided triple is in the graph.
-    pub fn contains(&self, triple: Triple<&R>) -> bool {
+    pub fn contains(&self, triple: Triple<&R, &R, &R>) -> bool {
         self.index_of_triple(triple).is_some()
     }
 
@@ -124,7 +120,7 @@ impl<R: Ord> BTreeGraph<R> {
     ///
     /// Returns `true` if the triple was not already in the graph, and `false`
     /// if it was.
-    pub fn insert(&mut self, triple: Triple<R>) -> bool {
+    pub fn insert(&mut self, triple: Triple<R, R, R>) -> bool {
         if self.contains(triple.as_ref()) {
             false
         } else {
@@ -141,7 +137,7 @@ impl<R: Ord> BTreeGraph<R> {
                     s_i
                 }
                 None => {
-                    let s_i = self.resources.insert(Resource::new(triple.0));
+                    let s_i = self.resources.insert(Entry::new(triple.0));
                     self.resources_indexes.insert(resource_index_cmp(&self.resources), s_i);
                     s_i
                 }
@@ -153,7 +149,7 @@ impl<R: Ord> BTreeGraph<R> {
                     p_i
                 }
                 None => {
-                    let p_i = self.resources.insert(Resource::new(triple.1));
+                    let p_i = self.resources.insert(Entry::new(triple.1));
                     self.resources_indexes.insert(resource_index_cmp(&self.resources), p_i);
                     p_i
                 }
@@ -165,7 +161,7 @@ impl<R: Ord> BTreeGraph<R> {
                     o_i
                 }
                 None => {
-                    let o_i = self.resources.insert(Resource::new(triple.2));
+                    let o_i = self.resources.insert(Entry::new(triple.2));
                     self.resources_indexes.insert(resource_index_cmp(&self.resources), o_i);
                     o_i
                 }
@@ -183,7 +179,7 @@ impl<R: Ord> BTreeGraph<R> {
     ///
     /// Returns whether or not the triple was in the graph.
     /// Does nothing if the triple was not in the graph.
-    pub fn remove(&mut self, triple: Triple<&R>) -> bool {
+    pub fn remove(&mut self, triple: Triple<&R, &R, &R>) -> bool {
         match self.triples_indexes.remove(triple_cmp(&self.resources, &self.triples), &triple) {
             Some(i) => {
                 let Triple(s_i, p_i, o_i) = self.triples.remove(i);
@@ -216,59 +212,36 @@ impl<R: Ord> BTreeGraph<R> {
     }
 }
 
-impl<R: Clone + Ord> FromIterator<Triple<R>> for BTreeGraph<R> {
-    fn from_iter<T: IntoIterator<Item = Triple<R>>>(iter: T) -> Self {
+impl<R: Resource + Clone + Ord> FromIterator<Triple<R, R, R>> for BTreeGraph<R> {
+    fn from_iter<T: IntoIterator<Item = Triple<R, R, R>>>(iter: T) -> Self {
         let mut result = Self::new();
         result.extend(iter);
         result
     }
 }
 
-impl<R: Clone + Ord> Extend<Triple<R>> for BTreeGraph<R> {
-    fn extend<T: IntoIterator<Item = Triple<R>>>(&mut self, iter: T) {
+impl<R: Resource + Clone + Ord> Extend<Triple<R, R, R>> for BTreeGraph<R> {
+    fn extend<T: IntoIterator<Item = Triple<R, R, R>>>(&mut self, iter: T) {
         for triple in iter {
             self.insert(triple);
         }
     }
 }
 
-impl<R: Clone + Ord> BTreeGraph<R> {
+impl<R: Resource + Clone + Ord> BTreeGraph<R> {
     /// Inserts every triple of `iter` in the graph.
-    pub fn absorb<I: IntoIterator<Item = Triple<R>>>(&mut self, iter: I) {
+    pub fn absorb<I: IntoIterator<Item = Triple<R, R, R>>>(&mut self, iter: I) {
         self.extend(iter);
     }
 }
 
-impl BTreeGraph<LocalTerm> {
-    /// Returns a blank-node bijection from `self` to `other` if one exists.
-    pub fn find_blank_id_bijection<'a, 'b>(&'a self, other: &'b Self) -> Option<Bijection<'a, 'b>> {
-        find_bijection(self, other)
-    }
-
-    /// Checks if `self` and `other` are isomorphic.
-    pub fn is_isomorphic_to(&self, other: &Self) -> bool {
-        are_isomorphic(self, other)
-    }
-
-    /// Returns a copy of `self` with each blank node identifier replaced by the
-    /// result of `f`.
-    pub fn substitute_blank_ids(self, mut f: impl FnMut(BlankIdBuf) -> BlankIdBuf) -> Self {
-        self.into_iter()
-            .map(|t| {
-                t.map(|x| match x {
-                    LocalTerm::BlankId(b) => LocalTerm::BlankId(f(b)),
-                    named => named,
-                })
-            })
-            .collect()
-    }
+impl<R: Resource> Graph for BTreeGraph<R> {
+    type Subject = R;
+    type Predicate = R;
+    type Object = R;
 }
 
-impl<R> Graph for BTreeGraph<R> {
-    type Resource = R;
-}
-
-impl<R> TraversableGraph for BTreeGraph<R> {
+impl<R: Resource> TraversableGraph for BTreeGraph<R> {
     type Triples<'a>
         = Triples<'a, R>
     where
@@ -283,7 +256,7 @@ impl<R> TraversableGraph for BTreeGraph<R> {
     }
 }
 
-impl<R> ResourceTraversableGraph for BTreeGraph<R> {
+impl<R: Resource> ResourceTraversableGraph for BTreeGraph<R> {
     type GraphResources<'a>
         = Resources<'a, R>
     where
@@ -298,12 +271,12 @@ impl<R> ResourceTraversableGraph for BTreeGraph<R> {
     }
 }
 
-impl<R: Clone + Ord> GraphMut for BTreeGraph<R> {
-    fn insert(&mut self, triple: Triple<Self::Resource>) {
+impl<R: Resource + Clone + Ord> GraphMut for BTreeGraph<R> {
+    fn insert(&mut self, triple: Triple<Self::Subject, Self::Predicate, Self::Object>) {
         self.insert(triple);
     }
 
-    fn remove(&mut self, triple: Triple<&Self::Resource>) {
+    fn remove(&mut self, triple: Triple<&Self::Subject, &Self::Predicate, &Self::Object>) {
         self.remove(triple);
     }
 }
@@ -312,13 +285,13 @@ impl<R: Clone + Ord> GraphMut for BTreeGraph<R> {
 #[derive(Educe)]
 #[educe(Clone, Copy)]
 pub struct Triples<'a, R> {
-    resources: &'a Slab<Resource<R>>,
-    triples: &'a Slab<Triple<usize>>,
+    resources: &'a Slab<Entry<R>>,
+    triples: &'a Slab<Triple<usize, usize, usize>>,
     indexes: raw_btree::Iter<'a, usize>,
 }
 
-impl<'a, R> Iterator for Triples<'a, R> {
-    type Item = Triple<&'a R>;
+impl<'a, R: Resource> Iterator for Triples<'a, R> {
+    type Item = Triple<&'a R, &'a R, &'a R>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.indexes.next().map(|&i| triple_with_resources(self.resources, self.triples[i]))
@@ -327,13 +300,13 @@ impl<'a, R> Iterator for Triples<'a, R> {
 
 /// Iterator over the triples of a [`BTreeGraph`].
 pub struct IntoTriples<R> {
-    resources: Slab<Resource<R>>,
-    triples: Slab<Triple<usize>>,
+    resources: Slab<Entry<R>>,
+    triples: Slab<Triple<usize, usize, usize>>,
     indexes: raw_btree::IntoIter<usize>,
 }
 
-impl<R: Clone> Iterator for IntoTriples<R> {
-    type Item = Triple<R>;
+impl<R: Resource + Clone> Iterator for IntoTriples<R> {
+    type Item = Triple<R, R, R>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.indexes
@@ -342,8 +315,8 @@ impl<R: Clone> Iterator for IntoTriples<R> {
     }
 }
 
-impl<'a, R> IntoIterator for &'a BTreeGraph<R> {
-    type Item = Triple<&'a R>;
+impl<'a, R: Resource> IntoIterator for &'a BTreeGraph<R> {
+    type Item = Triple<&'a R, &'a R, &'a R>;
     type IntoIter = Triples<'a, R>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -351,8 +324,8 @@ impl<'a, R> IntoIterator for &'a BTreeGraph<R> {
     }
 }
 
-impl<R: Clone> IntoIterator for BTreeGraph<R> {
-    type Item = Triple<R>;
+impl<R: Resource + Clone> IntoIterator for BTreeGraph<R> {
+    type Item = Triple<R, R, R>;
     type IntoIter = IntoTriples<R>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -365,7 +338,7 @@ impl<R: Clone> IntoIterator for BTreeGraph<R> {
 }
 
 pub struct Resources<'a, R> {
-    resources: &'a Slab<Resource<R>>,
+    resources: &'a Slab<Entry<R>>,
     indexes: raw_btree::Iter<'a, usize>,
 }
 
@@ -377,27 +350,27 @@ impl<'a, R> Iterator for Resources<'a, R> {
     }
 }
 
-impl<R: PartialEq> PartialEq for BTreeGraph<R> {
+impl<R: Resource + PartialEq> PartialEq for BTreeGraph<R> {
     fn eq(&self, other: &Self) -> bool {
         self.len() == other.len() && self.iter().zip(other).all(|(a, b)| a == b)
     }
 }
 
-impl<R: Eq> Eq for BTreeGraph<R> {}
+impl<R: Resource + Eq> Eq for BTreeGraph<R> {}
 
-impl<R: PartialOrd> PartialOrd for BTreeGraph<R> {
+impl<R: Resource + PartialOrd> PartialOrd for BTreeGraph<R> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.iter().partial_cmp(other)
     }
 }
 
-impl<R: Ord> Ord for BTreeGraph<R> {
+impl<R: Resource + Ord> Ord for BTreeGraph<R> {
     fn cmp(&self, other: &Self) -> Ordering {
         self.iter().cmp(other)
     }
 }
 
-impl<R: Hash> Hash for BTreeGraph<R> {
+impl<R: Resource + Hash> Hash for BTreeGraph<R> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         state.write_usize(self.len());
         for elt in self {
@@ -407,12 +380,12 @@ impl<R: Hash> Hash for BTreeGraph<R> {
 }
 
 #[derive(Default, Clone)]
-pub(crate) struct Resource<R> {
+pub(crate) struct Entry<R> {
     pub value: R,
     occurrences: usize,
 }
 
-impl<R> Resource<R> {
+impl<R> Entry<R> {
     pub const fn new(value: R) -> Self {
         Self { value, occurrences: 1 }
     }
@@ -422,13 +395,13 @@ impl<R> Resource<R> {
     }
 }
 
-impl<R: Debug> Debug for BTreeGraph<R> {
+impl<R: Resource + Debug> Debug for BTreeGraph<R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_set().entries(self.iter()).finish()
     }
 }
 
-impl<R: RdfDisplay> RdfDisplay for BTreeGraph<R> {
+impl<R: Resource + RdfDisplay> RdfDisplay for BTreeGraph<R> {
     fn rdf_fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         for t in self {
             writeln!(f, "{} .", t.rdf_display())?;
@@ -439,7 +412,7 @@ impl<R: RdfDisplay> RdfDisplay for BTreeGraph<R> {
 }
 
 #[cfg(feature = "serde")]
-impl<R: serde::Serialize> serde::Serialize for BTreeGraph<R> {
+impl<R: Resource + serde::Serialize> serde::Serialize for BTreeGraph<R> {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         use serde::ser::SerializeSeq;
         let mut seq = serializer.serialize_seq(Some(self.len()))?;
@@ -453,11 +426,11 @@ impl<R: serde::Serialize> serde::Serialize for BTreeGraph<R> {
 }
 
 #[cfg(feature = "serde")]
-impl<'de, R: Clone + Ord + serde::Deserialize<'de>> serde::Deserialize<'de> for BTreeGraph<R> {
+impl<'de, R: Resource + Clone + Ord + serde::Deserialize<'de>> serde::Deserialize<'de> for BTreeGraph<R> {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         struct Visitor<R>(std::marker::PhantomData<R>);
 
-        impl<'de, R: Clone + Ord + serde::Deserialize<'de>> serde::de::Visitor<'de> for Visitor<R> {
+        impl<'de, R: Resource + Clone + Ord + serde::Deserialize<'de>> serde::de::Visitor<'de> for Visitor<R> {
             type Value = BTreeGraph<R>;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -496,7 +469,7 @@ mod tests {
         let mut triples = Vec::new();
         triples.resize_with(n, || Triple(rng.next_u32(), rng.next_u32(), rng.next_u32()));
 
-        let mut graph = BTreeGraph::new();
+        let mut graph = BTreeGraph::<u32>::new();
         for &t in &triples {
             graph.insert(t);
         }
@@ -515,7 +488,7 @@ mod tests {
         let mut triples = Vec::new();
         triples.resize_with(n, || Triple(rng.next_u32(), rng.next_u32(), rng.next_u32()));
 
-        let mut graph = BTreeGraph::new();
+        let mut graph = BTreeGraph::<u32>::new();
         for &t in &triples {
             graph.insert(t);
         }
@@ -533,7 +506,7 @@ mod tests {
         test_eq(graph, triples)
     }
 
-    fn test_eq(graph: BTreeGraph<u32>, triples: Vec<Triple<u32>>) {
+    fn test_eq(graph: BTreeGraph<u32>, triples: Vec<Triple<u32, u32, u32>>) {
         assert_eq!(graph.len(), triples.len());
 
         let mut a = triples.iter().copied();

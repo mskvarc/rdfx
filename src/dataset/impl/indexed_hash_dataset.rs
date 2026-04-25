@@ -8,17 +8,15 @@ use std::{
 use hashbrown::{DefaultHashBuilder, HashSet, HashTable};
 use slab::Slab;
 
-use super::{
-    super::{Dataset, PatternMatchingDataset},
-    HashDataset,
-};
+use super::{super::PatternMatchingDataset, HashDataset};
 use crate::{
-    BlankIdBuf,
-    LocalTerm,
     Quad,
     RdfDisplay,
+    Resource,
     dataset::{
+        Dataset,
         DatasetMut,
+        Graph,
         HashGraph,
         MultiPatternMatchingDataset,
         NamedGraphTraversableDataset,
@@ -27,7 +25,6 @@ use crate::{
         ResourceTraversableDataset,
         SubjectTraversableDataset,
         TraversableDataset,
-        isomorphism::{Bijection, are_isomorphic, find_bijection},
     },
     pattern::{
         CanonicalQuadPattern,
@@ -35,7 +32,7 @@ use crate::{
     },
 };
 
-fn quad_with_resources<R>(resources: &Slab<Resource<R>>, Quad(s, p, o, g): Quad<usize>) -> Quad<&R> {
+fn quad_with_resources<R: Resource>(resources: &Slab<Entry<R>>, Quad(s, p, o, g): Quad<usize, usize, usize, usize>) -> Quad<&R, &R, &R, &R> {
     // Safety: resource indexes in stored quads always point to live entries in `resources`.
     // The slab key remains valid until the quad referencing it is removed, which only happens
     // before the corresponding resource entry is freed.
@@ -51,9 +48,9 @@ fn quad_with_resources<R>(resources: &Slab<Resource<R>>, Quad(s, p, o, g): Quad<
 
 /// Indexed hash-based RDF dataset, optimized for pattern matching operations.
 #[derive(Clone)]
-pub struct IndexedHashDataset<R = LocalTerm> {
-    resources: Slab<Resource<R>>,
-    quads: Slab<Quad<usize>>,
+pub struct IndexedHashDataset<R> {
+    resources: Slab<Entry<R>>,
+    quads: Slab<Quad<usize, usize, usize, usize>>,
     hasher: DefaultHashBuilder,
     resources_indexes: HashTable<usize>,
     quads_indexes: HashTable<usize>,
@@ -81,7 +78,7 @@ impl<R> Default for IndexedHashDataset<R> {
     }
 }
 
-impl<R> IndexedHashDataset<R> {
+impl<R: Resource> IndexedHashDataset<R> {
     /// Creates a new empty dataset.
     pub fn new() -> Self {
         Self::default()
@@ -147,16 +144,16 @@ impl<R> IndexedHashDataset<R> {
     }
 }
 
-impl<R: Eq + Hash> IndexedHashDataset<R> {
+impl<R: Resource + Eq + Hash> IndexedHashDataset<R> {
     /// Creates a new indexed dataset from a non-indexed one.
     pub fn from_non_indexed(dataset: HashDataset<R>) -> Self {
-        let mut resources: Slab<Resource<R>> = dataset
+        let mut resources: Slab<Entry<R>> = dataset
             .resources
             .into_iter()
             .map(|(i, r)| {
                 (
                     i,
-                    Resource {
+                    Entry {
                         value: r.value,
                         as_subject: BTreeSet::new(),
                         as_predicate: BTreeSet::new(),
@@ -214,7 +211,7 @@ impl<R: Eq + Hash> IndexedHashDataset<R> {
         self.hasher.hash_one(r)
     }
 
-    fn hash_quad(&self, q: &Quad<&R>) -> u64 {
+    fn hash_quad(&self, q: &Quad<&R, &R, &R, &R>) -> u64 {
         self.hasher.hash_one(q)
     }
 
@@ -224,11 +221,11 @@ impl<R: Eq + Hash> IndexedHashDataset<R> {
         self.resources_indexes.find(h, |&i| &resources[i].value == r).copied()
     }
 
-    fn get_resource(&self, r: &R) -> Option<&Resource<R>> {
+    fn get_resource(&self, r: &R) -> Option<&Entry<R>> {
         self.resources.get(self.index_of_resource(r)?)
     }
 
-    fn index_of_quad(&self, q: Quad<&R>) -> Option<usize> {
+    fn index_of_quad(&self, q: Quad<&R, &R, &R, &R>) -> Option<usize> {
         let h = self.hash_quad(&q);
         let resources = &self.resources;
         let quads = &self.quads;
@@ -241,7 +238,7 @@ impl<R: Eq + Hash> IndexedHashDataset<R> {
     }
 
     /// Checks if the provided quad is in the dataset.
-    pub fn contains(&self, q: Quad<&R>) -> bool {
+    pub fn contains(&self, q: Quad<&R, &R, &R, &R>) -> bool {
         self.index_of_quad(q).is_some()
     }
 
@@ -280,8 +277,8 @@ impl<R: Eq + Hash> IndexedHashDataset<R> {
     }
 }
 
-impl<R: Clone + Eq + Hash> IndexedHashDataset<R> {
-    fn intern_resource(&mut self, r: R, pre: Option<usize>, mk: impl FnOnce(R, usize) -> Resource<R>, i: usize) -> usize {
+impl<R: Resource + Clone + Eq + Hash> IndexedHashDataset<R> {
+    fn intern_resource(&mut self, r: R, pre: Option<usize>, mk: impl FnOnce(R, usize) -> Entry<R>, i: usize) -> usize {
         match pre {
             Some(j) => j,
             None => {
@@ -299,7 +296,7 @@ impl<R: Clone + Eq + Hash> IndexedHashDataset<R> {
     ///
     /// Returns `true` if the quad was not already in the dataset, and `false`
     /// if it was.
-    pub fn insert(&mut self, quad: Quad<R>) -> bool {
+    pub fn insert(&mut self, quad: Quad<R, R, R, R>) -> bool {
         if self.contains(quad.as_ref()) {
             return false;
         }
@@ -311,24 +308,24 @@ impl<R: Clone + Eq + Hash> IndexedHashDataset<R> {
 
         let i = self.quads.vacant_key();
 
-        let s_i = self.intern_resource(quad.0, s_pre, Resource::subject, i);
+        let s_i = self.intern_resource(quad.0, s_pre, Entry::subject, i);
         if s_pre.is_some() {
             self.resources[s_i].as_subject.insert(i);
         }
 
-        let p_i = self.intern_resource(quad.1, p_pre, Resource::predicate, i);
+        let p_i = self.intern_resource(quad.1, p_pre, Entry::predicate, i);
         if p_pre.is_some() {
             self.resources[p_i].as_predicate.insert(i);
         }
 
-        let o_i = self.intern_resource(quad.2, o_pre, Resource::object, i);
+        let o_i = self.intern_resource(quad.2, o_pre, Entry::object, i);
         if o_pre.is_some() {
             self.resources[o_i].as_object.insert(i);
         }
 
         let g_i = match (quad.3, g_pre) {
             (Some(g), Some(pre)) => {
-                let g_i = self.intern_resource(g, pre, Resource::graph, i);
+                let g_i = self.intern_resource(g, pre, Entry::graph, i);
                 if pre.is_some() {
                     self.resources[g_i].as_graph.insert(i);
                 }
@@ -366,7 +363,7 @@ impl<R: Clone + Eq + Hash> IndexedHashDataset<R> {
     ///
     /// Returns whether or not the quad was in the dataset.
     /// Does nothing if the quad was not in the dataset.
-    pub fn remove(&mut self, q: Quad<&R>) -> bool {
+    pub fn remove(&mut self, q: Quad<&R, &R, &R, &R>) -> bool {
         let h = self.hash_quad(&q);
         let resources = &self.resources;
         let quads = &self.quads;
@@ -482,36 +479,36 @@ impl<R: Clone + Eq + Hash> IndexedHashDataset<R> {
     }
 }
 
-impl<R: Clone + Eq + Hash> From<HashDataset<R>> for IndexedHashDataset<R> {
+impl<R: Resource + Clone + Eq + Hash> From<HashDataset<R>> for IndexedHashDataset<R> {
     fn from(value: HashDataset<R>) -> Self {
         Self::from_non_indexed(value)
     }
 }
 
-impl<R: Clone + Eq + Hash> FromIterator<Quad<R>> for IndexedHashDataset<R> {
-    fn from_iter<T: IntoIterator<Item = Quad<R>>>(iter: T) -> Self {
+impl<R: Resource + Clone + Eq + Hash> FromIterator<Quad<R, R, R, R>> for IndexedHashDataset<R> {
+    fn from_iter<T: IntoIterator<Item = Quad<R, R, R, R>>>(iter: T) -> Self {
         let mut result = Self::new();
         result.extend(iter);
         result
     }
 }
 
-impl<R: Clone + Eq + Hash> Extend<Quad<R>> for IndexedHashDataset<R> {
-    fn extend<T: IntoIterator<Item = Quad<R>>>(&mut self, iter: T) {
+impl<R: Resource + Clone + Eq + Hash> Extend<Quad<R, R, R, R>> for IndexedHashDataset<R> {
+    fn extend<T: IntoIterator<Item = Quad<R, R, R, R>>>(&mut self, iter: T) {
         for quad in iter {
             self.insert(quad);
         }
     }
 }
 
-impl<R: Clone + Eq + Hash> IndexedHashDataset<R> {
+impl<R: Resource + Clone + Eq + Hash> IndexedHashDataset<R> {
     /// Inserts every quad of `iter` in the dataset.
-    pub fn absorb<I: IntoIterator<Item = Quad<R>>>(&mut self, iter: I) {
+    pub fn absorb<I: IntoIterator<Item = Quad<R, R, R, R>>>(&mut self, iter: I) {
         self.extend(iter);
     }
 
     /// Removes the given quad and returns it if it was present.
-    pub fn take(&mut self, quad: Quad<&R>) -> Option<Quad<R>> {
+    pub fn take(&mut self, quad: Quad<&R, &R, &R, &R>) -> Option<Quad<R, R, R, R>> {
         let i = self.index_of_quad(quad)?;
         let value = quad_with_resources(&self.resources, self.quads[i]).cloned();
         self.remove_by_index(i, true);
@@ -519,43 +516,23 @@ impl<R: Clone + Eq + Hash> IndexedHashDataset<R> {
     }
 
     /// Removes and returns the first quad matching the given option-pattern, if any.
-    pub fn take_match(&mut self, pattern: Quad<Option<&R>, Option<&R>, Option<&R>, Option<&R>>) -> Option<Quad<R>> {
+    pub fn take_match(&mut self, pattern: Quad<Option<&R>, Option<&R>, Option<&R>, Option<&R>>) -> Option<Quad<R, R, R, R>> {
         let canonical = CanonicalQuadPattern::from_option_quad(pattern);
         self.extract_pattern_matching(canonical).next()
     }
 }
 
-impl IndexedHashDataset<LocalTerm> {
-    /// Returns a blank-node bijection from `self` to `other` if one exists.
-    pub fn find_blank_id_bijection<'a, 'b>(&'a self, other: &'b Self) -> Option<Bijection<'a, 'b>> {
-        find_bijection(self, other)
-    }
-
-    /// Checks if `self` and `other` are isomorphic.
-    pub fn is_isomorphic_to(&self, other: &Self) -> bool {
-        are_isomorphic(self, other)
-    }
-
-    /// Returns a copy of `self` with each blank node identifier replaced by the
-    /// result of `f`.
-    pub fn substitute_blank_ids(self, mut f: impl FnMut(BlankIdBuf) -> BlankIdBuf) -> Self {
-        self.into_iter()
-            .map(|q| {
-                q.map(|t| match t {
-                    LocalTerm::BlankId(b) => LocalTerm::BlankId(f(b)),
-                    named => named,
-                })
-            })
-            .collect::<crate::dataset::HashDataset<LocalTerm>>()
-            .into_indexed()
-    }
+impl<R: Resource> Graph for IndexedHashDataset<R> {
+    type Subject = R;
+    type Predicate = R;
+    type Object = R;
 }
 
-impl<R> Dataset for IndexedHashDataset<R> {
-    type Resource = R;
+impl<R: Resource> Dataset for IndexedHashDataset<R> {
+    type Graph = R;
 }
 
-impl<R> TraversableDataset for IndexedHashDataset<R> {
+impl<R: Resource> TraversableDataset for IndexedHashDataset<R> {
     type Quads<'a>
         = Quads<'a, R>
     where
@@ -570,7 +547,7 @@ impl<R> TraversableDataset for IndexedHashDataset<R> {
     }
 }
 
-impl<R> ResourceTraversableDataset for IndexedHashDataset<R> {
+impl<R: Resource> ResourceTraversableDataset for IndexedHashDataset<R> {
     type Resources<'a>
         = Resources<'a, R>
     where
@@ -585,7 +562,7 @@ impl<R> ResourceTraversableDataset for IndexedHashDataset<R> {
     }
 }
 
-impl<R> SubjectTraversableDataset for IndexedHashDataset<R> {
+impl<R: Resource> SubjectTraversableDataset for IndexedHashDataset<R> {
     type Subjects<'a>
         = Subjects<'a, R>
     where
@@ -600,7 +577,7 @@ impl<R> SubjectTraversableDataset for IndexedHashDataset<R> {
     }
 }
 
-impl<R> PredicateTraversableDataset for IndexedHashDataset<R> {
+impl<R: Resource> PredicateTraversableDataset for IndexedHashDataset<R> {
     type Predicates<'a>
         = Predicates<'a, R>
     where
@@ -615,7 +592,7 @@ impl<R> PredicateTraversableDataset for IndexedHashDataset<R> {
     }
 }
 
-impl<R> ObjectTraversableDataset for IndexedHashDataset<R> {
+impl<R: Resource> ObjectTraversableDataset for IndexedHashDataset<R> {
     type Objects<'a>
         = Objects<'a, R>
     where
@@ -630,7 +607,7 @@ impl<R> ObjectTraversableDataset for IndexedHashDataset<R> {
     }
 }
 
-impl<R> NamedGraphTraversableDataset for IndexedHashDataset<R> {
+impl<R: Resource> NamedGraphTraversableDataset for IndexedHashDataset<R> {
     type NamedGraphs<'a>
         = NamedGraphs<'a, R>
     where
@@ -645,38 +622,38 @@ impl<R> NamedGraphTraversableDataset for IndexedHashDataset<R> {
     }
 }
 
-impl<R: Clone + Eq + Hash> DatasetMut for IndexedHashDataset<R> {
-    fn insert(&mut self, quad: Quad<Self::Resource>) {
+impl<R: Resource + Clone + Eq + Hash> DatasetMut for IndexedHashDataset<R> {
+    fn insert(&mut self, quad: Quad<Self::Subject, Self::Predicate, Self::Object, <Self as Dataset>::Graph>) {
         self.insert(quad);
     }
 
-    fn remove(&mut self, quad: Quad<&Self::Resource>) {
+    fn remove(&mut self, quad: Quad<&Self::Subject, &Self::Predicate, &Self::Object, &<Self as Dataset>::Graph>) {
         self.remove(quad);
     }
 }
 
-impl<R: Eq + Hash> PatternMatchingDataset for IndexedHashDataset<R> {
+impl<R: Resource + Eq + Hash> PatternMatchingDataset for IndexedHashDataset<R> {
     type QuadPatternMatching<'a, 'p>
         = PatternMatching<'a, R>
     where
         R: 'a,
-        Self::Resource: 'p;
+        Self::Subject: 'p;
 
-    fn quad_pattern_matching<'p>(&self, pattern: CanonicalQuadPattern<&'p Self::Resource>) -> Self::QuadPatternMatching<'_, 'p> {
+    fn quad_pattern_matching<'p>(&self, pattern: CanonicalQuadPattern<&'p Self::Subject>) -> Self::QuadPatternMatching<'_, 'p> {
         self.pattern_matching(pattern)
     }
 
-    fn contains_quad(&self, quad: Quad<&Self::Resource>) -> bool {
+    fn contains_quad(&self, quad: Quad<&Self::Subject, &Self::Subject, &Self::Subject, &Self::Subject>) -> bool {
         self.contains(quad)
     }
 }
 
-impl<R: Eq + Hash> MultiPatternMatchingDataset for IndexedHashDataset<R> {
+impl<R: Resource + Eq + Hash> MultiPatternMatchingDataset for IndexedHashDataset<R> {
     type QuadMultiPatternMatching<'a, 'p>
         = MultiPatternMatching<'a, R>
     where
         R: 'a,
-        Self::Resource: 'p;
+        Self::Subject: 'p;
 
     fn quad_multi_pattern_matching<'p, P>(&self, pattern: CanonicalQuadPattern<P>) -> Self::QuadMultiPatternMatching<'_, 'p>
     where
@@ -688,13 +665,13 @@ impl<R: Eq + Hash> MultiPatternMatchingDataset for IndexedHashDataset<R> {
 }
 
 pub struct Quads<'a, R> {
-    resources: &'a Slab<Resource<R>>,
-    quads: &'a Slab<Quad<usize>>,
+    resources: &'a Slab<Entry<R>>,
+    quads: &'a Slab<Quad<usize, usize, usize, usize>>,
     indexes: hashbrown::hash_table::Iter<'a, usize>,
 }
 
-impl<'a, R> Iterator for Quads<'a, R> {
-    type Item = Quad<&'a R>;
+impl<'a, R: Resource> Iterator for Quads<'a, R> {
+    type Item = Quad<&'a R, &'a R, &'a R, &'a R>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.indexes.next().map(|&i| quad_with_resources(self.resources, self.quads[i]))
@@ -702,21 +679,21 @@ impl<'a, R> Iterator for Quads<'a, R> {
 }
 
 pub struct IntoQuads<R> {
-    resources: Slab<Resource<R>>,
-    quads: Slab<Quad<usize>>,
+    resources: Slab<Entry<R>>,
+    quads: Slab<Quad<usize, usize, usize, usize>>,
     indexes: hashbrown::hash_table::IntoIter<usize>,
 }
 
-impl<R: Clone> Iterator for IntoQuads<R> {
-    type Item = Quad<R>;
+impl<R: Resource + Clone> Iterator for IntoQuads<R> {
+    type Item = Quad<R, R, R, R>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.indexes.next().map(|i| quad_with_resources(&self.resources, self.quads.remove(i)).cloned())
     }
 }
 
-impl<'a, R> IntoIterator for &'a IndexedHashDataset<R> {
-    type Item = Quad<&'a R>;
+impl<'a, R: Resource> IntoIterator for &'a IndexedHashDataset<R> {
+    type Item = Quad<&'a R, &'a R, &'a R, &'a R>;
     type IntoIter = Quads<'a, R>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -724,8 +701,8 @@ impl<'a, R> IntoIterator for &'a IndexedHashDataset<R> {
     }
 }
 
-impl<R: Clone> IntoIterator for IndexedHashDataset<R> {
-    type Item = Quad<R>;
+impl<R: Resource + Clone> IntoIterator for IndexedHashDataset<R> {
+    type Item = Quad<R, R, R, R>;
     type IntoIter = IntoQuads<R>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -738,7 +715,7 @@ impl<R: Clone> IntoIterator for IndexedHashDataset<R> {
 }
 
 pub struct Resources<'a, R> {
-    resources: &'a Slab<Resource<R>>,
+    resources: &'a Slab<Entry<R>>,
     indexes: hashbrown::hash_table::Iter<'a, usize>,
 }
 
@@ -751,7 +728,7 @@ impl<'a, R> Iterator for Resources<'a, R> {
 }
 
 pub struct Subjects<'a, R> {
-    resources: &'a Slab<Resource<R>>,
+    resources: &'a Slab<Entry<R>>,
     indexes: hashbrown::hash_set::Iter<'a, usize>,
 }
 
@@ -764,7 +741,7 @@ impl<'a, R> Iterator for Subjects<'a, R> {
 }
 
 pub struct Predicates<'a, R> {
-    resources: &'a Slab<Resource<R>>,
+    resources: &'a Slab<Entry<R>>,
     indexes: hashbrown::hash_set::Iter<'a, usize>,
 }
 
@@ -777,7 +754,7 @@ impl<'a, R> Iterator for Predicates<'a, R> {
 }
 
 pub struct Objects<'a, R> {
-    resources: &'a Slab<Resource<R>>,
+    resources: &'a Slab<Entry<R>>,
     indexes: hashbrown::hash_set::Iter<'a, usize>,
 }
 
@@ -790,7 +767,7 @@ impl<'a, R> Iterator for Objects<'a, R> {
 }
 
 pub struct NamedGraphs<'a, R> {
-    resources: &'a Slab<Resource<R>>,
+    resources: &'a Slab<Entry<R>>,
     indexes: hashbrown::hash_set::Iter<'a, usize>,
 }
 
@@ -802,15 +779,15 @@ impl<'a, R> Iterator for NamedGraphs<'a, R> {
     }
 }
 
-impl<R: Eq + Hash> PartialEq for IndexedHashDataset<R> {
+impl<R: Resource + Eq + Hash> PartialEq for IndexedHashDataset<R> {
     fn eq(&self, other: &Self) -> bool {
         self.len() == other.len() && self.iter().all(|q| other.contains(q))
     }
 }
 
-impl<R: Eq + Hash> Eq for IndexedHashDataset<R> {}
+impl<R: Resource + Eq + Hash> Eq for IndexedHashDataset<R> {}
 
-impl<R: Hash> Hash for IndexedHashDataset<R> {
+impl<R: Resource + Hash> Hash for IndexedHashDataset<R> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         state.write_usize(self.len());
         let mut acc: u64 = 0;
@@ -824,8 +801,8 @@ impl<R: Hash> Hash for IndexedHashDataset<R> {
 }
 
 pub struct PatternMatching<'a, R> {
-    resources: &'a Slab<Resource<R>>,
-    quads: &'a Slab<Quad<usize>>,
+    resources: &'a Slab<Entry<R>>,
+    quads: &'a Slab<Quad<usize, usize, usize, usize>>,
     subject: SubjectConstraints,
     predicate: PredicateConstraints,
     object: ObjectConstraints,
@@ -833,8 +810,8 @@ pub struct PatternMatching<'a, R> {
     i: usize,
 }
 
-impl<'a, R> Iterator for PatternMatching<'a, R> {
-    type Item = Quad<&'a R>;
+impl<'a, R: Resource> Iterator for PatternMatching<'a, R> {
+    type Item = Quad<&'a R, &'a R, &'a R, &'a R>;
 
     fn next(&mut self) -> Option<Self::Item> {
         while self.i < self.quads.capacity() {
@@ -860,8 +837,8 @@ impl<'a, R> Iterator for PatternMatching<'a, R> {
 }
 
 pub struct MultiPatternMatching<'a, R> {
-    resources: &'a Slab<Resource<R>>,
-    quads: &'a Slab<Quad<usize>>,
+    resources: &'a Slab<Entry<R>>,
+    quads: &'a Slab<Quad<usize, usize, usize, usize>>,
     subject: SubjectConstraints,
     predicate: PredicateConstraints,
     object: ObjectConstraints,
@@ -869,8 +846,8 @@ pub struct MultiPatternMatching<'a, R> {
     i: usize,
 }
 
-impl<'a, R> Iterator for MultiPatternMatching<'a, R> {
-    type Item = Quad<&'a R>;
+impl<'a, R: Resource> Iterator for MultiPatternMatching<'a, R> {
+    type Item = Quad<&'a R, &'a R, &'a R, &'a R>;
 
     fn next(&mut self) -> Option<Self::Item> {
         while self.i < self.quads.capacity() {
@@ -904,8 +881,8 @@ pub struct ExtractPatternMatching<'a, R> {
     i: usize,
 }
 
-impl<R: Clone + Eq + Hash> Iterator for ExtractPatternMatching<'_, R> {
-    type Item = Quad<R>;
+impl<R: Resource + Clone + Eq + Hash> Iterator for ExtractPatternMatching<'_, R> {
+    type Item = Quad<R, R, R, R>;
 
     fn next(&mut self) -> Option<Self::Item> {
         while self.i < self.dataset.quads.capacity() {
@@ -945,7 +922,7 @@ enum SubjectConstraints {
 }
 
 impl SubjectConstraints {
-    fn new<R: Eq + Hash>(dataset: &IndexedHashDataset<R>, s: PatternSubject<&R>) -> Self {
+    fn new<R: Resource + Eq + Hash>(dataset: &IndexedHashDataset<R>, s: PatternSubject<&R>) -> Self {
         match s {
             PatternSubject::Any => Self::Any,
             PatternSubject::Given(s) => match dataset.get_resource(s) {
@@ -958,7 +935,7 @@ impl SubjectConstraints {
     fn new_multi<'p, R, P>(dataset: &IndexedHashDataset<R>, s: PatternSubject<P>) -> Self
     where
         P: IntoIterator<Item = &'p R>,
-        R: 'p + Eq + Hash,
+        R: Resource + 'p + Eq + Hash,
     {
         match s {
             PatternSubject::Any => Self::Any,
@@ -1007,7 +984,7 @@ enum PredicateConstraints {
 }
 
 impl PredicateConstraints {
-    fn new<R: Eq + Hash>(dataset: &IndexedHashDataset<R>, p: PatternPredicate<&R>) -> Self {
+    fn new<R: Resource + Eq + Hash>(dataset: &IndexedHashDataset<R>, p: PatternPredicate<&R>) -> Self {
         match p {
             PatternPredicate::Any => Self::Any,
             PatternPredicate::SameAsSubject => Self::SameAsSubject,
@@ -1021,7 +998,7 @@ impl PredicateConstraints {
     fn new_multi<'p, R, P>(dataset: &IndexedHashDataset<R>, p: PatternPredicate<P>) -> Self
     where
         P: IntoIterator<Item = &'p R>,
-        R: 'p + Eq + Hash,
+        R: Resource + 'p + Eq + Hash,
     {
         match p {
             PatternPredicate::Any => Self::Any,
@@ -1044,7 +1021,7 @@ impl PredicateConstraints {
         }
     }
 
-    fn next(&mut self, i: usize, quad: Quad<usize>) -> Result<(), Option<usize>> {
+    fn next(&mut self, i: usize, quad: Quad<usize, usize, usize, usize>) -> Result<(), Option<usize>> {
         match self {
             Self::None => Err(None),
             Self::Any => Ok(()),
@@ -1081,7 +1058,7 @@ enum ObjectConstraints {
 }
 
 impl ObjectConstraints {
-    fn new<R: Eq + Hash>(dataset: &IndexedHashDataset<R>, o: PatternObject<&R>) -> Self {
+    fn new<R: Resource + Eq + Hash>(dataset: &IndexedHashDataset<R>, o: PatternObject<&R>) -> Self {
         match o {
             PatternObject::Any => Self::Any,
             PatternObject::SameAsSubject => Self::SameAsSubject,
@@ -1096,7 +1073,7 @@ impl ObjectConstraints {
     fn new_multi<'p, R, P>(dataset: &IndexedHashDataset<R>, o: PatternObject<P>) -> Self
     where
         P: IntoIterator<Item = &'p R>,
-        R: 'p + Eq + Hash,
+        R: Resource + 'p + Eq + Hash,
     {
         match o {
             PatternObject::Any => Self::Any,
@@ -1120,7 +1097,7 @@ impl ObjectConstraints {
         }
     }
 
-    fn next(&mut self, i: usize, quad: Quad<usize>) -> Result<(), Option<usize>> {
+    fn next(&mut self, i: usize, quad: Quad<usize, usize, usize, usize>) -> Result<(), Option<usize>> {
         match self {
             Self::None => Err(None),
             Self::Any => Ok(()),
@@ -1165,7 +1142,7 @@ enum GraphConstraints {
 }
 
 impl GraphConstraints {
-    fn new<R: Eq + Hash>(dataset: &IndexedHashDataset<R>, g: PatternGraph<&R>) -> Self {
+    fn new<R: Resource + Eq + Hash>(dataset: &IndexedHashDataset<R>, g: PatternGraph<&R>) -> Self {
         match g {
             PatternGraph::Any => Self::Any,
             PatternGraph::SameAsSubject => Self::SameAsSubject,
@@ -1182,7 +1159,7 @@ impl GraphConstraints {
     fn new_multi<'p, R, P>(dataset: &IndexedHashDataset<R>, g: PatternGraph<P>) -> Self
     where
         P: IntoIterator<Item = &'p R>,
-        R: 'p + Eq + Hash,
+        R: Resource + 'p + Eq + Hash,
     {
         match g {
             PatternGraph::Any => Self::Any,
@@ -1208,7 +1185,7 @@ impl GraphConstraints {
         }
     }
 
-    fn next(&mut self, i: usize, quad: Quad<usize>) -> Result<(), Option<usize>> {
+    fn next(&mut self, i: usize, quad: Quad<usize, usize, usize, usize>) -> Result<(), Option<usize>> {
         match self {
             Self::None => Err(None),
             Self::Any => Ok(()),
@@ -1251,7 +1228,7 @@ impl GraphConstraints {
 }
 
 #[derive(Default, Clone)]
-struct Resource<R> {
+struct Entry<R> {
     value: R,
     as_subject: BTreeSet<usize>,
     as_predicate: BTreeSet<usize>,
@@ -1259,7 +1236,7 @@ struct Resource<R> {
     as_graph: BTreeSet<usize>,
 }
 
-impl<R> Resource<R> {
+impl<R> Entry<R> {
     pub fn subject(value: R, i: usize) -> Self {
         let mut s = BTreeSet::new();
         s.insert(i);
@@ -1313,13 +1290,13 @@ impl<R> Resource<R> {
     }
 }
 
-impl<R: Debug> Debug for IndexedHashDataset<R> {
+impl<R: Resource + Debug> Debug for IndexedHashDataset<R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_set().entries(self.iter()).finish()
     }
 }
 
-impl<R: RdfDisplay> RdfDisplay for IndexedHashDataset<R> {
+impl<R: Resource + RdfDisplay> RdfDisplay for IndexedHashDataset<R> {
     fn rdf_fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         for t in self {
             writeln!(f, "{} .", t.rdf_display())?;
@@ -1330,7 +1307,7 @@ impl<R: RdfDisplay> RdfDisplay for IndexedHashDataset<R> {
 }
 
 #[cfg(feature = "serde")]
-impl<R: serde::Serialize> serde::Serialize for IndexedHashDataset<R> {
+impl<R: Resource + serde::Serialize> serde::Serialize for IndexedHashDataset<R> {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         use serde::ser::SerializeSeq;
         let mut seq = serializer.serialize_seq(Some(self.len()))?;
@@ -1344,11 +1321,11 @@ impl<R: serde::Serialize> serde::Serialize for IndexedHashDataset<R> {
 }
 
 #[cfg(feature = "serde")]
-impl<'de, R: Clone + Eq + Hash + serde::Deserialize<'de>> serde::Deserialize<'de> for IndexedHashDataset<R> {
+impl<'de, R: Resource + Clone + Eq + Hash + serde::Deserialize<'de>> serde::Deserialize<'de> for IndexedHashDataset<R> {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         struct Visitor<R>(std::marker::PhantomData<R>);
 
-        impl<'de, R: Clone + Eq + Hash + serde::Deserialize<'de>> serde::de::Visitor<'de> for Visitor<R> {
+        impl<'de, R: Resource + Clone + Eq + Hash + serde::Deserialize<'de>> serde::de::Visitor<'de> for Visitor<R> {
             type Value = IndexedHashDataset<R>;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {

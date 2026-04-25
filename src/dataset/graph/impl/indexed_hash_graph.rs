@@ -10,9 +10,8 @@ use slab::Slab;
 
 use super::{super::Graph, hash_graph::HashGraph};
 use crate::{
-    BlankIdBuf,
-    LocalTerm,
     RdfDisplay,
+    Resource,
     Triple,
     dataset::{
         GraphMut,
@@ -22,7 +21,6 @@ use crate::{
         ResourceTraversableGraph,
         SubjectTraversableGraph,
         TraversableGraph,
-        isomorphism::{Bijection, are_isomorphic, find_bijection},
     },
     pattern::{
         CanonicalTriplePattern,
@@ -30,15 +28,15 @@ use crate::{
     },
 };
 
-fn triple_with_resources<R>(resources: &Slab<Resource<R>>, Triple(s, p, o): Triple<usize>) -> Triple<&R> {
+fn triple_with_resources<R: Resource>(resources: &Slab<Entry<R>>, Triple(s, p, o): Triple<usize, usize, usize>) -> Triple<&R, &R, &R> {
     Triple(&resources[s].value, &resources[p].value, &resources[o].value)
 }
 
 /// Indexed hash-based RDF graph, optimized for pattern matching operations.
 #[derive(Clone)]
-pub struct IndexedHashGraph<R = LocalTerm> {
-    resources: Slab<Resource<R>>,
-    triples: Slab<Triple<usize>>,
+pub struct IndexedHashGraph<R> {
+    resources: Slab<Entry<R>>,
+    triples: Slab<Triple<usize, usize, usize>>,
     hasher: DefaultHashBuilder,
     resources_indexes: HashTable<usize>,
     triples_indexes: HashTable<usize>,
@@ -120,16 +118,16 @@ impl<R> IndexedHashGraph<R> {
     }
 }
 
-impl<R: Eq + Hash> IndexedHashGraph<R> {
+impl<R: Resource + Eq + Hash> IndexedHashGraph<R> {
     /// Creates a new indexed graph from a non-indexed one.
     pub fn from_non_indexed(graph: HashGraph<R>) -> Self {
-        let mut resources: Slab<Resource<R>> = graph
+        let mut resources: Slab<Entry<R>> = graph
             .resources
             .into_iter()
             .map(|(i, r)| {
                 (
                     i,
-                    Resource {
+                    Entry {
                         value: r.value,
                         as_subject: BTreeSet::new(),
                         as_predicate: BTreeSet::new(),
@@ -172,7 +170,7 @@ impl<R: Eq + Hash> IndexedHashGraph<R> {
         self.hasher.hash_one(r)
     }
 
-    fn hash_triple(&self, t: &Triple<&R>) -> u64 {
+    fn hash_triple(&self, t: &Triple<&R, &R, &R>) -> u64 {
         self.hasher.hash_one(t)
     }
 
@@ -182,11 +180,11 @@ impl<R: Eq + Hash> IndexedHashGraph<R> {
         self.resources_indexes.find(h, |&i| &resources[i].value == r).copied()
     }
 
-    fn get_resource(&self, r: &R) -> Option<&Resource<R>> {
+    fn get_resource(&self, r: &R) -> Option<&Entry<R>> {
         self.resources.get(self.index_of_resource(r)?)
     }
 
-    fn index_of_triple(&self, triple: Triple<&R>) -> Option<usize> {
+    fn index_of_triple(&self, triple: Triple<&R, &R, &R>) -> Option<usize> {
         let h = self.hash_triple(&triple);
         let resources = &self.resources;
         let triples = &self.triples;
@@ -201,13 +199,13 @@ impl<R: Eq + Hash> IndexedHashGraph<R> {
     }
 
     /// Checks if the provided triple is in the graph.
-    pub fn contains(&self, triple: Triple<&R>) -> bool {
+    pub fn contains(&self, triple: Triple<&R, &R, &R>) -> bool {
         self.index_of_triple(triple).is_some()
     }
 }
 
-impl<R: Clone + Eq + Hash> IndexedHashGraph<R> {
-    fn intern_resource(&mut self, r: R, pre: Option<usize>, mk: impl FnOnce(R, usize) -> Resource<R>, i: usize) -> usize {
+impl<R: Resource + Clone + Eq + Hash> IndexedHashGraph<R> {
+    fn intern_resource(&mut self, r: R, pre: Option<usize>, mk: impl FnOnce(R, usize) -> Entry<R>, i: usize) -> usize {
         match pre {
             Some(j) => j,
             None => {
@@ -225,7 +223,7 @@ impl<R: Clone + Eq + Hash> IndexedHashGraph<R> {
     ///
     /// Returns `true` if the triple was not already in the graph, and `false`
     /// if it was.
-    pub fn insert(&mut self, triple: Triple<R>) -> bool {
+    pub fn insert(&mut self, triple: Triple<R, R, R>) -> bool {
         if self.contains(triple.as_ref()) {
             return false;
         }
@@ -236,17 +234,17 @@ impl<R: Clone + Eq + Hash> IndexedHashGraph<R> {
 
         let i = self.triples.vacant_key();
 
-        let s_i = self.intern_resource(triple.0, s_pre, Resource::subject, i);
+        let s_i = self.intern_resource(triple.0, s_pre, Entry::subject, i);
         if s_pre.is_some() {
             self.resources[s_i].as_subject.insert(i);
         }
 
-        let p_i = self.intern_resource(triple.1, p_pre, Resource::predicate, i);
+        let p_i = self.intern_resource(triple.1, p_pre, Entry::predicate, i);
         if p_pre.is_some() {
             self.resources[p_i].as_predicate.insert(i);
         }
 
-        let o_i = self.intern_resource(triple.2, o_pre, Resource::object, i);
+        let o_i = self.intern_resource(triple.2, o_pre, Entry::object, i);
         if o_pre.is_some() {
             self.resources[o_i].as_object.insert(i);
         }
@@ -283,7 +281,7 @@ impl<R: Clone + Eq + Hash> IndexedHashGraph<R> {
     ///
     /// Returns whether or not the triple was in the graph.
     /// Does nothing if the triple was not in the graph.
-    pub fn remove(&mut self, triple: Triple<&R>) -> bool {
+    pub fn remove(&mut self, triple: Triple<&R, &R, &R>) -> bool {
         let h = self.hash_triple(&triple);
         let resources = &self.resources;
         let triples = &self.triples;
@@ -334,7 +332,7 @@ impl<R: Clone + Eq + Hash> IndexedHashGraph<R> {
     }
 }
 
-impl<R: Eq + Hash> IndexedHashGraph<R> {
+impl<R: Resource + Eq + Hash> IndexedHashGraph<R> {
     /// Returns an iterator over all the triples matching the given canonical
     /// triple pattern.
     pub fn pattern_matching(&self, pattern: CanonicalTriplePattern<&R>) -> PatternMatching<'_, R> {
@@ -365,36 +363,36 @@ impl<R: Eq + Hash> IndexedHashGraph<R> {
     }
 }
 
-impl<R: Clone + Eq + Hash> From<HashGraph<R>> for IndexedHashGraph<R> {
+impl<R: Resource + Clone + Eq + Hash> From<HashGraph<R>> for IndexedHashGraph<R> {
     fn from(value: HashGraph<R>) -> Self {
         Self::from_non_indexed(value)
     }
 }
 
-impl<R: Clone + Eq + Hash> FromIterator<Triple<R>> for IndexedHashGraph<R> {
-    fn from_iter<T: IntoIterator<Item = Triple<R>>>(iter: T) -> Self {
+impl<R: Resource + Clone + Eq + Hash> FromIterator<Triple<R, R, R>> for IndexedHashGraph<R> {
+    fn from_iter<T: IntoIterator<Item = Triple<R, R, R>>>(iter: T) -> Self {
         let mut result = Self::new();
         result.extend(iter);
         result
     }
 }
 
-impl<R: Clone + Eq + Hash> Extend<Triple<R>> for IndexedHashGraph<R> {
-    fn extend<T: IntoIterator<Item = Triple<R>>>(&mut self, iter: T) {
+impl<R: Resource + Clone + Eq + Hash> Extend<Triple<R, R, R>> for IndexedHashGraph<R> {
+    fn extend<T: IntoIterator<Item = Triple<R, R, R>>>(&mut self, iter: T) {
         for triple in iter {
             self.insert(triple);
         }
     }
 }
 
-impl<R: Clone + Eq + Hash> IndexedHashGraph<R> {
+impl<R: Resource + Clone + Eq + Hash> IndexedHashGraph<R> {
     /// Inserts every triple of `iter` in the graph.
-    pub fn absorb<I: IntoIterator<Item = Triple<R>>>(&mut self, iter: I) {
+    pub fn absorb<I: IntoIterator<Item = Triple<R, R, R>>>(&mut self, iter: I) {
         self.extend(iter);
     }
 
     /// Removes the given triple and returns it if it was present.
-    pub fn take(&mut self, triple: Triple<&R>) -> Option<Triple<R>> {
+    pub fn take(&mut self, triple: Triple<&R, &R, &R>) -> Option<Triple<R, R, R>> {
         if !self.contains(triple) {
             return None;
         }
@@ -404,43 +402,19 @@ impl<R: Clone + Eq + Hash> IndexedHashGraph<R> {
     }
 
     /// Removes and returns the first triple matching the given option-pattern, if any.
-    pub fn take_match(&mut self, pattern: Triple<Option<&R>, Option<&R>, Option<&R>>) -> Option<Triple<R>> {
+    pub fn take_match(&mut self, pattern: Triple<Option<&R>, Option<&R>, Option<&R>>) -> Option<Triple<R, R, R>> {
         let canonical = CanonicalTriplePattern::from_option_triple(pattern);
         self.extract_pattern_matching(canonical).next()
     }
 }
 
-impl IndexedHashGraph<LocalTerm> {
-    /// Returns a blank-node bijection from `self` to `other` if one exists.
-    pub fn find_blank_id_bijection<'a, 'b>(&'a self, other: &'b Self) -> Option<Bijection<'a, 'b>> {
-        find_bijection(self, other)
-    }
-
-    /// Checks if `self` and `other` are isomorphic.
-    pub fn is_isomorphic_to(&self, other: &Self) -> bool {
-        are_isomorphic(self, other)
-    }
-
-    /// Returns a copy of `self` with each blank node identifier replaced by the
-    /// result of `f`.
-    pub fn substitute_blank_ids(self, mut f: impl FnMut(BlankIdBuf) -> BlankIdBuf) -> Self {
-        self.into_iter()
-            .map(|t| {
-                t.map(|x| match x {
-                    LocalTerm::BlankId(b) => LocalTerm::BlankId(f(b)),
-                    named => named,
-                })
-            })
-            .collect::<HashGraph<LocalTerm>>()
-            .into_indexed()
-    }
+impl<R: Resource> Graph for IndexedHashGraph<R> {
+    type Subject = R;
+    type Predicate = R;
+    type Object = R;
 }
 
-impl<R> Graph for IndexedHashGraph<R> {
-    type Resource = R;
-}
-
-impl<R> TraversableGraph for IndexedHashGraph<R> {
+impl<R: Resource> TraversableGraph for IndexedHashGraph<R> {
     type Triples<'a>
         = Triples<'a, R>
     where
@@ -455,7 +429,7 @@ impl<R> TraversableGraph for IndexedHashGraph<R> {
     }
 }
 
-impl<R> ResourceTraversableGraph for IndexedHashGraph<R> {
+impl<R: Resource> ResourceTraversableGraph for IndexedHashGraph<R> {
     type GraphResources<'a>
         = Resources<'a, R>
     where
@@ -470,7 +444,7 @@ impl<R> ResourceTraversableGraph for IndexedHashGraph<R> {
     }
 }
 
-impl<R> SubjectTraversableGraph for IndexedHashGraph<R> {
+impl<R: Resource> SubjectTraversableGraph for IndexedHashGraph<R> {
     type GraphSubjects<'a>
         = Subjects<'a, R>
     where
@@ -485,7 +459,7 @@ impl<R> SubjectTraversableGraph for IndexedHashGraph<R> {
     }
 }
 
-impl<R> PredicateTraversableGraph for IndexedHashGraph<R> {
+impl<R: Resource> PredicateTraversableGraph for IndexedHashGraph<R> {
     type GraphPredicates<'a>
         = Predicates<'a, R>
     where
@@ -500,7 +474,7 @@ impl<R> PredicateTraversableGraph for IndexedHashGraph<R> {
     }
 }
 
-impl<R> ObjectTraversableGraph for IndexedHashGraph<R> {
+impl<R: Resource> ObjectTraversableGraph for IndexedHashGraph<R> {
     type GraphObjects<'a>
         = Objects<'a, R>
     where
@@ -515,40 +489,40 @@ impl<R> ObjectTraversableGraph for IndexedHashGraph<R> {
     }
 }
 
-impl<R: Clone + Eq + Hash> GraphMut for IndexedHashGraph<R> {
-    fn insert(&mut self, triple: Triple<Self::Resource>) {
+impl<R: Resource + Clone + Eq + Hash> GraphMut for IndexedHashGraph<R> {
+    fn insert(&mut self, triple: Triple<Self::Subject, Self::Predicate, Self::Object>) {
         self.insert(triple);
     }
 
-    fn remove(&mut self, triple: Triple<&Self::Resource>) {
+    fn remove(&mut self, triple: Triple<&Self::Subject, &Self::Predicate, &Self::Object>) {
         self.remove(triple);
     }
 }
 
-impl<R: Eq + Hash> PatternMatchingGraph for IndexedHashGraph<R> {
+impl<R: Resource + Eq + Hash> PatternMatchingGraph for IndexedHashGraph<R> {
     type TriplePatternMatching<'a, 'p>
         = PatternMatching<'a, R>
     where
         R: 'a,
-        Self::Resource: 'p;
+        Self::Subject: 'p;
 
-    fn triple_pattern_matching<'p>(&self, pattern: CanonicalTriplePattern<&'p Self::Resource>) -> Self::TriplePatternMatching<'_, 'p> {
+    fn triple_pattern_matching<'p>(&self, pattern: CanonicalTriplePattern<&'p Self::Subject>) -> Self::TriplePatternMatching<'_, 'p> {
         self.pattern_matching(pattern)
     }
 
-    fn contains_triple(&self, triple: Triple<&Self::Resource>) -> bool {
+    fn contains_triple(&self, triple: Triple<&Self::Subject, &Self::Predicate, &Self::Object>) -> bool {
         self.contains(triple)
     }
 }
 
 pub struct Triples<'a, R> {
-    resources: &'a Slab<Resource<R>>,
-    triples: &'a Slab<Triple<usize>>,
+    resources: &'a Slab<Entry<R>>,
+    triples: &'a Slab<Triple<usize, usize, usize>>,
     indexes: hashbrown::hash_table::Iter<'a, usize>,
 }
 
-impl<'a, R> Iterator for Triples<'a, R> {
-    type Item = Triple<&'a R>;
+impl<'a, R: Resource> Iterator for Triples<'a, R> {
+    type Item = Triple<&'a R, &'a R, &'a R>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.indexes.next().map(|&i| triple_with_resources(self.resources, self.triples[i]))
@@ -556,13 +530,13 @@ impl<'a, R> Iterator for Triples<'a, R> {
 }
 
 pub struct IntoTriples<R> {
-    resources: Slab<Resource<R>>,
-    triples: Slab<Triple<usize>>,
+    resources: Slab<Entry<R>>,
+    triples: Slab<Triple<usize, usize, usize>>,
     indexes: hashbrown::hash_table::IntoIter<usize>,
 }
 
-impl<R: Clone> Iterator for IntoTriples<R> {
-    type Item = Triple<R>;
+impl<R: Resource + Clone> Iterator for IntoTriples<R> {
+    type Item = Triple<R, R, R>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.indexes
@@ -571,8 +545,8 @@ impl<R: Clone> Iterator for IntoTriples<R> {
     }
 }
 
-impl<'a, R> IntoIterator for &'a IndexedHashGraph<R> {
-    type Item = Triple<&'a R>;
+impl<'a, R: Resource> IntoIterator for &'a IndexedHashGraph<R> {
+    type Item = Triple<&'a R, &'a R, &'a R>;
     type IntoIter = Triples<'a, R>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -580,8 +554,8 @@ impl<'a, R> IntoIterator for &'a IndexedHashGraph<R> {
     }
 }
 
-impl<R: Clone> IntoIterator for IndexedHashGraph<R> {
-    type Item = Triple<R>;
+impl<R: Resource + Clone> IntoIterator for IndexedHashGraph<R> {
+    type Item = Triple<R, R, R>;
     type IntoIter = IntoTriples<R>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -594,7 +568,7 @@ impl<R: Clone> IntoIterator for IndexedHashGraph<R> {
 }
 
 pub struct Resources<'a, R> {
-    resources: &'a Slab<Resource<R>>,
+    resources: &'a Slab<Entry<R>>,
     indexes: hashbrown::hash_table::Iter<'a, usize>,
 }
 
@@ -607,7 +581,7 @@ impl<'a, R> Iterator for Resources<'a, R> {
 }
 
 pub struct Subjects<'a, R> {
-    resources: &'a Slab<Resource<R>>,
+    resources: &'a Slab<Entry<R>>,
     indexes: hashbrown::hash_set::Iter<'a, usize>,
 }
 
@@ -620,7 +594,7 @@ impl<'a, R> Iterator for Subjects<'a, R> {
 }
 
 pub struct Predicates<'a, R> {
-    resources: &'a Slab<Resource<R>>,
+    resources: &'a Slab<Entry<R>>,
     indexes: hashbrown::hash_set::Iter<'a, usize>,
 }
 
@@ -633,7 +607,7 @@ impl<'a, R> Iterator for Predicates<'a, R> {
 }
 
 pub struct Objects<'a, R> {
-    resources: &'a Slab<Resource<R>>,
+    resources: &'a Slab<Entry<R>>,
     indexes: hashbrown::hash_set::Iter<'a, usize>,
 }
 
@@ -645,25 +619,25 @@ impl<'a, R> Iterator for Objects<'a, R> {
     }
 }
 
-impl<R: Eq + Hash> PartialEq for IndexedHashGraph<R> {
+impl<R: Resource + Eq + Hash> PartialEq for IndexedHashGraph<R> {
     fn eq(&self, other: &Self) -> bool {
         self.len() == other.len() && self.iter().all(|t| other.contains(t))
     }
 }
 
-impl<R: Eq + Hash> Eq for IndexedHashGraph<R> {}
+impl<R: Resource + Eq + Hash> Eq for IndexedHashGraph<R> {}
 
 pub struct PatternMatching<'a, R> {
-    resources: &'a Slab<Resource<R>>,
-    triples: &'a Slab<Triple<usize>>,
+    resources: &'a Slab<Entry<R>>,
+    triples: &'a Slab<Triple<usize, usize, usize>>,
     subject: SubjectConstraints,
     predicate: PredicateConstraints,
     object: ObjectConstraints,
     i: usize,
 }
 
-impl<'a, R> Iterator for PatternMatching<'a, R> {
-    type Item = Triple<&'a R>;
+impl<'a, R: Resource> Iterator for PatternMatching<'a, R> {
+    type Item = Triple<&'a R, &'a R, &'a R>;
 
     fn next(&mut self) -> Option<Self::Item> {
         while self.i < self.triples.capacity() {
@@ -695,8 +669,8 @@ pub struct ExtractPatternMatching<'a, R> {
     i: usize,
 }
 
-impl<R: Clone + Eq + Hash> Iterator for ExtractPatternMatching<'_, R> {
-    type Item = Triple<R>;
+impl<R: Resource + Clone + Eq + Hash> Iterator for ExtractPatternMatching<'_, R> {
+    type Item = Triple<R, R, R>;
 
     fn next(&mut self) -> Option<Self::Item> {
         while self.i < self.graph.triples.capacity() {
@@ -733,7 +707,7 @@ enum SubjectConstraints {
 }
 
 impl SubjectConstraints {
-    fn new<R: Eq + Hash>(graph: &IndexedHashGraph<R>, s: PatternSubject<&R>) -> Self {
+    fn new<R: Resource + Eq + Hash>(graph: &IndexedHashGraph<R>, s: PatternSubject<&R>) -> Self {
         match s {
             PatternSubject::Any => Self::Any,
             PatternSubject::Given(s) => match graph.get_resource(s) {
@@ -770,7 +744,7 @@ enum PredicateConstraints {
 }
 
 impl PredicateConstraints {
-    fn new<R: Eq + Hash>(graph: &IndexedHashGraph<R>, p: PatternPredicate<&R>) -> Self {
+    fn new<R: Resource + Eq + Hash>(graph: &IndexedHashGraph<R>, p: PatternPredicate<&R>) -> Self {
         match p {
             PatternPredicate::Any => Self::Any,
             PatternPredicate::SameAsSubject => Self::SameAsSubject,
@@ -781,7 +755,7 @@ impl PredicateConstraints {
         }
     }
 
-    fn next(&mut self, i: usize, triple: Triple<usize>) -> Result<(), Option<usize>> {
+    fn next(&mut self, i: usize, triple: Triple<usize, usize, usize>) -> Result<(), Option<usize>> {
         match self {
             Self::None => Err(None),
             Self::Any => Ok(()),
@@ -818,7 +792,7 @@ enum ObjectConstraints {
 }
 
 impl ObjectConstraints {
-    fn new<R: Eq + Hash>(graph: &IndexedHashGraph<R>, o: PatternObject<&R>) -> Self {
+    fn new<R: Resource + Eq + Hash>(graph: &IndexedHashGraph<R>, o: PatternObject<&R>) -> Self {
         match o {
             PatternObject::Any => Self::Any,
             PatternObject::SameAsSubject => Self::SameAsSubject,
@@ -830,7 +804,7 @@ impl ObjectConstraints {
         }
     }
 
-    fn next(&mut self, i: usize, triple: Triple<usize>) -> Result<(), Option<usize>> {
+    fn next(&mut self, i: usize, triple: Triple<usize, usize, usize>) -> Result<(), Option<usize>> {
         match self {
             Self::None => Err(None),
             Self::Any => Ok(()),
@@ -866,14 +840,14 @@ impl ObjectConstraints {
 }
 
 #[derive(Default, Clone)]
-struct Resource<R> {
+struct Entry<R> {
     value: R,
     as_subject: BTreeSet<usize>,
     as_predicate: BTreeSet<usize>,
     as_object: BTreeSet<usize>,
 }
 
-impl<R> Resource<R> {
+impl<R> Entry<R> {
     fn subject(value: R, i: usize) -> Self {
         let mut as_subject = BTreeSet::new();
         as_subject.insert(i);
@@ -912,13 +886,13 @@ impl<R> Resource<R> {
     }
 }
 
-impl<R: Debug> Debug for IndexedHashGraph<R> {
+impl<R: Resource + Debug> Debug for IndexedHashGraph<R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_set().entries(self.iter()).finish()
     }
 }
 
-impl<R: RdfDisplay> RdfDisplay for IndexedHashGraph<R> {
+impl<R: Resource + RdfDisplay> RdfDisplay for IndexedHashGraph<R> {
     fn rdf_fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         for t in self {
             writeln!(f, "{} .", t.rdf_display())?;
@@ -929,7 +903,7 @@ impl<R: RdfDisplay> RdfDisplay for IndexedHashGraph<R> {
 }
 
 #[cfg(feature = "serde")]
-impl<R: serde::Serialize> serde::Serialize for IndexedHashGraph<R> {
+impl<R: Resource + serde::Serialize> serde::Serialize for IndexedHashGraph<R> {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         use serde::ser::SerializeSeq;
         let mut seq = serializer.serialize_seq(Some(self.len()))?;
@@ -943,11 +917,11 @@ impl<R: serde::Serialize> serde::Serialize for IndexedHashGraph<R> {
 }
 
 #[cfg(feature = "serde")]
-impl<'de, R: Clone + Eq + Hash + serde::Deserialize<'de>> serde::Deserialize<'de> for IndexedHashGraph<R> {
+impl<'de, R: Resource + Clone + Eq + Hash + serde::Deserialize<'de>> serde::Deserialize<'de> for IndexedHashGraph<R> {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         struct Visitor<R>(std::marker::PhantomData<R>);
 
-        impl<'de, R: Clone + Eq + Hash + serde::Deserialize<'de>> serde::de::Visitor<'de> for Visitor<R> {
+        impl<'de, R: Resource + Clone + Eq + Hash + serde::Deserialize<'de>> serde::de::Visitor<'de> for Visitor<R> {
             type Value = IndexedHashGraph<R>;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
