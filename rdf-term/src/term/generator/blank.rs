@@ -56,7 +56,13 @@ impl Blank {
     }
 
     pub fn next_blank_id(&mut self) -> BlankIdBuf {
-        let id = unsafe { BlankIdBuf::new_unchecked(format!("_:{}{}", self.prefix, self.count)) };
+        let mut buf = itoa::Buffer::new();
+        let count_str = buf.format(self.count);
+        let mut s = String::with_capacity(2 + self.prefix.len() + count_str.len());
+        s.push_str("_:");
+        s.push_str(&self.prefix);
+        s.push_str(count_str);
+        let id = unsafe { BlankIdBuf::new_unchecked(s) };
         self.count += 1;
         id
     }

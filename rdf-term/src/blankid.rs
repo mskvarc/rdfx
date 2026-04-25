@@ -156,25 +156,25 @@ impl BlankIdBuf {
     /// Creates a blank node identifier using the given `u8` as suffix.
     #[inline(always)]
     pub fn from_u8(i: u8) -> Self {
-        unsafe { Self::new_unchecked(format!("_:{i}")) }
+        unsafe { Self::new_unchecked(format_blank_int(i)) }
     }
 
     /// Creates a blank node identifier using the given `u16` as suffix.
     #[inline(always)]
     pub fn from_u16(i: u16) -> Self {
-        unsafe { Self::new_unchecked(format!("_:{i}")) }
+        unsafe { Self::new_unchecked(format_blank_int(i)) }
     }
 
     /// Creates a blank node identifier using the given `u32` as suffix.
     #[inline(always)]
     pub fn from_u32(i: u32) -> Self {
-        unsafe { Self::new_unchecked(format!("_:{i}")) }
+        unsafe { Self::new_unchecked(format_blank_int(i)) }
     }
 
     /// Creates a blank node identifier using the given `u64` as suffix.
     #[inline(always)]
     pub fn from_u64(i: u64) -> Self {
-        unsafe { Self::new_unchecked(format!("_:{i}")) }
+        unsafe { Self::new_unchecked(format_blank_int(i)) }
     }
 
     /// Creates a blank node identifier using the given suffix.
@@ -188,6 +188,16 @@ impl BlankIdBuf {
     pub fn as_blank_id_ref(&self) -> &BlankId {
         unsafe { BlankId::new_unchecked(&self.0) }
     }
+}
+
+#[inline(always)]
+fn format_blank_int<I: itoa::Integer>(i: I) -> String {
+    let mut buf = itoa::Buffer::new();
+    let n = buf.format(i);
+    let mut s = String::with_capacity(2 + n.len());
+    s.push_str("_:");
+    s.push_str(n);
+    s
 }
 
 impl FromStr for BlankIdBuf {
