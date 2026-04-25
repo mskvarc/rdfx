@@ -1,6 +1,6 @@
 [package]
 name = "rdf-rs"
-description = "Data-structures and traits definitions for RDF."
+description = "RDF data-structures, traits and utilities: terms, triples, quads, interpretations, graphs and datasets."
 version = "0.23.0"
 edition = "2024"
 rust-version = "1.85.0"
@@ -10,8 +10,12 @@ authors = [
 ]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
-repository = "https://github.com/mskvarc/rdf/"
-categories = ["web-programming", "internationalization"]
+repository = "https://github.com/mskvarc/rdf-rs/"
+categories = ["data-structures", "web-programming", "encoding"]
+keywords = ["rdf", "graph", "dataset", "triple", "semantic-web"]
+
+[package.metadata.docs.rs]
+all-features = true
 
 [features]
 default = []
