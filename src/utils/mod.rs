@@ -2,6 +2,8 @@ use std::marker::PhantomData;
 
 use crate::{Quad, Triple};
 
+pub(crate) mod hash_map;
+
 pub struct InfallibleIterator<I>(pub I);
 
 impl<I: Iterator> Iterator for InfallibleIterator<I> {
