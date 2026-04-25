@@ -30,7 +30,7 @@ impl BlankId {
     /// Parses a blank node identifier.
     #[inline(always)]
     pub fn new(s: &str) -> Result<&Self, InvalidBlankId<&str>> {
-        if check(s.chars()) {
+        if check(s) {
             Ok(unsafe { Self::new_unchecked(s) })
         } else {
             Err(InvalidBlankId(s))
@@ -136,7 +136,7 @@ impl BlankIdBuf {
     /// Parses a blank node identifier.
     #[inline(always)]
     pub fn new(s: String) -> Result<Self, InvalidBlankId<String>> {
-        if check(s.chars()) {
+        if check(&s) {
             Ok(unsafe { Self::new_unchecked(s) })
         } else {
             Err(InvalidBlankId(s))
@@ -311,24 +311,25 @@ impl PartialEq<BlankIdBuf> for BlankId {
     }
 }
 
-fn check<C: Iterator<Item = char>>(mut chars: C) -> bool {
-    if chars.next() != Some('_') {
+fn check(s: &str) -> bool {
+    let bytes = s.as_bytes();
+    if bytes.len() < 3 || bytes[0] != b'_' || bytes[1] != b':' {
         return false;
     }
-    if chars.next() != Some(':') {
+    if bytes[bytes.len() - 1] == b'.' {
         return false;
     }
-    let mut last = match chars.next() {
-        Some(c) if c.is_ascii_digit() || is_pn_char_u(c) => c,
+    let mut chars = s[2..].chars();
+    match chars.next() {
+        Some(c) if c.is_ascii_digit() || is_pn_char_u(c) => {}
         _ => return false,
-    };
+    }
     for c in chars {
-        if c != '.' && !is_pn_char(c) {
+        if !is_pn_char(c) && c != '.' {
             return false;
         }
-        last = c;
     }
-    last != '.'
+    true
 }
 
 const fn is_pn_char_base(c: char) -> bool {
