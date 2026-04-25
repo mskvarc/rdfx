@@ -44,6 +44,9 @@ pub mod interpretation;
 pub mod pattern;
 pub mod utils;
 
+#[cfg(feature = "meta")]
+pub mod meta;
+
 pub use dataset::Dataset;
 pub use interpretation::{Interpretation, InterpretationMut};
 pub use iri_rs::{Iri, IriBuf, iri};
