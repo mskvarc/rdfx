@@ -1,6 +1,6 @@
 #![cfg(feature = "meta")]
 
-use rdf_term::{
+use rdf_rs::{
     BlankIdBuf,
     LocalTerm,
     Quad,

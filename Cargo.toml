@@ -1,5 +1,5 @@
 [package]
-name = "rdf-term"
+name = "rdf-rs"
 description = "Data-structures and traits definitions for RDF."
 version = "0.23.0"
 edition = "2024"

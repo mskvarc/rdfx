@@ -1,11 +1,11 @@
 //! This file is auto generated using the
 //! `tests/utils/generate-iso-test.rb` script.
-use rdf_term::{BlankIdBuf, Quad, LocalTerm, dataset::BTreeDataset, iri};
-use rdf_term::dataset::isomorphism::Bijection;
+use rdf_rs::{BlankIdBuf, Quad, LocalTerm, dataset::BTreeDataset, iri};
+use rdf_rs::dataset::isomorphism::Bijection;
 use std::collections::BTreeMap;
 
 fn test(a: BTreeDataset, b: BTreeDataset) {
-	let substitution: BTreeMap<_, _> = match rdf_term::dataset::isomorphism::find_bijection(&a, &b) {
+	let substitution: BTreeMap<_, _> = match rdf_rs::dataset::isomorphism::find_bijection(&a, &b) {
 		Some(Bijection { forward, .. }) => forward.into_iter().map(|(a, b)| (a.to_owned(), b.clone())).collect(),
 		None => panic!("no substitution found"),
 	};

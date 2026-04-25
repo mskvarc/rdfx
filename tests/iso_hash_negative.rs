@@ -1,7 +1,7 @@
-use rdf_term::{BlankIdBuf, LocalTerm, Quad, dataset::HashDataset, iri};
+use rdf_rs::{BlankIdBuf, LocalTerm, Quad, dataset::HashDataset, iri};
 
 fn test(a: HashDataset, b: HashDataset) {
-    if rdf_term::dataset::isomorphism::find_bijection(&a, &b).is_some() {
+    if rdf_rs::dataset::isomorphism::find_bijection(&a, &b).is_some() {
         panic!("bijection found!")
     }
 }

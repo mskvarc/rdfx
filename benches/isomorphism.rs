@@ -1,5 +1,5 @@
 use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
-use rdf_term::{
+use rdf_rs::{
     BlankIdBuf,
     LocalTerm,
     Quad,
