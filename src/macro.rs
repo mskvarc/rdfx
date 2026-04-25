@@ -345,6 +345,7 @@ macro_rules! grdf_quads {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::panic, clippy::expect_used)]
 mod tests {
     use iri_rs::iri;
 

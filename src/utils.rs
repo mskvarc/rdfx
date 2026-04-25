@@ -15,7 +15,7 @@ impl<I: Iterator> Iterator for InfallibleIterator<I> {
 pub struct TripleToQuadIterator<I, G>(I, PhantomData<G>);
 
 impl<I, G> TripleToQuadIterator<I, G> {
-    pub fn new(inner: I) -> Self {
+    pub const fn new(inner: I) -> Self {
         Self(inner, PhantomData)
     }
 }

@@ -33,19 +33,19 @@ impl<S1: PartialOrd<S2>, P1: PartialOrd<P2>, O1: PartialOrd<O2>, S2, P2, O2> Par
 
 impl<S, P, O> Triple<S, P, O> {
     /// Creates a new triple.
-    pub fn new(subject: S, predicate: P, object: O) -> Self {
+    pub const fn new(subject: S, predicate: P, object: O) -> Self {
         Self(subject, predicate, object)
     }
 
     /// Returns a reference to the subject of the triple,
     /// the first component.
-    pub fn subject(&self) -> &S {
+    pub const fn subject(&self) -> &S {
         &self.0
     }
 
     /// Returns a mutable reference to the subject of the triple,
     /// the first component.
-    pub fn subject_mut(&mut self) -> &mut S {
+    pub const fn subject_mut(&mut self) -> &mut S {
         &mut self.0
     }
 
@@ -57,13 +57,13 @@ impl<S, P, O> Triple<S, P, O> {
 
     /// Returns a reference to the predicate of the triple,
     /// the second component.
-    pub fn predicate(&self) -> &P {
+    pub const fn predicate(&self) -> &P {
         &self.1
     }
 
     /// Returns a mutable reference to the predicate of the triple,
     /// the second component.
-    pub fn predicate_mut(&mut self) -> &mut P {
+    pub const fn predicate_mut(&mut self) -> &mut P {
         &mut self.1
     }
 
@@ -75,13 +75,13 @@ impl<S, P, O> Triple<S, P, O> {
 
     /// Returns a reference to the object of the triple,
     /// the third component.
-    pub fn object(&self) -> &O {
+    pub const fn object(&self) -> &O {
         &self.2
     }
 
     /// Returns a mutable reference to the object of the triple,
     /// the third component.
-    pub fn object_mut(&mut self) -> &mut O {
+    pub const fn object_mut(&mut self) -> &mut O {
         &mut self.2
     }
 
@@ -117,7 +117,7 @@ impl<S, P, O> Triple<S, P, O> {
     }
 
     /// Borrows each component of the triple.
-    pub fn as_ref(&self) -> Triple<&S, &P, &O> {
+    pub const fn as_ref(&self) -> Triple<&S, &P, &O> {
         Triple(&self.0, &self.1, &self.2)
     }
 }
@@ -143,7 +143,7 @@ impl<S, P, O> Triple<&S, &P, &O> {
 }
 
 impl<S, P, O> Triple<&S, &P, &O> {
-    pub fn copied(&self) -> Triple<S, P, O>
+    pub const fn copied(&self) -> Triple<S, P, O>
     where
         S: Copy,
         P: Copy,
@@ -152,7 +152,7 @@ impl<S, P, O> Triple<&S, &P, &O> {
         Triple(*self.0, *self.1, *self.2)
     }
 
-    pub fn into_copied(self) -> Triple<S, P, O>
+    pub const fn into_copied(self) -> Triple<S, P, O>
     where
         S: Copy,
         P: Copy,

@@ -14,7 +14,7 @@ impl<T, X> ResourceOrVar<T, X> {
         }
     }
 
-    pub fn as_ref(&self) -> ResourceOrVar<&T, &X> {
+    pub const fn as_ref(&self) -> ResourceOrVar<&T, &X> {
         match self {
             Self::Resource(t) => ResourceOrVar::Resource(t),
             Self::Var(x) => ResourceOrVar::Var(x),

@@ -1431,6 +1431,7 @@ impl<'de, R: Clone + Ord + serde::Deserialize<'de>> serde::Deserialize<'de> for 
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::panic, clippy::expect_used)]
 mod tests {
     use rand::{Rng, SeedableRng, rngs::SmallRng};
 

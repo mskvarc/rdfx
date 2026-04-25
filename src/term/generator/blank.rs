@@ -18,7 +18,7 @@ pub struct Blank {
 
 impl Blank {
     /// Creates a new numbered generator with no prefix.
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self::new_full(String::new(), 0)
     }
 
@@ -27,12 +27,12 @@ impl Blank {
     ///
     /// The returned generator can create `usize::MAX - offset` unique blank node identifiers
     /// before panicking.
-    pub fn new_with_offset(offset: usize) -> Self {
+    pub const fn new_with_offset(offset: usize) -> Self {
         Self::new_full(String::new(), offset)
     }
 
     /// Creates a new numbered generator with the given prefix.
-    pub fn new_with_prefix(prefix: String) -> Self {
+    pub const fn new_with_prefix(prefix: String) -> Self {
         Self::new_full(prefix, 0)
     }
 
@@ -41,7 +41,7 @@ impl Blank {
     ///
     /// The returned generator can create `usize::MAX - offset` unique blank node identifiers
     /// before panicking.
-    pub fn new_full(prefix: String, offset: usize) -> Self {
+    pub const fn new_full(prefix: String, offset: usize) -> Self {
         Self { prefix, count: offset }
     }
 
@@ -51,7 +51,7 @@ impl Blank {
     }
 
     /// Returns the number of already generated identifiers.
-    pub fn count(&self) -> usize {
+    pub const fn count(&self) -> usize {
         self.count
     }
 

@@ -18,19 +18,19 @@ pub enum Id {
 }
 
 impl Id {
-    pub fn iri(iri: IriBuf) -> Self {
+    pub const fn iri(iri: IriBuf) -> Self {
         Self::Iri(iri)
     }
 
-    pub fn blank_id(blank_id: BlankIdBuf) -> Self {
+    pub const fn blank_id(blank_id: BlankIdBuf) -> Self {
         Self::BlankId(blank_id)
     }
 
-    pub fn is_iri(&self) -> bool {
+    pub const fn is_iri(&self) -> bool {
         matches!(self, Self::Iri(_))
     }
 
-    pub fn is_blank_id(&self) -> bool {
+    pub const fn is_blank_id(&self) -> bool {
         matches!(self, Self::BlankId(_))
     }
 
@@ -83,7 +83,7 @@ impl Id {
         }
     }
 
-    pub fn into_owned(self) -> Self {
+    pub const fn into_owned(self) -> Self {
         self
     }
 }

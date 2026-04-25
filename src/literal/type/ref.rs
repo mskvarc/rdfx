@@ -22,11 +22,11 @@ pub enum LiteralTypeRef<'a> {
 }
 
 impl<'a> LiteralTypeRef<'a> {
-    pub fn is_lang_string(&self) -> bool {
+    pub const fn is_lang_string(&self) -> bool {
         matches!(self, Self::LangString(_))
     }
 
-    pub fn lang_tag(&self) -> Option<&'a LangTag> {
+    pub const fn lang_tag(&self) -> Option<&'a LangTag> {
         match self {
             Self::LangString(tag) => Some(tag),
             _ => None,

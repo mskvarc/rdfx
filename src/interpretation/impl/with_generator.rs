@@ -39,7 +39,7 @@ pub struct WithGenerator<G, I = ()> {
 }
 
 impl<G, I> WithGenerator<G, I> {
-    pub fn new(interpretation: I, generator: G) -> Self {
+    pub const fn new(interpretation: I, generator: G) -> Self {
         Self { interpretation, generator }
     }
 
@@ -47,19 +47,19 @@ impl<G, I> WithGenerator<G, I> {
         (self.interpretation, self.generator)
     }
 
-    pub fn inner_interpretation(&self) -> &I {
+    pub const fn inner_interpretation(&self) -> &I {
         &self.interpretation
     }
 
-    pub fn inner_interpretation_mut(&mut self) -> &mut I {
+    pub const fn inner_interpretation_mut(&mut self) -> &mut I {
         &mut self.interpretation
     }
 
-    pub fn generator(&self) -> &G {
+    pub const fn generator(&self) -> &G {
         &self.generator
     }
 
-    pub fn generator_mut(&mut self) -> &mut G {
+    pub const fn generator_mut(&mut self) -> &mut G {
         &mut self.generator
     }
 
@@ -126,7 +126,7 @@ pub struct WithLocalGenerator<G, I = ()> {
 }
 
 impl<G, I> WithLocalGenerator<G, I> {
-    pub fn new(interpretation: I, generator: G) -> Self {
+    pub const fn new(interpretation: I, generator: G) -> Self {
         Self { interpretation, generator }
     }
 
@@ -134,19 +134,19 @@ impl<G, I> WithLocalGenerator<G, I> {
         (self.interpretation, self.generator)
     }
 
-    pub fn inner_interpretation(&self) -> &I {
+    pub const fn inner_interpretation(&self) -> &I {
         &self.interpretation
     }
 
-    pub fn inner_interpretation_mut(&mut self) -> &mut I {
+    pub const fn inner_interpretation_mut(&mut self) -> &mut I {
         &mut self.interpretation
     }
 
-    pub fn generator(&self) -> &G {
+    pub const fn generator(&self) -> &G {
         &self.generator
     }
 
-    pub fn generator_mut(&mut self) -> &mut G {
+    pub const fn generator_mut(&mut self) -> &mut G {
         &mut self.generator
     }
 

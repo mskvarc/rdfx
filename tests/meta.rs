@@ -1,4 +1,5 @@
 #![cfg(feature = "meta")]
+#![allow(clippy::unwrap_used, clippy::panic, clippy::expect_used, clippy::get_unwrap)]
 
 use rdf_rs::{
     BlankIdBuf,

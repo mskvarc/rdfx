@@ -17,6 +17,22 @@ keywords = ["rdf", "graph", "dataset", "triple", "semantic-web"]
 [package.metadata.docs.rs]
 all-features = true
 
+[lints.clippy]
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+get_unwrap = "warn"
+wildcard_dependencies = "warn"
+wildcard_imports = "warn"
+used_underscore_binding = "warn"
+missing_const_for_fn = "warn"
+branches_sharing_code = "warn"
+cloned_instead_of_copied = "warn"
+unnecessary_self_imports = "warn"
+redundant_clone = "warn"
+needless_collect = "warn"
+map_unwrap_or = "warn"
+
 [features]
 default = []
 serde = ["dep:serde", "iri-rs/serde", "langtag/serde"]

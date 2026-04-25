@@ -84,7 +84,7 @@ where
     // Step 3: find candidates for each blank id.
     let mut candidates: Vec<(&'a I::Resource, BTreeSet<&'b I::Resource>)> = Vec::new();
     for (len, a_group) in a_groups {
-        let b_group = b_groups.get(&len).unwrap();
+        let b_group = &b_groups[&len];
 
         for (a_blank_id, a_sig) in a_group {
             let mut a_blank_id_candidates = BTreeSet::new();
@@ -234,7 +234,7 @@ pub struct Bijection<'a, 'b, R = LocalTerm> {
 }
 
 impl<R> Bijection<'_, '_, R> {
-    fn new() -> Self {
+    const fn new() -> Self {
         Self {
             forward: BTreeMap::new(),
             backward: BTreeMap::new(),
@@ -316,7 +316,14 @@ impl<'a, 'b, R: Ord> Bijection<'a, 'b, R> {
             self.forward.insert(a_blank_id, b_candidate);
             self.backward.insert(b_candidate, a_blank_id);
 
-            let sig_ok = depth == 0 || self.signature_matches_with(interpretation, a.get(a_blank_id).unwrap(), b.get(b_candidate).unwrap());
+            let sig_ok = if depth == 0 {
+                true
+            } else {
+                match (a.get(a_blank_id), b.get(b_candidate)) {
+                    (Some(a_sig), Some(b_sig)) => self.signature_matches_with(interpretation, a_sig, b_sig),
+                    _ => false,
+                }
+            };
             if sig_ok && self.find_from_candidates(interpretation, candidates, depth + 1, a, b) {
                 return true;
             }
@@ -330,7 +337,6 @@ impl<'a, 'b, R: Ord> Bijection<'a, 'b, R> {
 }
 
 /// Signature of a blank node identifier.
-#[allow(clippy::type_complexity)]
 struct BlankSignature<'a, R>(Vec<Quad<&'a R>>);
 
 impl<R> Default for BlankSignature<'_, R> {
@@ -406,6 +412,7 @@ where
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::panic, clippy::expect_used)]
 mod tests {
     use super::*;
 
@@ -440,7 +447,7 @@ mod tests {
 
     #[test]
     fn bipartite_matching_no_solution() {
-        // a = [x, y], b = [X, Y]. x matches {X}; y matches {X}.
+        // a = [x, y], b = [X, Y]. Both x and y can only match X (not Y).
         // No perfect matching exists.
         let x = "x";
         let y = "y";
@@ -452,17 +459,7 @@ mod tests {
         let a: Vec<Quad<&&str>> = vec![Quad(&x, &r, &z, None), Quad(&y, &r, &z, None)];
         let b: Vec<Quad<&&str>> = vec![Quad(&cap_x, &r, &z, None), Quad(&cap_y, &r, &z, None)];
 
-        let result = match_quad_lists(&a, &b, |qa, _qb| {
-            // both x and y can only match X
-            *qa.0 == "x" || *qa.0 == "y"
-        });
-        // Both can match X but matches() returns true for any (x,*) and (y,*),
-        // which forms perfect matching trivially. Tighten:
-        let _ = result;
-
-        let result = match_quad_lists(&a, &b, |qa, qb| {
-            (*qa.0 == "x" && *qb.0 == "X") || (*qa.0 == "y" && *qb.0 == "X")
-        });
+        let result = match_quad_lists(&a, &b, |qa, qb| (*qa.0 == "x" || *qa.0 == "y") && *qb.0 == "X");
         assert!(!result, "no perfect matching when both a-nodes only match same b-node");
     }
 }

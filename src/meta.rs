@@ -43,15 +43,15 @@ pub use locspan::{Location, Span};
 pub struct Meta<T, M>(pub T, pub M);
 
 impl<T, M> Meta<T, M> {
-    pub fn new(value: T, metadata: M) -> Self {
+    pub const fn new(value: T, metadata: M) -> Self {
         Self(value, metadata)
     }
 
-    pub fn value(&self) -> &T {
+    pub const fn value(&self) -> &T {
         &self.0
     }
 
-    pub fn metadata(&self) -> &M {
+    pub const fn metadata(&self) -> &M {
         &self.1
     }
 

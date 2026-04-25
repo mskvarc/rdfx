@@ -37,7 +37,6 @@ fn quad_with_resources<R>(resources: &Slab<Resource<R>>, Quad(s, p, o, g): Quad<
 
 /// Hash-based RDF dataset.
 #[derive(Clone)]
-/// Hash-based RDF dataset.
 pub struct HashDataset<R = LocalTerm> {
     pub(crate) resources: Slab<Resource<R>>,
     pub(crate) quads: Slab<Quad<usize>>,
@@ -171,7 +170,7 @@ impl<R: Clone + Eq + Hash> HashDataset<R> {
         if let (Some(s_i), Some(p_i), Some(o_i), Some(g_slot)) = (s_pre, p_pre, o_pre, g_existing) {
             let target = Quad(s_i, p_i, o_i, g_slot);
             let resolved = quad_with_resources(&self.resources, target);
-            let h = self.hasher.hash_one(&resolved);
+            let h = self.hasher.hash_one(resolved);
             let resources = &self.resources;
             let quads = &self.quads;
             if self.quads_indexes.find(h, |&i| quad_with_resources(resources, quads[i]) == resolved).is_some() {
@@ -192,7 +191,7 @@ impl<R: Clone + Eq + Hash> HashDataset<R> {
         let stored = Quad(s_i, p_i, o_i, g_i);
         let h = match precomputed_hash {
             Some(h) => h,
-            None => self.hasher.hash_one(&quad_with_resources(&self.resources, stored)),
+            None => self.hasher.hash_one(quad_with_resources(&self.resources, stored)),
         };
         let i = self.quads.insert(stored);
 
@@ -200,7 +199,7 @@ impl<R: Clone + Eq + Hash> HashDataset<R> {
         let resources = &self.resources;
         let quads = &self.quads;
         self.quads_indexes
-            .insert_unique(h, i, |&j| hasher.hash_one(&quad_with_resources(resources, quads[j])));
+            .insert_unique(h, i, |&j| hasher.hash_one(quad_with_resources(resources, quads[j])));
 
         true
     }
@@ -483,6 +482,7 @@ impl<'de, R: Clone + Eq + Hash + serde::Deserialize<'de>> serde::Deserialize<'de
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::panic, clippy::expect_used)]
 mod tests {
     use rand::{Rng, SeedableRng, rngs::SmallRng};
 

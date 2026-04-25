@@ -21,35 +21,35 @@ pub struct LiteralRef<'a> {
 }
 
 impl<'a> LiteralRef<'a> {
-    pub fn new(value: &'a str, type_: LiteralTypeRef<'a>) -> Self {
+    pub const fn new(value: &'a str, type_: LiteralTypeRef<'a>) -> Self {
         Self { value, type_ }
     }
 
-    pub fn as_type(&self) -> LiteralTypeRef<'a> {
+    pub const fn as_type(&self) -> LiteralTypeRef<'a> {
         self.type_
     }
 
-    pub fn as_type_mut(&mut self) -> &mut LiteralTypeRef<'a> {
+    pub const fn as_type_mut(&mut self) -> &mut LiteralTypeRef<'a> {
         &mut self.type_
     }
 
-    pub fn into_type(self) -> LiteralTypeRef<'a> {
+    pub const fn into_type(self) -> LiteralTypeRef<'a> {
         self.type_
     }
 
-    pub fn as_value(&self) -> &'a str {
+    pub const fn as_value(&self) -> &'a str {
         self.value
     }
 
-    pub fn into_value(self) -> &'a str {
+    pub const fn into_value(self) -> &'a str {
         self.value
     }
 
-    pub fn into_parts(self) -> (&'a str, LiteralTypeRef<'a>) {
+    pub const fn into_parts(self) -> (&'a str, LiteralTypeRef<'a>) {
         (self.value, self.type_)
     }
 
-    pub fn as_str(&self) -> &'a str {
+    pub const fn as_str(&self) -> &'a str {
         self.value
     }
 
@@ -57,11 +57,11 @@ impl<'a> LiteralRef<'a> {
         self.value.as_ref()
     }
 
-    pub fn is_lang_string(&self) -> bool {
+    pub const fn is_lang_string(&self) -> bool {
         self.type_.is_lang_string()
     }
 
-    pub fn lang_tag(&self) -> Option<&'a LangTag> {
+    pub const fn lang_tag(&self) -> Option<&'a LangTag> {
         self.type_.lang_tag()
     }
 

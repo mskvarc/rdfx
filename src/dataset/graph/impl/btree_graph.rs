@@ -413,11 +413,11 @@ pub(crate) struct Resource<R> {
 }
 
 impl<R> Resource<R> {
-    pub fn new(value: R) -> Self {
+    pub const fn new(value: R) -> Self {
         Self { value, occurrences: 1 }
     }
 
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.occurrences == 0
     }
 }
@@ -483,6 +483,7 @@ impl<'de, R: Clone + Ord + serde::Deserialize<'de>> serde::Deserialize<'de> for 
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::panic, clippy::expect_used)]
 mod tests {
     use rand::{Rng, SeedableRng, rngs::SmallRng};
 

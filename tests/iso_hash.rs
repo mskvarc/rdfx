@@ -1,5 +1,7 @@
 //! This file is auto generated using the
 //! `tests/utils/generate-iso-test.rb` script.
+#![allow(clippy::unwrap_used, clippy::panic, clippy::expect_used, clippy::get_unwrap)]
+
 use rdf_rs::{
     BlankIdBuf,
     LocalTerm,

@@ -59,7 +59,7 @@ impl<T> CanonicalTriplePattern<T> {
         }
     }
 
-    pub fn subject(&self) -> PatternSubject<&T> {
+    pub const fn subject(&self) -> PatternSubject<&T> {
         match self {
             Self::AnySubject(_) => PatternSubject::Any,
             Self::GivenSubject(id, _) => PatternSubject::Given(id),
@@ -73,7 +73,7 @@ impl<T> CanonicalTriplePattern<T> {
         }
     }
 
-    pub fn predicate(&self) -> PatternPredicate<&T> {
+    pub const fn predicate(&self) -> PatternPredicate<&T> {
         match self {
             Self::AnySubject(t) => t.predicate(),
             Self::GivenSubject(_, t) => t.predicate(),
@@ -87,7 +87,7 @@ impl<T> CanonicalTriplePattern<T> {
         }
     }
 
-    pub fn object(&self) -> PatternObject<&T> {
+    pub const fn object(&self) -> PatternObject<&T> {
         match self {
             Self::AnySubject(t) => t.object(),
             Self::GivenSubject(_, t) => t.object(),
@@ -253,7 +253,7 @@ pub enum PatternSubject<T> {
 }
 
 impl<T> PatternSubject<T> {
-    pub fn id(&self) -> Option<&T> {
+    pub const fn id(&self) -> Option<&T> {
         match self {
             Self::Any => None,
             Self::Given(id) => Some(id),
@@ -288,7 +288,7 @@ pub enum PatternPredicate<T> {
 }
 
 impl<T> PatternPredicate<T> {
-    pub fn id(&self) -> Option<&T> {
+    pub const fn id(&self) -> Option<&T> {
         match self {
             Self::Any => None,
             Self::SameAsSubject => None,
@@ -327,7 +327,7 @@ pub enum PatternObject<T> {
 }
 
 impl<T> PatternObject<T> {
-    pub fn id(&self) -> Option<&T> {
+    pub const fn id(&self) -> Option<&T> {
         match self {
             Self::Given(id) => Some(id),
             _ => None,
@@ -403,7 +403,7 @@ impl<T> AnySubject<T> {
         }
     }
 
-    pub fn predicate(&self) -> PatternPredicate<&T> {
+    pub const fn predicate(&self) -> PatternPredicate<&T> {
         match self {
             Self::AnyPredicate(_) => PatternPredicate::Any,
             Self::SameAsSubject(_) => PatternPredicate::SameAsSubject,
@@ -419,7 +419,7 @@ impl<T> AnySubject<T> {
         }
     }
 
-    pub fn object(&self) -> PatternObject<&T> {
+    pub const fn object(&self) -> PatternObject<&T> {
         match self {
             Self::AnyPredicate(t) => t.object(),
             Self::SameAsSubject(t) => t.object(),
@@ -531,7 +531,7 @@ impl<T> AnySubjectAnyPredicate<T> {
         }
     }
 
-    pub fn object(&self) -> PatternObject<&T> {
+    pub const fn object(&self) -> PatternObject<&T> {
         match self {
             Self::AnyObject => PatternObject::Any,
             Self::SameAsSubject => PatternObject::SameAsSubject,
@@ -590,7 +590,7 @@ impl<T> AnySubjectGivenPredicate<T> {
         }
     }
 
-    pub fn object(&self) -> PatternObject<&T> {
+    pub const fn object(&self) -> PatternObject<&T> {
         match self {
             Self::AnyObject => PatternObject::Any,
             Self::SameAsSubject => PatternObject::SameAsSubject,
@@ -639,7 +639,7 @@ impl<T> GivenSubject<T> {
         }
     }
 
-    pub fn predicate(&self) -> PatternPredicate<&T> {
+    pub const fn predicate(&self) -> PatternPredicate<&T> {
         match self {
             Self::AnyPredicate(_) => PatternPredicate::Any,
             Self::GivenPredicate(id, _) => PatternPredicate::Given(id),
@@ -653,7 +653,7 @@ impl<T> GivenSubject<T> {
         }
     }
 
-    pub fn object(&self) -> PatternObject<&T> {
+    pub const fn object(&self) -> PatternObject<&T> {
         match self {
             Self::AnyPredicate(t) => t.object(),
             Self::GivenPredicate(_, t) => t.object(),
@@ -740,14 +740,14 @@ impl<T> GivenSubjectAnyPredicate<T> {
         }
     }
 
-    pub fn as_given(&self) -> Option<&T> {
+    pub const fn as_given(&self) -> Option<&T> {
         match self {
             Self::GivenObject(o) => Some(o),
             _ => None,
         }
     }
 
-    pub fn object(&self) -> PatternObject<&T> {
+    pub const fn object(&self) -> PatternObject<&T> {
         match self {
             Self::AnyObject => PatternObject::Any,
             Self::SameAsPredicate => PatternObject::SameAsPredicate,
@@ -798,14 +798,14 @@ impl<T> GivenSubjectGivenPredicate<T> {
         }
     }
 
-    pub fn as_given(&self) -> Option<&T> {
+    pub const fn as_given(&self) -> Option<&T> {
         match self {
             Self::GivenObject(o) => Some(o),
             _ => None,
         }
     }
 
-    pub fn object(&self) -> PatternObject<&T> {
+    pub const fn object(&self) -> PatternObject<&T> {
         match self {
             Self::AnyObject => PatternObject::Any,
             Self::GivenObject(id) => PatternObject::Given(id),

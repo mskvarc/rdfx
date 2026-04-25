@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used, clippy::panic, clippy::expect_used, clippy::get_unwrap)]
+
 use rdf_rs::{BlankIdBuf, LocalTerm, Quad, dataset::HashDataset, iri};
 
 fn test(a: HashDataset, b: HashDataset) {

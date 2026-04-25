@@ -62,6 +62,7 @@ impl crate::Generator for Uuid {
 
 #[cfg(any(feature = "uuid-generator-v3", feature = "uuid-generator-v4", feature = "uuid-generator-v5"))]
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::panic, clippy::expect_used)]
 mod tests {
     use super::*;
     use crate::Generator;

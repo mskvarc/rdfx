@@ -23,7 +23,7 @@ pub enum LiteralType {
 }
 
 impl LiteralType {
-    pub fn is_lang_string(&self) -> bool {
+    pub const fn is_lang_string(&self) -> bool {
         matches!(self, Self::LangString(_))
     }
 

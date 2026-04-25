@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used, clippy::panic, clippy::expect_used, clippy::get_unwrap)]
+
 use rdf_rs::{BlankIdBuf, LocalTerm, Quad, dataset::BTreeDataset, iri};
 
 fn test(a: BTreeDataset, b: BTreeDataset) {

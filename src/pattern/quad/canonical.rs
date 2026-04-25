@@ -101,7 +101,7 @@ impl<T> CanonicalQuadPattern<T> {
         }
     }
 
-    pub fn subject(&self) -> PatternSubject<&T> {
+    pub const fn subject(&self) -> PatternSubject<&T> {
         match self {
             Self::AnySubject(_) => PatternSubject::Any,
             Self::GivenSubject(id, _) => PatternSubject::Given(id),
@@ -115,7 +115,7 @@ impl<T> CanonicalQuadPattern<T> {
         }
     }
 
-    pub fn predicate(&self) -> PatternPredicate<&T> {
+    pub const fn predicate(&self) -> PatternPredicate<&T> {
         match self {
             Self::AnySubject(t) => t.predicate(),
             Self::GivenSubject(_, t) => t.predicate(),
@@ -129,7 +129,7 @@ impl<T> CanonicalQuadPattern<T> {
         }
     }
 
-    pub fn object(&self) -> PatternObject<&T> {
+    pub const fn object(&self) -> PatternObject<&T> {
         match self {
             Self::AnySubject(t) => t.object(),
             Self::GivenSubject(_, t) => t.object(),
@@ -143,7 +143,7 @@ impl<T> CanonicalQuadPattern<T> {
         }
     }
 
-    pub fn graph(&self) -> PatternGraph<&T> {
+    pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnySubject(t) => t.graph(),
             Self::GivenSubject(_, t) => t.graph(),
@@ -183,7 +183,7 @@ impl<T> CanonicalQuadPattern<T> {
         }
     }
 
-    pub fn as_ref(&self) -> CanonicalQuadPattern<&T> {
+    pub const fn as_ref(&self) -> CanonicalQuadPattern<&T> {
         match self {
             Self::AnySubject(pog) => CanonicalQuadPattern::AnySubject(pog.as_ref()),
             Self::GivenSubject(s, pog) => CanonicalQuadPattern::GivenSubject(s, pog.as_ref()),
@@ -219,7 +219,7 @@ pub enum PatternSubject<T> {
 }
 
 impl<T> PatternSubject<T> {
-    pub fn id(&self) -> Option<&T> {
+    pub const fn id(&self) -> Option<&T> {
         match self {
             Self::Any => None,
             Self::Given(id) => Some(id),
@@ -254,7 +254,7 @@ pub enum PatternPredicate<T> {
 }
 
 impl<T> PatternPredicate<T> {
-    pub fn id(&self) -> Option<&T> {
+    pub const fn id(&self) -> Option<&T> {
         match self {
             Self::Any => None,
             Self::SameAsSubject => None,
@@ -293,7 +293,7 @@ pub enum PatternObject<T> {
 }
 
 impl<T> PatternObject<T> {
-    pub fn id(&self) -> Option<&T> {
+    pub const fn id(&self) -> Option<&T> {
         match self {
             Self::Given(id) => Some(id),
             _ => None,
@@ -361,7 +361,7 @@ impl<T> AnySubject<T> {
         }
     }
 
-    pub fn predicate(&self) -> PatternPredicate<&T> {
+    pub const fn predicate(&self) -> PatternPredicate<&T> {
         match self {
             Self::AnyPredicate(_) => PatternPredicate::Any,
             Self::SameAsSubject(_) => PatternPredicate::SameAsSubject,
@@ -377,7 +377,7 @@ impl<T> AnySubject<T> {
         }
     }
 
-    pub fn object(&self) -> PatternObject<&T> {
+    pub const fn object(&self) -> PatternObject<&T> {
         match self {
             Self::AnyPredicate(t) => t.object(),
             Self::SameAsSubject(t) => t.object(),
@@ -393,7 +393,7 @@ impl<T> AnySubject<T> {
         }
     }
 
-    pub fn graph(&self) -> PatternGraph<&T> {
+    pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyPredicate(t) => t.graph(),
             Self::SameAsSubject(t) => t.graph(),
@@ -409,7 +409,7 @@ impl<T> AnySubject<T> {
         }
     }
 
-    pub fn as_ref(&self) -> AnySubject<&T> {
+    pub const fn as_ref(&self) -> AnySubject<&T> {
         match self {
             Self::AnyPredicate(og) => AnySubject::AnyPredicate(og.as_ref()),
             Self::SameAsSubject(og) => AnySubject::SameAsSubject(og.as_ref()),
@@ -509,7 +509,7 @@ impl<T> AnySubjectAnyPredicate<T> {
         }
     }
 
-    pub fn object(&self) -> PatternObject<&T> {
+    pub const fn object(&self) -> PatternObject<&T> {
         match self {
             Self::AnyObject(_) => PatternObject::Any,
             Self::SameAsSubject(_) => PatternObject::SameAsSubject,
@@ -527,7 +527,7 @@ impl<T> AnySubjectAnyPredicate<T> {
         }
     }
 
-    pub fn graph(&self) -> PatternGraph<&T> {
+    pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyObject(g) => g.graph(),
             Self::SameAsSubject(g) => g.graph(),
@@ -545,7 +545,7 @@ impl<T> AnySubjectAnyPredicate<T> {
         }
     }
 
-    pub fn as_ref(&self) -> AnySubjectAnyPredicate<&T> {
+    pub const fn as_ref(&self) -> AnySubjectAnyPredicate<&T> {
         match self {
             Self::AnyObject(g) => AnySubjectAnyPredicate::AnyObject(g.as_ref()),
             Self::SameAsSubject(g) => AnySubjectAnyPredicate::SameAsSubject(g.as_ref()),
@@ -632,7 +632,7 @@ impl<T> AnySubjectGivenPredicate<T> {
         }
     }
 
-    pub fn object(&self) -> PatternObject<&T> {
+    pub const fn object(&self) -> PatternObject<&T> {
         match self {
             Self::AnyObject(_) => PatternObject::Any,
             Self::SameAsSubject(_) => PatternObject::SameAsSubject,
@@ -648,7 +648,7 @@ impl<T> AnySubjectGivenPredicate<T> {
         }
     }
 
-    pub fn graph(&self) -> PatternGraph<&T> {
+    pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyObject(g) => g.graph(),
             Self::SameAsSubject(g) => g.graph(),
@@ -664,7 +664,7 @@ impl<T> AnySubjectGivenPredicate<T> {
         }
     }
 
-    pub fn as_ref(&self) -> AnySubjectGivenPredicate<&T> {
+    pub const fn as_ref(&self) -> AnySubjectGivenPredicate<&T> {
         match self {
             Self::AnyObject(g) => AnySubjectGivenPredicate::AnyObject(g.as_ref()),
             Self::SameAsSubject(g) => AnySubjectGivenPredicate::SameAsSubject(g.as_ref()),
@@ -736,7 +736,7 @@ impl<T> GivenSubject<T> {
         }
     }
 
-    pub fn predicate(&self) -> PatternPredicate<&T> {
+    pub const fn predicate(&self) -> PatternPredicate<&T> {
         match self {
             Self::AnyPredicate(_) => PatternPredicate::Any,
             Self::GivenPredicate(id, _) => PatternPredicate::Given(id),
@@ -750,7 +750,7 @@ impl<T> GivenSubject<T> {
         }
     }
 
-    pub fn object(&self) -> PatternObject<&T> {
+    pub const fn object(&self) -> PatternObject<&T> {
         match self {
             Self::AnyPredicate(t) => t.object(),
             Self::GivenPredicate(_, t) => t.object(),
@@ -764,7 +764,7 @@ impl<T> GivenSubject<T> {
         }
     }
 
-    pub fn graph(&self) -> PatternGraph<&T> {
+    pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyPredicate(t) => t.graph(),
             Self::GivenPredicate(_, t) => t.graph(),
@@ -778,7 +778,7 @@ impl<T> GivenSubject<T> {
         }
     }
 
-    pub fn as_ref(&self) -> GivenSubject<&T> {
+    pub const fn as_ref(&self) -> GivenSubject<&T> {
         match self {
             Self::AnyPredicate(og) => GivenSubject::AnyPredicate(og.as_ref()),
             Self::GivenPredicate(p, og) => GivenSubject::GivenPredicate(p, og.as_ref()),
@@ -861,7 +861,7 @@ impl<T> GivenSubjectAnyPredicate<T> {
         }
     }
 
-    pub fn object(&self) -> PatternObject<&T> {
+    pub const fn object(&self) -> PatternObject<&T> {
         match self {
             Self::AnyObject(_) => PatternObject::Any,
             Self::SameAsPredicate(_) => PatternObject::SameAsPredicate,
@@ -877,7 +877,7 @@ impl<T> GivenSubjectAnyPredicate<T> {
         }
     }
 
-    pub fn graph(&self) -> PatternGraph<&T> {
+    pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyObject(t) => t.graph(),
             Self::SameAsPredicate(t) => t.graph(),
@@ -893,7 +893,7 @@ impl<T> GivenSubjectAnyPredicate<T> {
         }
     }
 
-    pub fn as_ref(&self) -> GivenSubjectAnyPredicate<&T> {
+    pub const fn as_ref(&self) -> GivenSubjectAnyPredicate<&T> {
         match self {
             Self::AnyObject(g) => GivenSubjectAnyPredicate::AnyObject(g.as_ref()),
             Self::SameAsPredicate(g) => GivenSubjectAnyPredicate::SameAsPredicate(g.as_ref()),
@@ -965,7 +965,7 @@ impl<T> GivenSubjectGivenPredicate<T> {
         }
     }
 
-    pub fn object(&self) -> PatternObject<&T> {
+    pub const fn object(&self) -> PatternObject<&T> {
         match self {
             Self::AnyObject(_) => PatternObject::Any,
             Self::GivenObject(id, _) => PatternObject::Given(id),
@@ -979,7 +979,7 @@ impl<T> GivenSubjectGivenPredicate<T> {
         }
     }
 
-    pub fn graph(&self) -> PatternGraph<&T> {
+    pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyObject(t) => t.graph(),
             Self::GivenObject(_, t) => t.graph(),
@@ -993,7 +993,7 @@ impl<T> GivenSubjectGivenPredicate<T> {
         }
     }
 
-    pub fn as_ref(&self) -> GivenSubjectGivenPredicate<&T> {
+    pub const fn as_ref(&self) -> GivenSubjectGivenPredicate<&T> {
         match self {
             Self::AnyObject(g) => GivenSubjectGivenPredicate::AnyObject(g.as_ref()),
             Self::GivenObject(o, g) => GivenSubjectGivenPredicate::GivenObject(o, g.as_ref()),
@@ -1083,7 +1083,7 @@ impl<T> AnySubjectAnyPredicateAnyObject<T> {
         }
     }
 
-    pub fn graph(&self) -> PatternGraph<&T> {
+    pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyGraph => PatternGraph::Any,
             Self::SameAsSubject => PatternGraph::SameAsSubject,
@@ -1103,7 +1103,7 @@ impl<T> AnySubjectAnyPredicateAnyObject<T> {
         }
     }
 
-    pub fn as_ref(&self) -> AnySubjectAnyPredicateAnyObject<&T> {
+    pub const fn as_ref(&self) -> AnySubjectAnyPredicateAnyObject<&T> {
         match self {
             Self::AnyGraph => AnySubjectAnyPredicateAnyObject::AnyGraph,
             Self::SameAsSubject => AnySubjectAnyPredicateAnyObject::SameAsSubject,
@@ -1181,7 +1181,7 @@ impl<T> GivenSubjectAnyPredicateAnyObject<T> {
         }
     }
 
-    pub fn graph(&self) -> PatternGraph<&T> {
+    pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyGraph => PatternGraph::Any,
             Self::SameAsPredicate => PatternGraph::SameAsPredicate,
@@ -1199,7 +1199,7 @@ impl<T> GivenSubjectAnyPredicateAnyObject<T> {
         }
     }
 
-    pub fn as_ref(&self) -> GivenSubjectAnyPredicateAnyObject<&T> {
+    pub const fn as_ref(&self) -> GivenSubjectAnyPredicateAnyObject<&T> {
         match self {
             Self::AnyGraph => GivenSubjectAnyPredicateAnyObject::AnyGraph,
             Self::SameAsPredicate => GivenSubjectAnyPredicateAnyObject::SameAsPredicate,
@@ -1274,7 +1274,7 @@ impl<T> AnySubjectGivenPredicateAnyObject<T> {
         }
     }
 
-    pub fn graph(&self) -> PatternGraph<&T> {
+    pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyGraph => PatternGraph::Any,
             Self::SameAsSubject => PatternGraph::SameAsSubject,
@@ -1292,7 +1292,7 @@ impl<T> AnySubjectGivenPredicateAnyObject<T> {
         }
     }
 
-    pub fn as_ref(&self) -> AnySubjectGivenPredicateAnyObject<&T> {
+    pub const fn as_ref(&self) -> AnySubjectGivenPredicateAnyObject<&T> {
         match self {
             Self::AnyGraph => AnySubjectGivenPredicateAnyObject::AnyGraph,
             Self::SameAsSubject => AnySubjectGivenPredicateAnyObject::SameAsSubject,
@@ -1367,7 +1367,7 @@ impl<T> AnySubjectAnyPredicateGivenObject<T> {
         }
     }
 
-    pub fn graph(&self) -> PatternGraph<&T> {
+    pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyGraph => PatternGraph::Any,
             Self::SameAsSubject => PatternGraph::SameAsSubject,
@@ -1385,7 +1385,7 @@ impl<T> AnySubjectAnyPredicateGivenObject<T> {
         }
     }
 
-    pub fn as_ref(&self) -> AnySubjectAnyPredicateGivenObject<&T> {
+    pub const fn as_ref(&self) -> AnySubjectAnyPredicateGivenObject<&T> {
         match self {
             Self::AnyGraph => AnySubjectAnyPredicateGivenObject::AnyGraph,
             Self::SameAsSubject => AnySubjectAnyPredicateGivenObject::SameAsSubject,
@@ -1460,7 +1460,7 @@ impl<T> AnySubjectGivenPredicateGivenObject<T> {
         }
     }
 
-    pub fn graph(&self) -> PatternGraph<&T> {
+    pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyGraph => PatternGraph::Any,
             Self::SameAsSubject => PatternGraph::SameAsSubject,
@@ -1476,7 +1476,7 @@ impl<T> AnySubjectGivenPredicateGivenObject<T> {
         }
     }
 
-    pub fn as_ref(&self) -> AnySubjectGivenPredicateGivenObject<&T> {
+    pub const fn as_ref(&self) -> AnySubjectGivenPredicateGivenObject<&T> {
         match self {
             Self::AnyGraph => AnySubjectGivenPredicateGivenObject::AnyGraph,
             Self::SameAsSubject => AnySubjectGivenPredicateGivenObject::SameAsSubject,
@@ -1545,7 +1545,7 @@ impl<T> GivenSubjectAnyPredicateGivenObject<T> {
         }
     }
 
-    pub fn graph(&self) -> PatternGraph<&T> {
+    pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyGraph => PatternGraph::Any,
             Self::SameAsPredicate => PatternGraph::SameAsPredicate,
@@ -1561,7 +1561,7 @@ impl<T> GivenSubjectAnyPredicateGivenObject<T> {
         }
     }
 
-    pub fn as_ref(&self) -> GivenSubjectAnyPredicateGivenObject<&T> {
+    pub const fn as_ref(&self) -> GivenSubjectAnyPredicateGivenObject<&T> {
         match self {
             Self::AnyGraph => GivenSubjectAnyPredicateGivenObject::AnyGraph,
             Self::SameAsPredicate => GivenSubjectAnyPredicateGivenObject::SameAsPredicate,
@@ -1630,7 +1630,7 @@ impl<T> GivenSubjectGivenPredicateAnyObject<T> {
         }
     }
 
-    pub fn graph(&self) -> PatternGraph<&T> {
+    pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyGraph => PatternGraph::Any,
             Self::SameAsObject => PatternGraph::SameAsObject,
@@ -1646,7 +1646,7 @@ impl<T> GivenSubjectGivenPredicateAnyObject<T> {
         }
     }
 
-    pub fn as_ref(&self) -> GivenSubjectGivenPredicateAnyObject<&T> {
+    pub const fn as_ref(&self) -> GivenSubjectGivenPredicateAnyObject<&T> {
         match self {
             Self::AnyGraph => GivenSubjectGivenPredicateAnyObject::AnyGraph,
             Self::SameAsObject => GivenSubjectGivenPredicateAnyObject::SameAsObject,
@@ -1708,7 +1708,7 @@ impl<T> GivenSubjectGivenPredicateGivenObject<T> {
         }
     }
 
-    pub fn graph(&self) -> PatternGraph<&T> {
+    pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyGraph => PatternGraph::Any,
             Self::GivenGraph(g) => PatternGraph::Given(g.as_ref()),
@@ -1722,7 +1722,7 @@ impl<T> GivenSubjectGivenPredicateGivenObject<T> {
         }
     }
 
-    pub fn as_ref(&self) -> GivenSubjectGivenPredicateGivenObject<&T> {
+    pub const fn as_ref(&self) -> GivenSubjectGivenPredicateGivenObject<&T> {
         match self {
             Self::AnyGraph => GivenSubjectGivenPredicateGivenObject::AnyGraph,
             Self::GivenGraph(g) => GivenSubjectGivenPredicateGivenObject::GivenGraph(g.as_ref()),

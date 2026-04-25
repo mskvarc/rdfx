@@ -17,7 +17,7 @@ use super::LocalGenerator;
 pub struct LocalGeneratorInterpretation<G>(RefCell<G>);
 
 impl<G> LocalGeneratorInterpretation<G> {
-    pub fn new(generator: G) -> Self {
+    pub const fn new(generator: G) -> Self {
         Self(RefCell::new(generator))
     }
 

@@ -27,11 +27,11 @@ pub enum Term {
 }
 
 impl Term {
-    pub fn is_iri(&self) -> bool {
+    pub const fn is_iri(&self) -> bool {
         matches!(self, Self::Iri(_))
     }
 
-    pub fn is_literal(&self) -> bool {
+    pub const fn is_literal(&self) -> bool {
         matches!(self, Self::Literal(_))
     }
 

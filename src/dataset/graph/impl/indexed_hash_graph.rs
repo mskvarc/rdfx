@@ -259,12 +259,12 @@ impl<R: Clone + Eq + Hash> IndexedHashGraph<R> {
         let inserted = self.triples.insert(stored);
         debug_assert_eq!(inserted, i);
 
-        let h = self.hasher.hash_one(&triple_with_resources(&self.resources, stored));
+        let h = self.hasher.hash_one(triple_with_resources(&self.resources, stored));
         let hasher = self.hasher.clone();
         let resources = &self.resources;
         let triples = &self.triples;
         self.triples_indexes
-            .insert_unique(h, i, |&j| hasher.hash_one(&triple_with_resources(resources, triples[j])));
+            .insert_unique(h, i, |&j| hasher.hash_one(triple_with_resources(resources, triples[j])));
 
         true
     }
@@ -306,7 +306,7 @@ impl<R: Clone + Eq + Hash> IndexedHashGraph<R> {
             let resources = &self.resources;
             let triples = &self.triples;
             let t = triple_with_resources(resources, triples[i]);
-            let h = self.hasher.hash_one(&t);
+            let h = self.hasher.hash_one(t);
             if let Ok(entry) = self.triples_indexes.find_entry(h, |&j| j == i) {
                 entry.remove();
             }
@@ -973,6 +973,7 @@ impl<'de, R: Clone + Eq + Hash + serde::Deserialize<'de>> serde::Deserialize<'de
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::panic, clippy::expect_used)]
 mod tests {
     use rand::{Rng, SeedableRng, rngs::SmallRng};
 

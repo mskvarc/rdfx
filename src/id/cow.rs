@@ -13,11 +13,11 @@ pub enum CowId<'a> {
 }
 
 impl<'a> CowId<'a> {
-    pub fn is_iri(&self) -> bool {
+    pub const fn is_iri(&self) -> bool {
         matches!(self, Self::Iri(_))
     }
 
-    pub fn is_blank_id(&self) -> bool {
+    pub const fn is_blank_id(&self) -> bool {
         matches!(self, Self::BlankId(_))
     }
 

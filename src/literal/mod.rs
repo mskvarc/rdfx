@@ -30,11 +30,11 @@ impl Literal {
         }
     }
 
-    pub fn as_type(&self) -> &LiteralType {
+    pub const fn as_type(&self) -> &LiteralType {
         &self.type_
     }
 
-    pub fn as_type_mut(&mut self) -> &mut LiteralType {
+    pub const fn as_type_mut(&mut self) -> &mut LiteralType {
         &mut self.type_
     }
 
@@ -58,7 +58,7 @@ impl Literal {
         self.value.as_ref()
     }
 
-    pub fn is_lang_string(&self) -> bool {
+    pub const fn is_lang_string(&self) -> bool {
         self.type_.is_lang_string()
     }
 

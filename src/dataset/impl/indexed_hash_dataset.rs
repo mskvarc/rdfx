@@ -352,12 +352,12 @@ impl<R: Clone + Eq + Hash> IndexedHashDataset<R> {
         let inserted = self.quads.insert(stored);
         debug_assert_eq!(inserted, i);
 
-        let h = self.hasher.hash_one(&quad_with_resources(&self.resources, stored));
+        let h = self.hasher.hash_one(quad_with_resources(&self.resources, stored));
         let hasher = self.hasher.clone();
         let resources = &self.resources;
         let quads = &self.quads;
         self.quads_indexes
-            .insert_unique(h, i, |&j| hasher.hash_one(&quad_with_resources(resources, quads[j])));
+            .insert_unique(h, i, |&j| hasher.hash_one(quad_with_resources(resources, quads[j])));
 
         true
     }
@@ -425,7 +425,7 @@ impl<R: Clone + Eq + Hash> IndexedHashDataset<R> {
             let resources = &self.resources;
             let quads = &self.quads;
             let q = quad_with_resources(resources, quads[i]);
-            let h = self.hasher.hash_one(&q);
+            let h = self.hasher.hash_one(q);
             if let Ok(entry) = self.quads_indexes.find_entry(h, |&j| j == i) {
                 entry.remove();
             }
@@ -1374,6 +1374,7 @@ impl<'de, R: Clone + Eq + Hash + serde::Deserialize<'de>> serde::Deserialize<'de
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::panic, clippy::expect_used)]
 mod tests {
     use rand::{Rng, SeedableRng, rngs::SmallRng};
 

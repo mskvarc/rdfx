@@ -49,7 +49,7 @@ impl BlankId {
 
     /// Returns a reference to the underlying string defining the blank node identifier.
     #[inline(always)]
-    pub fn as_str(&self) -> &str {
+    pub const fn as_str(&self) -> &str {
         &self.0
     }
 
@@ -332,15 +332,15 @@ fn check<C: Iterator<Item = char>>(mut chars: C) -> bool {
     }
 }
 
-fn is_pn_char_base(c: char) -> bool {
+const fn is_pn_char_base(c: char) -> bool {
     matches!(c, 'A'..='Z' | 'a'..='z' | '\u{00c0}'..='\u{00d6}' | '\u{00d8}'..='\u{00f6}' | '\u{00f8}'..='\u{02ff}' | '\u{0370}'..='\u{037d}' | '\u{037f}'..='\u{1fff}' | '\u{200c}'..='\u{200d}' | '\u{2070}'..='\u{218f}' | '\u{2c00}'..='\u{2fef}' | '\u{3001}'..='\u{d7ff}' | '\u{f900}'..='\u{fdcf}' | '\u{fdf0}'..='\u{fffd}' | '\u{10000}'..='\u{effff}')
 }
 
-fn is_pn_char_u(c: char) -> bool {
+const fn is_pn_char_u(c: char) -> bool {
     is_pn_char_base(c) || matches!(c, '_' | ':')
 }
 
-fn is_pn_char(c: char) -> bool {
+const fn is_pn_char(c: char) -> bool {
     is_pn_char_u(c) || matches!(c, '-' | '0'..='9' | '\u{00b7}' | '\u{0300}'..='\u{036f}' | '\u{203f}'..='\u{2040}')
 }
 

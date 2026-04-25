@@ -20,15 +20,15 @@ pub enum LocalTerm {
 }
 
 impl LocalTerm {
-    pub fn iri(iri: IriBuf) -> Self {
+    pub const fn iri(iri: IriBuf) -> Self {
         Self::Named(Term::Iri(iri))
     }
 
-    pub fn literal(literal: Literal) -> Self {
+    pub const fn literal(literal: Literal) -> Self {
         Self::Named(Term::Literal(literal))
     }
 
-    pub fn is_blank_id(&self) -> bool {
+    pub const fn is_blank_id(&self) -> bool {
         matches!(self, Self::BlankId(_))
     }
 

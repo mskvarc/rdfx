@@ -157,7 +157,7 @@ impl<R: Clone + Eq + Hash> HashGraph<R> {
         if let (Some(s_i), Some(p_i), Some(o_i)) = (s_pre, p_pre, o_pre) {
             let target = Triple(s_i, p_i, o_i);
             let resolved = triple_with_resources(&self.resources, target);
-            let h = self.hasher.hash_one(&resolved);
+            let h = self.hasher.hash_one(resolved);
             let resources = &self.resources;
             let triples = &self.triples;
             if self
@@ -177,7 +177,7 @@ impl<R: Clone + Eq + Hash> HashGraph<R> {
         let stored = Triple(s_i, p_i, o_i);
         let h = match precomputed_hash {
             Some(h) => h,
-            None => self.hasher.hash_one(&triple_with_resources(&self.resources, stored)),
+            None => self.hasher.hash_one(triple_with_resources(&self.resources, stored)),
         };
         let i = self.triples.insert(stored);
 
@@ -185,7 +185,7 @@ impl<R: Clone + Eq + Hash> HashGraph<R> {
         let resources = &self.resources;
         let triples = &self.triples;
         self.triples_indexes
-            .insert_unique(h, i, |&j| hasher.hash_one(&triple_with_resources(resources, triples[j])));
+            .insert_unique(h, i, |&j| hasher.hash_one(triple_with_resources(resources, triples[j])));
 
         true
     }
@@ -400,11 +400,11 @@ pub(crate) struct Resource<R> {
 }
 
 impl<R> Resource<R> {
-    pub fn new(value: R) -> Self {
+    pub const fn new(value: R) -> Self {
         Self { value, occurrences: 1 }
     }
 
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.occurrences == 0
     }
 }
@@ -470,6 +470,7 @@ impl<'de, R: Clone + Eq + Hash + serde::Deserialize<'de>> serde::Deserialize<'de
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::panic, clippy::expect_used)]
 mod tests {
     use rand::{Rng, SeedableRng, rngs::SmallRng};
 

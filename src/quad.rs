@@ -17,7 +17,7 @@ pub struct Quad<S = LocalTerm, P = S, O = S, G = S>(pub S, pub P, pub O, pub Opt
 
 impl<S, P, O, G> Quad<S, P, O, G> {
     /// Borrows each component of the quad.
-    pub fn as_ref(&self) -> Quad<&S, &P, &O, &G> {
+    pub const fn as_ref(&self) -> Quad<&S, &P, &O, &G> {
         Quad(&self.0, &self.1, &self.2, self.3.as_ref())
     }
 }
@@ -45,7 +45,7 @@ impl<S, P, O, G> Quad<&S, &P, &O, &G> {
 }
 
 impl<S, P, O, G> Quad<&S, &P, &O, &G> {
-    pub fn copied(&self) -> Quad<S, P, O, G>
+    pub const fn copied(&self) -> Quad<S, P, O, G>
     where
         S: Copy,
         P: Copy,
@@ -55,7 +55,7 @@ impl<S, P, O, G> Quad<&S, &P, &O, &G> {
         Quad(*self.0, *self.1, *self.2, self.3.copied())
     }
 
-    pub fn into_copied(self) -> Quad<S, P, O, G>
+    pub const fn into_copied(self) -> Quad<S, P, O, G>
     where
         S: Copy,
         P: Copy,
@@ -80,19 +80,19 @@ impl LexicalQuadRef<'_> {
 
 impl<S, P, O, G> Quad<S, P, O, G> {
     /// Creates a new quad.
-    pub fn new(subject: S, predicate: P, object: O, graph: Option<G>) -> Self {
+    pub const fn new(subject: S, predicate: P, object: O, graph: Option<G>) -> Self {
         Self(subject, predicate, object, graph)
     }
 
     /// Returns a reference to the subject of the quad,
     /// the first component.
-    pub fn subject(&self) -> &S {
+    pub const fn subject(&self) -> &S {
         &self.0
     }
 
     /// Returns a mutable reference to the subject of the quad,
     /// the first component.
-    pub fn subject_mut(&mut self) -> &mut S {
+    pub const fn subject_mut(&mut self) -> &mut S {
         &mut self.0
     }
 
@@ -104,13 +104,13 @@ impl<S, P, O, G> Quad<S, P, O, G> {
 
     /// Returns a reference to the predicate of the quad,
     /// the second component.
-    pub fn predicate(&self) -> &P {
+    pub const fn predicate(&self) -> &P {
         &self.1
     }
 
     /// Returns a mutable reference to the predicate of the quad,
     /// the second component.
-    pub fn predicate_mut(&mut self) -> &mut P {
+    pub const fn predicate_mut(&mut self) -> &mut P {
         &mut self.1
     }
 
@@ -122,13 +122,13 @@ impl<S, P, O, G> Quad<S, P, O, G> {
 
     /// Returns a reference to the object of the quad,
     /// the third component.
-    pub fn object(&self) -> &O {
+    pub const fn object(&self) -> &O {
         &self.2
     }
 
     /// Returns a mutable reference to the object of the quad,
     /// the third component.
-    pub fn object_mut(&mut self) -> &mut O {
+    pub const fn object_mut(&mut self) -> &mut O {
         &mut self.2
     }
 
@@ -140,13 +140,13 @@ impl<S, P, O, G> Quad<S, P, O, G> {
 
     /// Returns a reference to the graph of the quad,
     /// the fourth component.
-    pub fn graph(&self) -> Option<&G> {
+    pub const fn graph(&self) -> Option<&G> {
         self.3.as_ref()
     }
 
     /// Returns a mutable reference to the graph of the quad,
     /// the fourth component.
-    pub fn graph_mut(&mut self) -> Option<&mut G> {
+    pub const fn graph_mut(&mut self) -> Option<&mut G> {
         self.3.as_mut()
     }
 
