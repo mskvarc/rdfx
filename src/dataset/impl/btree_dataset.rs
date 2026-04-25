@@ -409,7 +409,7 @@ impl<R: Hash> Hash for BTreeDataset<R> {
 #[derive(Default, Clone)]
 pub(crate) struct Resource<R> {
     pub value: R,
-    occurrences: usize,
+    pub(crate) occurrences: usize,
 }
 
 impl<R> Resource<R> {
