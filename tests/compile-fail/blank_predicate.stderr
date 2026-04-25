@@ -1,0 +1,76 @@
+error[E0277]: the trait bound `BlankIdBuf: IsPredicate` is not satisfied
+ --> tests/compile-fail/blank_predicate.rs:5:13
+  |
+5 |     let _t: Triple<Id, BlankIdBuf, LocalTerm> = Triple::new(
+  |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `IsPredicate` is not implemented for `BlankIdBuf`
+  |
+  = help: the following other types implement trait `IsPredicate`:
+            &T
+            Cow<'_, rdf_rs::Iri<String>>
+            Meta<T, M>
+            Option<T>
+            ResourceOrVar<T, X>
+            String
+            i32
+            i64
+          and $N others
+note: required by a bound in `Triple`
+ --> src/triple.rs
+  |
+  | pub struct Triple<S: IsSubject = Id, P: IsPredicate = IriBuf, O: IsObject = LocalTerm>(pub S, pub P, pub O);
+  |                                         ^^^^^^^^^^^ required by this bound in `Triple`
+
+error[E0277]: the trait bound `BlankIdBuf: IsPredicate` is not satisfied
+ --> tests/compile-fail/blank_predicate.rs:7:9
+  |
+5 |     let _t: Triple<Id, BlankIdBuf, LocalTerm> = Triple::new(
+  |                                                 ----------- required by a bound introduced by this call
+6 |         Id::iri(IriBuf::new("http://example.org/s".to_owned()).unwrap()),
+7 |         BlankIdBuf::new("_:b0".to_owned()).unwrap(),
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `IsPredicate` is not implemented for `BlankIdBuf`
+  |
+  = help: the following other types implement trait `IsPredicate`:
+            &T
+            Cow<'_, rdf_rs::Iri<String>>
+            Meta<T, M>
+            Option<T>
+            ResourceOrVar<T, X>
+            String
+            i32
+            i64
+          and $N others
+note: required by a bound in `Triple::<S, P, O>::new`
+ --> src/triple.rs
+  |
+  | impl<S: IsSubject, P: IsPredicate, O: IsObject> Triple<S, P, O> {
+  |                       ^^^^^^^^^^^ required by this bound in `Triple::<S, P, O>::new`
+  |     /// Creates a new triple.
+  |     pub const fn new(subject: S, predicate: P, object: O) -> Self {
+  |                  --- required by a bound in this associated function
+
+error[E0277]: the trait bound `BlankIdBuf: IsPredicate` is not satisfied
+ --> tests/compile-fail/blank_predicate.rs:5:49
+  |
+5 |       let _t: Triple<Id, BlankIdBuf, LocalTerm> = Triple::new(
+  |  _________________________________________________^
+6 | |         Id::iri(IriBuf::new("http://example.org/s".to_owned()).unwrap()),
+7 | |         BlankIdBuf::new("_:b0".to_owned()).unwrap(),
+8 | |         LocalTerm::iri(IriBuf::new("http://example.org/o".to_owned()).unwrap()),
+9 | |     );
+  | |_____^ the trait `IsPredicate` is not implemented for `BlankIdBuf`
+  |
+  = help: the following other types implement trait `IsPredicate`:
+            &T
+            Cow<'_, rdf_rs::Iri<String>>
+            Meta<T, M>
+            Option<T>
+            ResourceOrVar<T, X>
+            String
+            i32
+            i64
+          and $N others
+note: required by a bound in `Triple`
+ --> src/triple.rs
+  |
+  | pub struct Triple<S: IsSubject = Id, P: IsPredicate = IriBuf, O: IsObject = LocalTerm>(pub S, pub P, pub O);
+  |                                         ^^^^^^^^^^^ required by this bound in `Triple`

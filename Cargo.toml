@@ -65,6 +65,7 @@ uuid = { version = "1.23.1", optional = true }
 criterion = { version = "0.8.2", features = ["html_reports"] }
 iri-rs = { version = "3.3.1", features = ["static"] }
 rand = "0.10.1"
+trybuild = "1"
 
 [[bench]]
 name = "dataset"
