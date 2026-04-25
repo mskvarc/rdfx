@@ -1,30 +1,120 @@
-//! Blank-node bijection between datasets — RDF 1.1 §3.6 / §4.4 graph and
-//! dataset equivalence under blank-node renaming.
+//! Blank-node bijection between graphs and datasets — RDF 1.1 §3.6 / §4.4
+//! equivalence under blank-node renaming.
 //!
-//! Per [RDF 1.1 Concepts §3.6][s3] / [§4.4][s4], two graphs (datasets) are
-//! equivalent iff there exists a bijection between their blank node
-//! identifiers that maps one to the other. [`find_bijection`] computes that
-//! bijection if it exists; [`graph_equivalent`] / [`dataset_equivalent`] are
-//! convenience predicates.
+//! Per [RDF 1.1 Concepts §3.6][s3] / [§4.4][s4], two graphs (resp. datasets)
+//! are equivalent iff there exists a bijection between their blank node
+//! identifiers that maps one to the other while preserving all triples (resp.
+//! quads). [`find_bijection_with`] / [`find_bijection_graph_with`] compute
+//! that bijection if it exists; [`graph_equivalent_with`] /
+//! [`dataset_equivalent_with`] are convenience predicates.
+//!
+//! The no-`_with` variants ([`graph_equivalent`], [`dataset_equivalent`]) use
+//! [`BlindInterpretation`] — every resource is treated as a renameable
+//! "blank-like" handle, yielding *structural* equivalence (any equipotent
+//! injection works). For RDF-semantic equivalence (where common IRIs must
+//! match exactly), pass a real [`ReverseInterpretation`] via the `_with`
+//! variants.
 //!
 //! Implementation: signature-bucket pre-filter (split by neighbourhood
 //! signature size, then by per-quad match-set) followed by augmenting-path
-//! bipartite matching. Not RDFC-1.0; just structural bijection.
+//! bipartite matching. Not [RDFC-1.0][rdfc]; just the structural bijection
+//! prescribed by RDF 1.1 §3.6 / §4.4.
 //!
 //! [s3]: https://www.w3.org/TR/rdf11-concepts/#section-graph-equality
 //! [s4]: https://www.w3.org/TR/rdf11-concepts/#section-dataset-equality
-use std::collections::{BTreeMap, BTreeSet, btree_map::Entry};
-
-use crate::{
-    Quad,
-    Resource,
-    dataset::{TraversableDataset, TraversableGraph},
-    interpretation::ReverseInterpretation,
+//! [rdfc]: https://www.w3.org/TR/rdf-canon/
+use std::{
+    borrow::Cow,
+    collections::{BTreeMap, BTreeSet, btree_map::Entry},
+    marker::PhantomData,
 };
 
-/// RDF 1.1 §3.6 graph equivalence: graphs are equal iff a blank-node
-/// bijection exists between them. Wraps [`find_bijection_graph_with`].
-pub fn graph_equivalent<I, A, B>(interpretation: &I, a: &A, b: &B) -> bool
+use iri_rs::IriBuf;
+
+use crate::{
+    CowLiteral,
+    Quad,
+    Resource,
+    dataset::{Graph, TraversableDataset, TraversableGraph},
+    interpretation::{Interpretation, ReverseInterpretation},
+};
+
+/// "Everything-is-a-blank-id" reverse interpretation, used by the no-argument
+/// [`graph_equivalent`] / [`dataset_equivalent`] entry points to obtain
+/// structural equivalence over arbitrary [`Resource`] handles.
+///
+/// Reports no IRIs and no literals for any resource, so
+/// [`ReverseInterpretation::is_blank_id`] returns `true` for every resource —
+/// the bijection algorithm therefore tries to rename every resource freely
+/// (no exact-match constraints).
+pub struct BlindInterpretation<R>(PhantomData<R>);
+
+impl<R> Default for BlindInterpretation<R> {
+    fn default() -> Self {
+        Self(PhantomData)
+    }
+}
+
+impl<R: Resource> Interpretation for BlindInterpretation<R> {
+    type Resource = R;
+    fn iri(&self, _iri: iri_rs::Iri<&str>) -> Option<R> {
+        None
+    }
+    fn literal<'a>(&self, _literal: impl Into<crate::LiteralRef<'a>>) -> Option<R> {
+        None
+    }
+}
+
+impl<R: Resource> ReverseInterpretation for BlindInterpretation<R> {
+    type Iris<'a>
+        = std::iter::Empty<Cow<'a, IriBuf>>
+    where
+        Self: 'a;
+    type Literals<'a>
+        = std::iter::Empty<CowLiteral<'a>>
+    where
+        Self: 'a;
+    fn iris_of<'a>(&'a self, _r: &'a R) -> Self::Iris<'a> {
+        std::iter::empty()
+    }
+    fn literals_of<'a>(&'a self, _r: &'a R) -> Self::Literals<'a> {
+        std::iter::empty()
+    }
+}
+
+/// Structural graph equivalence: two graphs are equivalent iff some bijection
+/// between their resources preserves all triples. Treats every resource as
+/// renameable; for RDF-semantic equivalence (IRIs must match exactly) use
+/// [`graph_equivalent_with`] with a real interpretation.
+pub fn graph_equivalent<G1, G2, R>(a: &G1, b: &G2) -> bool
+where
+    R: Resource + Ord,
+    G1: TraversableGraph<Subject = R, Predicate = R, Object = R>,
+    G2: TraversableGraph<Subject = R, Predicate = R, Object = R>,
+{
+    are_isomorphic_graph_with(&BlindInterpretation::<R>::default(), a, b)
+}
+
+/// Structural dataset equivalence: two datasets are equivalent iff some
+/// bijection between their resources preserves all quads. Treats every
+/// resource as renameable; use [`dataset_equivalent_with`] for RDF-semantic
+/// equivalence with a real interpretation.
+pub fn dataset_equivalent<D1, D2, R>(a: &D1, b: &D2) -> bool
+where
+    R: Resource + Ord,
+    D1: TraversableDataset<Subject = R, Predicate = R, Object = R> + Graph<Subject = R, Predicate = R, Object = R>,
+    D2: TraversableDataset<Subject = R, Predicate = R, Object = R> + Graph<Subject = R, Predicate = R, Object = R>,
+    D1: TraversableDataset<Graph = R>,
+    D2: TraversableDataset<Graph = R>,
+{
+    are_isomorphic_with(&BlindInterpretation::<R>::default(), a, b)
+}
+
+/// RDF 1.1 §3.6 graph equivalence under a provided interpretation: graphs
+/// are equivalent iff there is a blank-node bijection between them that
+/// preserves all triples (with IRIs/literals matched exactly via the
+/// interpretation). Wraps [`find_bijection_graph_with`].
+pub fn graph_equivalent_with<I, A, B>(interpretation: &I, a: &A, b: &B) -> bool
 where
     I: ReverseInterpretation,
     I::Resource: Resource + Ord,
@@ -34,9 +124,10 @@ where
     are_isomorphic_graph_with(interpretation, a, b)
 }
 
-/// RDF 1.1 §4.4 dataset equivalence: datasets are equal iff a blank-node
-/// bijection exists between them. Wraps [`find_bijection_with`].
-pub fn dataset_equivalent<I, A, B>(interpretation: &I, a: &A, b: &B) -> bool
+/// RDF 1.1 §4.4 dataset equivalence under a provided interpretation: datasets
+/// are equivalent iff there is a blank-node bijection between them that
+/// preserves all quads. Wraps [`find_bijection_with`].
+pub fn dataset_equivalent_with<I, A, B>(interpretation: &I, a: &A, b: &B) -> bool
 where
     I: ReverseInterpretation,
     I::Resource: Resource + Ord,
