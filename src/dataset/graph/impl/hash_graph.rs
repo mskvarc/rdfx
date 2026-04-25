@@ -1,7 +1,4 @@
-use std::{
-    fmt::Debug,
-    hash::{BuildHasher, Hash},
-};
+use std::{fmt::Debug, hash::Hash};
 
 use hashbrown::HashTable;
 use slab::Slab;

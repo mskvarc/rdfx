@@ -1,7 +1,4 @@
-use std::{
-    fmt::Debug,
-    hash::{BuildHasher, Hash},
-};
+use std::{fmt::Debug, hash::Hash};
 
 use hashbrown::HashTable;
 use slab::Slab;
@@ -11,7 +8,7 @@ use crate::{
     LocalTerm,
     Quad,
     RdfDisplay,
-    dataset::{DatasetMut, ResourceTraversableDataset, TraversableDataset},
+    dataset::{DatasetMut, IndexedHashDataset, ResourceTraversableDataset, TraversableDataset},
     utils::hash_map::DefaultHashBuilder,
 };
 
@@ -78,6 +75,10 @@ impl<R> HashDataset<R> {
 }
 
 impl<R: Eq + Hash> HashDataset<R> {
+    pub fn into_indexed(self) -> IndexedHashDataset<R> {
+        IndexedHashDataset::from_non_indexed(self)
+    }
+
     fn hash_resource(&self, r: &R) -> u64 {
         self.hasher.hash_one(r)
     }

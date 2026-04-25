@@ -1,8 +1,4 @@
-use std::{
-    cmp::Ordering,
-    fmt::Debug,
-    hash::{BuildHasher, Hash},
-};
+use std::{cmp::Ordering, fmt::Debug, hash::Hash};
 
 use hashbrown::HashTable;
 use slab::Slab;
