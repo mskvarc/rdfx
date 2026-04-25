@@ -8,10 +8,17 @@ use slab::Slab;
 
 use super::{super::Dataset, btree_dataset::Resource};
 use crate::{
+    BlankIdBuf,
     LocalTerm,
     Quad,
     RdfDisplay,
-    dataset::{DatasetMut, IndexedHashDataset, ResourceTraversableDataset, TraversableDataset},
+    dataset::{
+        DatasetMut,
+        IndexedHashDataset,
+        ResourceTraversableDataset,
+        TraversableDataset,
+        isomorphism::{HashBijection, are_isomorphic_hash, find_hash_bijection},
+    },
     utils::hash_map::DefaultHashBuilder,
 };
 
@@ -229,6 +236,38 @@ impl<R: Clone + Eq + Hash> Extend<Quad<R>> for HashDataset<R> {
         for quad in iter {
             self.insert(quad);
         }
+    }
+}
+
+impl<R: Clone + Eq + Hash> HashDataset<R> {
+    /// Inserts every quad of `iter` in the dataset.
+    pub fn absorb<I: IntoIterator<Item = Quad<R>>>(&mut self, iter: I) {
+        self.extend(iter);
+    }
+}
+
+impl HashDataset<LocalTerm> {
+    /// Returns a blank-node bijection from `self` to `other` if one exists.
+    pub fn find_blank_id_bijection<'a, 'b>(&'a self, other: &'b Self) -> Option<HashBijection<'a, 'b>> {
+        find_hash_bijection(self, other)
+    }
+
+    /// Checks if `self` and `other` are isomorphic.
+    pub fn is_isomorphic_to(&self, other: &Self) -> bool {
+        are_isomorphic_hash(self, other)
+    }
+
+    /// Returns a copy of `self` with each blank node identifier replaced by the
+    /// result of `f`.
+    pub fn substitute_blank_ids(self, mut f: impl FnMut(BlankIdBuf) -> BlankIdBuf) -> Self {
+        self.into_iter()
+            .map(|q| {
+                q.map(|t| match t {
+                    LocalTerm::Anonymous(b) => LocalTerm::Anonymous(f(b)),
+                    named => named,
+                })
+            })
+            .collect()
     }
 }
 

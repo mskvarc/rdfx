@@ -6,10 +6,17 @@ use slab::Slab;
 
 use super::super::Dataset;
 use crate::{
+    BlankIdBuf,
     LocalTerm,
     Quad,
     RdfDisplay,
-    dataset::{DatasetMut, IndexedBTreeDataset, ResourceTraversableDataset, TraversableDataset},
+    dataset::{
+        DatasetMut,
+        IndexedBTreeDataset,
+        ResourceTraversableDataset,
+        TraversableDataset,
+        isomorphism::{BTreeBijection, are_isomorphic, find_bijection},
+    },
 };
 
 fn resource_cmp<R: Ord>(resources: &Slab<Resource<R>>) -> impl '_ + Fn(&usize, &R) -> Ordering {
@@ -271,6 +278,38 @@ impl<R: Clone + Ord> Extend<Quad<R>> for BTreeDataset<R> {
         for quad in iter {
             self.insert(quad);
         }
+    }
+}
+
+impl<R: Clone + Ord> BTreeDataset<R> {
+    /// Inserts every quad of `iter` in the dataset.
+    pub fn absorb<I: IntoIterator<Item = Quad<R>>>(&mut self, iter: I) {
+        self.extend(iter);
+    }
+}
+
+impl BTreeDataset<LocalTerm> {
+    /// Returns a blank-node bijection from `self` to `other` if one exists.
+    pub fn find_blank_id_bijection<'a, 'b>(&'a self, other: &'b Self) -> Option<BTreeBijection<'a, 'b>> {
+        find_bijection(self, other)
+    }
+
+    /// Checks if `self` and `other` are isomorphic.
+    pub fn is_isomorphic_to(&self, other: &Self) -> bool {
+        are_isomorphic(self, other)
+    }
+
+    /// Returns a copy of `self` with each blank node identifier replaced by the
+    /// result of `f`.
+    pub fn substitute_blank_ids(self, mut f: impl FnMut(BlankIdBuf) -> BlankIdBuf) -> Self {
+        self.into_iter()
+            .map(|q| {
+                q.map(|t| match t {
+                    LocalTerm::Anonymous(b) => LocalTerm::Anonymous(f(b)),
+                    named => named,
+                })
+            })
+            .collect()
     }
 }
 

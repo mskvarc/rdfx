@@ -9,6 +9,7 @@ use super::{
     BTreeDataset,
 };
 use crate::{
+    BlankIdBuf,
     LocalTerm,
     Quad,
     RdfDisplay,
@@ -22,6 +23,7 @@ use crate::{
         ResourceTraversableDataset,
         SubjectTraversableDataset,
         TraversableDataset,
+        isomorphism::{BTreeBijection, are_isomorphic, find_bijection},
     },
     pattern::{
         CanonicalQuadPattern,
@@ -484,6 +486,53 @@ impl<R: Clone + Ord> Extend<Quad<R>> for IndexedBTreeDataset<R> {
         for quad in iter {
             self.insert(quad);
         }
+    }
+}
+
+impl<R: Clone + Ord> IndexedBTreeDataset<R> {
+    /// Inserts every quad of `iter` in the dataset.
+    pub fn absorb<I: IntoIterator<Item = Quad<R>>>(&mut self, iter: I) {
+        self.extend(iter);
+    }
+
+    /// Removes the given quad and returns it if it was present.
+    pub fn take(&mut self, quad: Quad<&R>) -> Option<Quad<R>> {
+        let i = self.index_of_quad(quad)?;
+        let value = quad_with_resources(&self.resources, self.quads[i]).cloned();
+        self.remove_by_index(i, true);
+        Some(value)
+    }
+
+    /// Removes and returns the first quad matching the given option-pattern, if any.
+    pub fn take_match(&mut self, pattern: Quad<Option<&R>, Option<&R>, Option<&R>, Option<&R>>) -> Option<Quad<R>> {
+        let canonical = CanonicalQuadPattern::from_option_quad(pattern);
+        self.extract_pattern_matching(canonical).next()
+    }
+}
+
+impl IndexedBTreeDataset<LocalTerm> {
+    /// Returns a blank-node bijection from `self` to `other` if one exists.
+    pub fn find_blank_id_bijection<'a, 'b>(&'a self, other: &'b Self) -> Option<BTreeBijection<'a, 'b>> {
+        find_bijection(self, other)
+    }
+
+    /// Checks if `self` and `other` are isomorphic.
+    pub fn is_isomorphic_to(&self, other: &Self) -> bool {
+        are_isomorphic(self, other)
+    }
+
+    /// Returns a copy of `self` with each blank node identifier replaced by the
+    /// result of `f`.
+    pub fn substitute_blank_ids(self, mut f: impl FnMut(BlankIdBuf) -> BlankIdBuf) -> Self {
+        self.into_iter()
+            .map(|q| {
+                q.map(|t| match t {
+                    LocalTerm::Anonymous(b) => LocalTerm::Anonymous(f(b)),
+                    named => named,
+                })
+            })
+            .collect::<crate::dataset::BTreeDataset<LocalTerm>>()
+            .into_indexed()
     }
 }
 

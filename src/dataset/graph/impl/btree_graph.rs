@@ -6,10 +6,16 @@ use slab::Slab;
 
 use super::{super::Graph, IndexedBTreeGraph};
 use crate::{
+    BlankIdBuf,
     LocalTerm,
     RdfDisplay,
     Triple,
-    dataset::{GraphMut, ResourceTraversableGraph, TraversableGraph},
+    dataset::{
+        GraphMut,
+        ResourceTraversableGraph,
+        TraversableGraph,
+        isomorphism::{BTreeBijection, are_isomorphic, find_bijection},
+    },
 };
 
 fn resource_cmp<R: Ord>(resources: &Slab<Resource<R>>) -> impl '_ + Fn(&usize, &R) -> Ordering {
@@ -223,6 +229,38 @@ impl<R: Clone + Ord> Extend<Triple<R>> for BTreeGraph<R> {
         for triple in iter {
             self.insert(triple);
         }
+    }
+}
+
+impl<R: Clone + Ord> BTreeGraph<R> {
+    /// Inserts every triple of `iter` in the graph.
+    pub fn absorb<I: IntoIterator<Item = Triple<R>>>(&mut self, iter: I) {
+        self.extend(iter);
+    }
+}
+
+impl BTreeGraph<LocalTerm> {
+    /// Returns a blank-node bijection from `self` to `other` if one exists.
+    pub fn find_blank_id_bijection<'a, 'b>(&'a self, other: &'b Self) -> Option<BTreeBijection<'a, 'b>> {
+        find_bijection(self, other)
+    }
+
+    /// Checks if `self` and `other` are isomorphic.
+    pub fn is_isomorphic_to(&self, other: &Self) -> bool {
+        are_isomorphic(self, other)
+    }
+
+    /// Returns a copy of `self` with each blank node identifier replaced by the
+    /// result of `f`.
+    pub fn substitute_blank_ids(self, mut f: impl FnMut(BlankIdBuf) -> BlankIdBuf) -> Self {
+        self.into_iter()
+            .map(|t| {
+                t.map(|x| match x {
+                    LocalTerm::Anonymous(b) => LocalTerm::Anonymous(f(b)),
+                    named => named,
+                })
+            })
+            .collect()
     }
 }
 

@@ -7,10 +7,18 @@ use hashbrown::HashTable;
 use slab::Slab;
 
 use crate::{
+    BlankIdBuf,
     LocalTerm,
     RdfDisplay,
     Triple,
-    dataset::{Graph, GraphMut, IndexedHashGraph, ResourceTraversableGraph, TraversableGraph},
+    dataset::{
+        Graph,
+        GraphMut,
+        IndexedHashGraph,
+        ResourceTraversableGraph,
+        TraversableGraph,
+        isomorphism::{HashBijection, are_isomorphic_hash, find_hash_bijection},
+    },
     utils::hash_map::DefaultHashBuilder,
 };
 
@@ -212,6 +220,38 @@ impl<R: Clone + Eq + Hash> Extend<Triple<R>> for HashGraph<R> {
         for triple in iter {
             self.insert(triple);
         }
+    }
+}
+
+impl<R: Clone + Eq + Hash> HashGraph<R> {
+    /// Inserts every triple of `iter` in the graph.
+    pub fn absorb<I: IntoIterator<Item = Triple<R>>>(&mut self, iter: I) {
+        self.extend(iter);
+    }
+}
+
+impl HashGraph<LocalTerm> {
+    /// Returns a blank-node bijection from `self` to `other` if one exists.
+    pub fn find_blank_id_bijection<'a, 'b>(&'a self, other: &'b Self) -> Option<HashBijection<'a, 'b>> {
+        find_hash_bijection(self, other)
+    }
+
+    /// Checks if `self` and `other` are isomorphic.
+    pub fn is_isomorphic_to(&self, other: &Self) -> bool {
+        are_isomorphic_hash(self, other)
+    }
+
+    /// Returns a copy of `self` with each blank node identifier replaced by the
+    /// result of `f`.
+    pub fn substitute_blank_ids(self, mut f: impl FnMut(BlankIdBuf) -> BlankIdBuf) -> Self {
+        self.into_iter()
+            .map(|t| {
+                t.map(|x| match x {
+                    LocalTerm::Anonymous(b) => LocalTerm::Anonymous(f(b)),
+                    named => named,
+                })
+            })
+            .collect()
     }
 }
 
