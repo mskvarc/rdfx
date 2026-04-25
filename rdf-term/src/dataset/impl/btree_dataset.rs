@@ -119,75 +119,87 @@ impl<R: Ord> BTreeDataset<R> {
     /// Returns `true` if the quad was not already in the dataset, and `false`
     /// if it was.
     pub fn insert(&mut self, quad: Quad<R>) -> bool {
-        if self.contains(quad.as_ref()) {
-            false
-        } else {
-            let s_i = self.index_of_resource(&quad.0);
-            let p_i = self.index_of_resource(&quad.1);
-            let o_i = self.index_of_resource(&quad.2);
-            let g_i = quad.3.map(|g| {
-                let g_i = self.index_of_resource(&g);
-                (g, g_i)
-            });
+        // Resolve resources first. If any is missing, the quad cannot exist,
+        // so we skip the dedup check that walks `quads_indexes`.
+        let s_i_pre = self.index_of_resource(&quad.0);
+        let p_i_pre = self.index_of_resource(&quad.1);
+        let o_i_pre = self.index_of_resource(&quad.2);
+        let g_i_pre = quad.3.as_ref().map(|g| self.index_of_resource(g));
 
-            let e = self.quads.vacant_entry();
-            let i = e.key();
+        let g_existing = match g_i_pre {
+            Some(Some(g_i)) => Some(Some(g_i)),
+            None => Some(None),
+            Some(None) => None,
+        };
 
-            let s_i = match s_i {
-                Some(s_i) => {
-                    self.resources[s_i].occurrences += 1;
-                    s_i
-                }
-                None => {
-                    let s_i = self.resources.insert(Resource::new(quad.0));
-                    self.resources_indexes.insert(resource_index_cmp(&self.resources), s_i);
-                    s_i
-                }
-            };
-
-            let p_i = match p_i {
-                Some(p_i) => {
-                    self.resources[p_i].occurrences += 1;
-                    p_i
-                }
-                None => {
-                    let p_i = self.resources.insert(Resource::new(quad.1));
-                    self.resources_indexes.insert(resource_index_cmp(&self.resources), p_i);
-                    p_i
-                }
-            };
-
-            let o_i = match o_i {
-                Some(o_i) => {
-                    self.resources[o_i].occurrences += 1;
-                    o_i
-                }
-                None => {
-                    let o_i = self.resources.insert(Resource::new(quad.2));
-                    self.resources_indexes.insert(resource_index_cmp(&self.resources), o_i);
-                    o_i
-                }
-            };
-
-            let g_i = match g_i {
-                Some((_, Some(g_i))) => {
-                    self.resources[g_i].occurrences += 1;
-                    Some(g_i)
-                }
-                Some((g, None)) => {
-                    let g_i = self.resources.insert(Resource::new(g));
-                    self.resources_indexes.insert(resource_index_cmp(&self.resources), g_i);
-                    Some(g_i)
-                }
-                None => None,
-            };
-
-            e.insert(Quad(s_i, p_i, o_i, g_i));
-
-            self.quads_indexes.insert(quad_index_cmp(&self.resources, &self.quads), i);
-
-            true
+        if let (Some(s_i), Some(p_i), Some(o_i), Some(g_slot)) = (s_i_pre, p_i_pre, o_i_pre, g_existing) {
+            let target = Quad(s_i, p_i, o_i, g_slot);
+            let resources = &self.resources;
+            let quads = &self.quads;
+            let cmp = |i: &usize, t: &Quad<usize>| quad_with_resources(resources, quads[*i]).cmp(&quad_with_resources(resources, *t));
+            if self.quads_indexes.get(cmp, &target).is_some() {
+                return false;
+            }
         }
+
+        let e = self.quads.vacant_entry();
+        let i = e.key();
+
+        let s_i = match s_i_pre {
+            Some(s_i) => {
+                self.resources[s_i].occurrences += 1;
+                s_i
+            }
+            None => {
+                let s_i = self.resources.insert(Resource::new(quad.0));
+                self.resources_indexes.insert(resource_index_cmp(&self.resources), s_i);
+                s_i
+            }
+        };
+
+        let p_i = match p_i_pre {
+            Some(p_i) => {
+                self.resources[p_i].occurrences += 1;
+                p_i
+            }
+            None => {
+                let p_i = self.resources.insert(Resource::new(quad.1));
+                self.resources_indexes.insert(resource_index_cmp(&self.resources), p_i);
+                p_i
+            }
+        };
+
+        let o_i = match o_i_pre {
+            Some(o_i) => {
+                self.resources[o_i].occurrences += 1;
+                o_i
+            }
+            None => {
+                let o_i = self.resources.insert(Resource::new(quad.2));
+                self.resources_indexes.insert(resource_index_cmp(&self.resources), o_i);
+                o_i
+            }
+        };
+
+        let g_i = match (quad.3, g_i_pre) {
+            (_, Some(Some(g_i))) => {
+                self.resources[g_i].occurrences += 1;
+                Some(g_i)
+            }
+            (Some(g), Some(None)) => {
+                let g_i = self.resources.insert(Resource::new(g));
+                self.resources_indexes.insert(resource_index_cmp(&self.resources), g_i);
+                Some(g_i)
+            }
+            (None, None) => None,
+            (Some(_), None) | (None, Some(_)) => unreachable!(),
+        };
+
+        e.insert(Quad(s_i, p_i, o_i, g_i));
+
+        self.quads_indexes.insert(quad_index_cmp(&self.resources, &self.quads), i);
+
+        true
     }
 
     /// Removes the given quad from the dataset.
