@@ -53,7 +53,9 @@ impl crate::Generator for Uuid {
         let len = uuid.urn().encode_lower(buffer.as_mut()).len();
         buffer.truncate(len);
         let s = unsafe { String::from_utf8_unchecked(buffer) };
-        crate::Term::Iri(iri_rs::IriBuf::parse(s).unwrap())
+        // The encoded UUID URN (`urn:uuid:<hex>`) is statically a valid IRI;
+        // skip re-parsing/validation.
+        crate::Term::Iri(iri_rs::IriBuf::parse_unchecked(s))
     }
 }
 
