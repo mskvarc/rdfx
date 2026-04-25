@@ -38,6 +38,14 @@ macro_rules! generalized_triple {
         )),) $($rest)*)
     };
     {
+        @from ($($acc:tt)*) $value:literal @ $lang:literal $($rest:tt)*
+    } => {
+        $crate::generalized_triple!(@from ($($acc)* $crate::LocalTerm::literal($crate::Literal::lang_string(
+            $value.to_owned(),
+            <$crate::langtag::LangTagBuf as ::std::str::FromStr>::from_str($lang).expect("compile-time lang tag is well-formed BCP47")
+        )),) $($rest)*)
+    };
+    {
         @from ($($acc:tt)*) $value:literal $($rest:tt)*
     } => {
         $crate::generalized_triple!(@from ($($acc)* $crate::LocalTerm::literal($crate::Literal::plain($value.to_owned())),) $($rest)*)
@@ -91,6 +99,11 @@ macro_rules! generalized_triples {
         @tokenize [$($acc:tt)*] [$($current:tt)*] ^ $($rest:tt)*
     } => {
         $crate::generalized_triples!(@tokenize [$($acc)*] [$($current)* ^] $($rest)*)
+    };
+    {
+        @tokenize [$($acc:tt)*] [$($current:tt)*] @ $($rest:tt)*
+    } => {
+        $crate::generalized_triples!(@tokenize [$($acc)*] [$($current)* @] $($rest)*)
     };
     {
         @tokenize [$($acc:tt)*] [$($current:tt)*] $l:literal $($rest:tt)*
@@ -156,6 +169,14 @@ macro_rules! generalized_quad {
         )),) $($rest)*)
     };
     {
+        @from ($($acc:tt)*) $value:literal @ $lang:literal $($rest:tt)*
+    } => {
+        $crate::generalized_quad!(@from ($($acc)* $crate::LocalTerm::literal($crate::Literal::lang_string(
+            $value.to_owned(),
+            <$crate::langtag::LangTagBuf as ::std::str::FromStr>::from_str($lang).expect("compile-time lang tag is well-formed BCP47")
+        )),) $($rest)*)
+    };
+    {
         @from ($($acc:tt)*) $value:literal $($rest:tt)*
     } => {
         $crate::generalized_quad!(@from ($($acc)* $crate::LocalTerm::literal($crate::Literal::plain($value.to_owned())),) $($rest)*)
@@ -217,6 +238,14 @@ macro_rules! generalized_quad_pattern {
         ))),) $($rest)*)
     };
     {
+        @from ($($acc:tt)*) $value:literal @ $lang:literal $($rest:tt)*
+    } => {
+        $crate::generalized_quad_pattern!(@from ($($acc)* $crate::pattern::ResourceOrVar::Resource($crate::LocalTerm::literal($crate::Literal::lang_string(
+            $value.to_owned(),
+            <$crate::langtag::LangTagBuf as ::std::str::FromStr>::from_str($lang).expect("compile-time lang tag is well-formed BCP47")
+        ))),) $($rest)*)
+    };
+    {
         @from ($($acc:tt)*) $value:literal $($rest:tt)*
     } => {
         $crate::generalized_quad_pattern!(@from ($($acc)* $crate::pattern::ResourceOrVar::Resource($crate::LocalTerm::literal($crate::Literal::plain($value.to_owned()))),) $($rest)*)
@@ -275,6 +304,11 @@ macro_rules! generalized_quads {
         @tokenize [$($acc:tt)*] [$($current:tt)*] ^ $($rest:tt)*
     } => {
         $crate::generalized_quads!(@tokenize [$($acc)*] [$($current)* ^] $($rest)*)
+    };
+    {
+        @tokenize [$($acc:tt)*] [$($current:tt)*] @ $($rest:tt)*
+    } => {
+        $crate::generalized_quads!(@tokenize [$($acc)*] [$($current)* @] $($rest)*)
     };
     {
         @tokenize [$($acc:tt)*] [$($current:tt)*] $l:literal $($rest:tt)*
@@ -375,6 +409,12 @@ macro_rules! triple {
             $crate::Datatype::new($crate::IriBuf::from($crate::iri!($ty))).expect("compile-time IRI is not rdf:langString")
         )),))
     };
+    { @obj ($($acc:tt)*) $value:literal @ $lang:literal } => {
+        $crate::triple!(@end ($($acc)* $crate::LocalTerm::literal($crate::Literal::lang_string(
+            $value.to_owned(),
+            <$crate::langtag::LangTagBuf as ::std::str::FromStr>::from_str($lang).expect("compile-time lang tag is well-formed BCP47")
+        )),))
+    };
     { @obj ($($acc:tt)*) $value:literal } => {
         $crate::triple!(@end ($($acc)* $crate::LocalTerm::literal($crate::Literal::plain($value.to_owned())),))
     };
@@ -441,6 +481,12 @@ macro_rules! quad {
         $crate::quad!(@graph ($($acc)* $crate::LocalTerm::literal($crate::Literal::typed(
             $value.to_owned(),
             $crate::Datatype::new($crate::IriBuf::from($crate::iri!($ty))).expect("compile-time IRI is not rdf:langString")
+        )),) $($rest)*)
+    };
+    { @obj ($($acc:tt)*) $value:literal @ $lang:literal $($rest:tt)* } => {
+        $crate::quad!(@graph ($($acc)* $crate::LocalTerm::literal($crate::Literal::lang_string(
+            $value.to_owned(),
+            <$crate::langtag::LangTagBuf as ::std::str::FromStr>::from_str($lang).expect("compile-time lang tag is well-formed BCP47")
         )),) $($rest)*)
     };
     { @obj ($($acc:tt)*) $value:literal $($rest:tt)* } => {
@@ -516,6 +562,11 @@ macro_rules! triples {
         $crate::triples!(@tokenize [$($acc)*] [$($current)* ^] $($rest)*)
     };
     {
+        @tokenize [$($acc:tt)*] [$($current:tt)*] @ $($rest:tt)*
+    } => {
+        $crate::triples!(@tokenize [$($acc)*] [$($current)* @] $($rest)*)
+    };
+    {
         @tokenize [$($acc:tt)*] [$($current:tt)*] $l:literal $($rest:tt)*
     } => {
         $crate::triples!(@tokenize [$($acc)*] [$($current)* $l] $($rest)*)
@@ -584,6 +635,11 @@ macro_rules! quads {
         @tokenize [$($acc:tt)*] [$($current:tt)*] ^ $($rest:tt)*
     } => {
         $crate::quads!(@tokenize [$($acc)*] [$($current)* ^] $($rest)*)
+    };
+    {
+        @tokenize [$($acc:tt)*] [$($current:tt)*] @ $($rest:tt)*
+    } => {
+        $crate::quads!(@tokenize [$($acc)*] [$($current)* @] $($rest)*)
     };
     {
         @tokenize [$($acc:tt)*] [$($current:tt)*] $l:literal $($rest:tt)*
@@ -679,6 +735,12 @@ macro_rules! triple_pattern {
             $crate::Datatype::new($crate::IriBuf::from($crate::iri!($ty))).expect("compile-time IRI is not rdf:langString")
         ))),))
     };
+    { @obj ($($acc:tt)*) $value:literal @ $lang:literal } => {
+        $crate::triple_pattern!(@end ($($acc)* $crate::pattern::ResourceOrVar::Resource($crate::LocalTerm::literal($crate::Literal::lang_string(
+            $value.to_owned(),
+            <$crate::langtag::LangTagBuf as ::std::str::FromStr>::from_str($lang).expect("compile-time lang tag is well-formed BCP47")
+        ))),))
+    };
     { @obj ($($acc:tt)*) $value:literal } => {
         $crate::triple_pattern!(@end ($($acc)* $crate::pattern::ResourceOrVar::Resource($crate::LocalTerm::literal($crate::Literal::plain($value.to_owned()))),))
     };
@@ -747,6 +809,12 @@ macro_rules! quad_pattern {
         $crate::quad_pattern!(@graph ($($acc)* $crate::pattern::ResourceOrVar::Resource($crate::LocalTerm::literal($crate::Literal::typed(
             $value.to_owned(),
             $crate::Datatype::new($crate::IriBuf::from($crate::iri!($ty))).expect("compile-time IRI is not rdf:langString")
+        ))),) $($rest)*)
+    };
+    { @obj ($($acc:tt)*) $value:literal @ $lang:literal $($rest:tt)* } => {
+        $crate::quad_pattern!(@graph ($($acc)* $crate::pattern::ResourceOrVar::Resource($crate::LocalTerm::literal($crate::Literal::lang_string(
+            $value.to_owned(),
+            <$crate::langtag::LangTagBuf as ::std::str::FromStr>::from_str($lang).expect("compile-time lang tag is well-formed BCP47")
         ))),) $($rest)*)
     };
     { @obj ($($acc:tt)*) $value:literal $($rest:tt)* } => {

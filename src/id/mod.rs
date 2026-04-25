@@ -103,8 +103,14 @@ impl From<BlankIdBuf> for Id {
 impl Hash for Id {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         match self {
-            Self::BlankId(id) => id.hash(state),
-            Self::Iri(iri) => iri.hash(state),
+            Self::BlankId(id) => {
+                state.write_u8(0);
+                id.hash(state);
+            }
+            Self::Iri(iri) => {
+                state.write_u8(1);
+                iri.hash(state);
+            }
         }
     }
 }

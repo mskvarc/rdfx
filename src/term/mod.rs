@@ -111,8 +111,14 @@ impl From<Literal> for Term {
 impl Hash for Term {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         match self {
-            Self::Iri(id) => id.hash(state),
-            Self::Literal(l) => l.hash(state),
+            Self::Iri(id) => {
+                state.write_u8(0);
+                id.hash(state);
+            }
+            Self::Literal(l) => {
+                state.write_u8(1);
+                l.hash(state);
+            }
         }
     }
 }

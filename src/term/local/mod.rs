@@ -102,8 +102,14 @@ impl From<BlankIdBuf> for LocalTerm {
 impl Hash for LocalTerm {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         match self {
-            Self::BlankId(id) => id.hash(state),
-            Self::Named(l) => l.hash(state),
+            Self::BlankId(id) => {
+                state.write_u8(0);
+                id.hash(state);
+            }
+            Self::Named(l) => {
+                state.write_u8(1);
+                l.hash(state);
+            }
         }
     }
 }

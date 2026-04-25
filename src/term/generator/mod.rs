@@ -1,7 +1,7 @@
 use crate::{LocalTerm, Term};
 
 mod blank;
-pub use blank::Blank;
+pub use blank::{Blank, InvalidBlankPrefix};
 
 mod uuid;
 pub use uuid::Uuid;

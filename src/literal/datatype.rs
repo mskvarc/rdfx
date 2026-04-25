@@ -24,7 +24,7 @@ pub struct RdfLangStringDatatypeError(pub IriBuf);
 ///
 /// [s]: https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize), serde(transparent))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize), serde(transparent))]
 pub struct Datatype(IriBuf);
 
 impl Datatype {
@@ -104,6 +104,7 @@ impl TryFrom<IriBuf> for Datatype {
 
 /// Borrowed counterpart of [`Datatype`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize), serde(transparent))]
 pub struct DatatypeRef<'a>(Iri<&'a str>);
 
 impl<'a> DatatypeRef<'a> {
@@ -152,3 +153,19 @@ impl RdfDisplay for DatatypeRef<'_> {
 
 /// Owned-or-borrowed [`Datatype`].
 pub type CowDatatype<'a> = Cow<'a, Datatype>;
+
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for Datatype {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let iri = IriBuf::deserialize(deserializer)?;
+        Datatype::new(iri).map_err(|RdfLangStringDatatypeError(bad)| {
+            <D::Error as serde::de::Error>::invalid_value(
+                serde::de::Unexpected::Str(bad.as_str()),
+                &"a non-rdf:langString datatype IRI",
+            )
+        })
+    }
+}

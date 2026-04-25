@@ -6,7 +6,7 @@ pub enum ResourceOrVar<T, X> {
     Var(X),
 }
 
-impl<T: crate::sealed::Sealed, X> crate::sealed::Sealed for ResourceOrVar<T, X> {}
+impl<T: crate::__seal::Sealed, X> crate::__seal::Sealed for ResourceOrVar<T, X> {}
 impl<T: crate::IsSubject, X> crate::IsSubject for ResourceOrVar<T, X> {}
 impl<T: crate::IsPredicate, X> crate::IsPredicate for ResourceOrVar<T, X> {}
 impl<T: crate::IsObject, X> crate::IsObject for ResourceOrVar<T, X> {}

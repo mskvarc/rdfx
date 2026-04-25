@@ -9,7 +9,7 @@
 //!
 //! [`IsSubject`], [`IsPredicate`], [`IsObject`], [`IsGraph`] are sealed:
 //! only this crate (for lexical RDF types) and types declared via
-//! [`impl_resource!`] (the unsealed [`Resource`] marker) may satisfy them.
+//! [`impl_resource!`](crate::impl_resource!) (the unsealed [`Resource`] marker) may satisfy them.
 //!
 //! Generalized RDF (RDF 1.1 §A) — literals as subjects, blank nodes as
 //! predicates — is opt-in via the parallel `Generalized*` types, which place
@@ -40,29 +40,36 @@ use crate::{
 };
 
 #[doc(hidden)]
-pub mod sealed {
+pub mod __seal {
+    /// Internal sealing trait. **Do not implement.**
+    ///
+    /// This trait is the supertrait of [`super::IsSubject`], [`super::IsPredicate`],
+    /// [`super::IsObject`], and [`super::IsGraph`]. Implementing it bypasses the
+    /// position-bound invariants RDF 1.1 §3 / §4 enforce. Use the
+    /// [`impl_resource!`](crate::impl_resource!) macro to opt a type into every
+    /// position; lexical RDF types are sealed by this crate directly.
     pub trait Sealed {}
 }
 
 /// Types that may appear in the subject position of an RDF triple/quad.
-pub trait IsSubject: sealed::Sealed {}
+pub trait IsSubject: __seal::Sealed {}
 /// Types that may appear in the predicate position of an RDF triple/quad.
-pub trait IsPredicate: sealed::Sealed {}
+pub trait IsPredicate: __seal::Sealed {}
 /// Types that may appear in the object position of an RDF triple/quad.
-pub trait IsObject: sealed::Sealed {}
+pub trait IsObject: __seal::Sealed {}
 /// Types that may appear in the graph-name position of an RDF quad.
-pub trait IsGraph: sealed::Sealed {}
+pub trait IsGraph: __seal::Sealed {}
 
 /// Marker trait for opaque resource handles (e.g. interpretation indices).
 ///
-/// Implement via [`impl_resource!`], which also emits the four position-trait
+/// Implement via [`impl_resource!`](crate::impl_resource!), which also emits the four position-trait
 /// impls so the type is usable in every position. The supertraits make
 /// `R: Resource` propagate position-trait bounds automatically — concrete
 /// `Resource` impls must also satisfy [`IsSubject`], [`IsPredicate`],
 /// [`IsObject`], and [`IsGraph`], which `impl_resource!` handles.
 pub trait Resource: IsSubject + IsPredicate + IsObject + IsGraph {}
 
-impl<T: sealed::Sealed + ?Sized> sealed::Sealed for &T {}
+impl<T: __seal::Sealed + ?Sized> __seal::Sealed for &T {}
 impl<T: IsSubject + ?Sized> IsSubject for &T {}
 impl<T: IsPredicate + ?Sized> IsPredicate for &T {}
 impl<T: IsObject + ?Sized> IsObject for &T {}
@@ -71,7 +78,7 @@ impl<T: Resource + ?Sized> Resource for &T {}
 
 // Option-of-position is also a position — used by canonical pattern types
 // where `None` denotes "any".
-impl<T: sealed::Sealed> sealed::Sealed for Option<T> {}
+impl<T: __seal::Sealed> __seal::Sealed for Option<T> {}
 impl<T: IsSubject> IsSubject for Option<T> {}
 impl<T: IsPredicate> IsPredicate for Option<T> {}
 impl<T: IsObject> IsObject for Option<T> {}
@@ -79,7 +86,7 @@ impl<T: IsGraph> IsGraph for Option<T> {}
 
 macro_rules! impl_iri_positions {
     ($t:ty) => {
-        impl sealed::Sealed for $t {}
+        impl __seal::Sealed for $t {}
         impl IsSubject for $t {}
         impl IsPredicate for $t {}
         impl IsObject for $t {}
@@ -87,13 +94,15 @@ macro_rules! impl_iri_positions {
     };
 }
 
+
+
 impl_iri_positions!(IriBuf);
 impl_iri_positions!(Iri<&'_ str>);
 impl_iri_positions!(Cow<'_, IriBuf>);
 
 macro_rules! impl_id_positions {
     ($t:ty) => {
-        impl sealed::Sealed for $t {}
+        impl __seal::Sealed for $t {}
         impl IsSubject for $t {}
         impl IsObject for $t {}
         impl IsGraph for $t {}
@@ -109,7 +118,7 @@ impl_id_positions!(CowId<'_>);
 
 macro_rules! impl_obj_positions {
     ($t:ty) => {
-        impl sealed::Sealed for $t {}
+        impl __seal::Sealed for $t {}
         impl IsObject for $t {}
     };
 }
@@ -130,7 +139,7 @@ impl_obj_positions!(CowLocalTerm<'_>);
 macro_rules! impl_resource {
     ($t:ty) => {
         impl $crate::Resource for $t {}
-        impl $crate::sealed::Sealed for $t {}
+        impl $crate::__seal::Sealed for $t {}
         impl $crate::IsSubject for $t {}
         impl $crate::IsPredicate for $t {}
         impl $crate::IsObject for $t {}
@@ -146,7 +155,7 @@ impl_resource!(i64);
 impl_resource!(String);
 
 impl Resource for str {}
-impl sealed::Sealed for str {}
+impl __seal::Sealed for str {}
 impl IsSubject for str {}
 impl IsPredicate for str {}
 impl IsObject for str {}

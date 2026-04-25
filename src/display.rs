@@ -62,9 +62,12 @@ impl RdfDisplay for String {
     }
 }
 
-/// Precomputed `\uXX` escape strings for every byte. Six bytes each:
-/// `\`, `u`, `0`, `x`, hex_hi, hex_lo (lowercase). Bypasses `write!` macro
-/// dispatch — escape emission becomes a single `f.write_str` of fixed bytes.
+/// Precomputed N-Triples / Turtle [UCHAR][s] escape strings for every byte.
+/// Six bytes each: `\`, `u`, `0`, `0`, hex_hi, hex_lo (lowercase). Single-byte
+/// codepoints fit in `\u00XX`. Bypasses `write!` macro dispatch — escape
+/// emission becomes a single `f.write_str` of fixed bytes.
+///
+/// [s]: https://www.w3.org/TR/n-triples/#grammar-production-UCHAR
 const IRI_ESC: [[u8; 6]; 256] = {
     let mut t = [[0u8; 6]; 256];
     let mut i = 0usize;
@@ -74,7 +77,7 @@ const IRI_ESC: [[u8; 6]; 256] = {
         t[i][0] = b'\\';
         t[i][1] = b'u';
         t[i][2] = b'0';
-        t[i][3] = b'x';
+        t[i][3] = b'0';
         t[i][4] = if hi < 10 { b'0' + hi } else { b'a' + hi - 10 };
         t[i][5] = if lo < 10 { b'0' + lo } else { b'a' + lo - 10 };
         i += 1;
@@ -254,19 +257,19 @@ mod tests {
 
     #[test]
     fn escapes_each_special() {
-        assert_eq!(render("a<b"), "<a\\u0x3cb>");
-        assert_eq!(render("a>b"), "<a\\u0x3eb>");
-        assert_eq!(render("a\"b"), "<a\\u0x22b>");
-        assert_eq!(render("a{b"), "<a\\u0x7bb>");
-        assert_eq!(render("a}b"), "<a\\u0x7db>");
-        assert_eq!(render("a|b"), "<a\\u0x7cb>");
-        assert_eq!(render("a^b"), "<a\\u0x5eb>");
-        assert_eq!(render("a`b"), "<a\\u0x60b>");
-        assert_eq!(render("a\\b"), "<a\\u0x5cb>");
-        assert_eq!(render("a b"), "<a\\u0x20b>");
-        assert_eq!(render("a\tb"), "<a\\u0x09b>");
-        assert_eq!(render("a\0b"), "<a\\u0x00b>");
-        assert_eq!(render("a\x1fb"), "<a\\u0x1fb>");
+        assert_eq!(render("a<b"), "<a\\u003cb>");
+        assert_eq!(render("a>b"), "<a\\u003eb>");
+        assert_eq!(render("a\"b"), "<a\\u0022b>");
+        assert_eq!(render("a{b"), "<a\\u007bb>");
+        assert_eq!(render("a}b"), "<a\\u007db>");
+        assert_eq!(render("a|b"), "<a\\u007cb>");
+        assert_eq!(render("a^b"), "<a\\u005eb>");
+        assert_eq!(render("a`b"), "<a\\u0060b>");
+        assert_eq!(render("a\\b"), "<a\\u005cb>");
+        assert_eq!(render("a b"), "<a\\u0020b>");
+        assert_eq!(render("a\tb"), "<a\\u0009b>");
+        assert_eq!(render("a\0b"), "<a\\u0000b>");
+        assert_eq!(render("a\x1fb"), "<a\\u001fb>");
     }
 
     #[test]
@@ -292,7 +295,7 @@ mod tests {
             body.replace_range(i..i + 1, "<");
             let mut expected = String::from("<");
             expected.push_str(&body[..i]);
-            expected.push_str("\\u0x3c");
+            expected.push_str("\\u003c");
             expected.push_str(&body[i + 1..]);
             expected.push('>');
             assert_eq!(render(&body), expected, "escape at index {i}");
@@ -302,7 +305,7 @@ mod tests {
     #[test]
     fn all_escapes_back_to_back() {
         let body = "<>\"{|}^`\\";
-        let expected = "<\\u0x3c\\u0x3e\\u0x22\\u0x7b\\u0x7c\\u0x7d\\u0x5e\\u0x60\\u0x5c>";
+        let expected = "<\\u003c\\u003e\\u0022\\u007b\\u007c\\u007d\\u005e\\u0060\\u005c>";
         assert_eq!(render(body), expected);
     }
 }

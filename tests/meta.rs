@@ -8,14 +8,16 @@ use rdf_rs::{
     meta::{Meta, Strip},
 };
 
+type MetaUsize = Meta<usize, u32>;
+type MetaQuadAlias = Meta<Quad<MetaUsize, MetaUsize, MetaUsize, MetaUsize>, u32>;
+
 #[test]
 fn strip_meta_quad_collapses_to_plain_quad() {
     let s: usize = 0;
     let p: usize = 1;
     let o: usize = 2;
 
-    let mq: Meta<Quad<Meta<usize, u32>, Meta<usize, u32>, Meta<usize, u32>, Meta<usize, u32>>, u32> =
-        Meta(Quad(Meta(s, 1), Meta(p, 2), Meta(o, 3), None), 7);
+    let mq: MetaQuadAlias = Meta(Quad(Meta(s, 1), Meta(p, 2), Meta(o, 3), None), 7);
 
     let stripped: Quad<usize, usize, usize, usize> = mq.strip();
     assert_eq!(stripped, Quad(s, p, o, None));

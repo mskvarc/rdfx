@@ -71,3 +71,28 @@ fn literal_type_try_from_iribuf() {
     let bad = LiteralType::try_from(IriBuf::from(RDF_LANG_STRING));
     assert!(bad.is_err());
 }
+
+#[cfg(feature = "serde")]
+#[test]
+fn datatype_serde_rejects_rdf_lang_string() {
+    let json = r#""http://www.w3.org/1999/02/22-rdf-syntax-ns#langString""#;
+    let result: Result<Datatype, _> = serde_json::from_str(json);
+    assert!(result.is_err(), "deserializing rdf:langString into Datatype must fail");
+}
+
+#[cfg(feature = "serde")]
+#[test]
+fn datatype_serde_round_trip_xsd_string() {
+    let dt = Datatype::xsd_string();
+    let json = serde_json::to_string(&dt).unwrap();
+    let parsed: Datatype = serde_json::from_str(&json).unwrap();
+    assert_eq!(parsed, dt);
+}
+
+#[cfg(feature = "serde")]
+#[test]
+fn literal_type_serde_rejects_rdf_lang_string_in_any() {
+    let json = r#"{"Any":"http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"}"#;
+    let result: Result<LiteralType, _> = serde_json::from_str(json);
+    assert!(result.is_err(), "deserializing Any(rdf:langString) must fail");
+}

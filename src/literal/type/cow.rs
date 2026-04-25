@@ -23,7 +23,7 @@ pub enum CowLiteralType<'a> {
 impl CowLiteralType<'_> {
     pub fn as_ref(&self) -> LiteralTypeRef<'_> {
         match self {
-            Self::Any(d) => LiteralTypeRef::Any(d.as_iri()),
+            Self::Any(d) => LiteralTypeRef::Any(d.as_datatype_ref()),
             Self::LangString(l) => LiteralTypeRef::LangString(l),
         }
     }
@@ -45,9 +45,7 @@ impl<'a> From<CowLiteralType<'a>> for LiteralType {
 impl<'a> From<LiteralTypeRef<'a>> for CowLiteralType<'a> {
     fn from(value: LiteralTypeRef<'a>) -> Self {
         match value {
-            // Safety: see `LiteralTypeRef::into_owned` — invariant assumed
-            // upstream.
-            LiteralTypeRef::Any(i) => Self::Any(Cow::Owned(unsafe { Datatype::new_unchecked(i.into()) })),
+            LiteralTypeRef::Any(d) => Self::Any(Cow::Owned(d.to_owned())),
             LiteralTypeRef::LangString(t) => Self::LangString(Cow::Borrowed(t)),
         }
     }

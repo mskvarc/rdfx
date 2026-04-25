@@ -20,6 +20,9 @@
 #[doc(hidden)]
 pub use iri_rs;
 
+#[doc(hidden)]
+pub use langtag;
+
 mod blankid;
 mod display;
 mod generalized;
@@ -40,7 +43,7 @@ pub use id::*;
 pub use literal::*;
 pub use positions::{IsGraph, IsObject, IsPredicate, IsSubject, Resource};
 #[doc(hidden)]
-pub use positions::sealed;
+pub use positions::__seal;
 pub use quad::*;
 pub use schema::*;
 pub use term::*;

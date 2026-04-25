@@ -77,7 +77,7 @@ impl LiteralType {
 
     pub fn as_ref(&self) -> LiteralTypeRef<'_> {
         match self {
-            Self::Any(d) => LiteralTypeRef::Any(d.as_iri()),
+            Self::Any(d) => LiteralTypeRef::Any(d.as_datatype_ref()),
             Self::LangString(l) => LiteralTypeRef::LangString(l),
         }
     }

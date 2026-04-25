@@ -41,7 +41,7 @@ pub use locspan::{Location, Span};
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct Meta<T, M>(pub T, pub M);
 
-impl<T: crate::sealed::Sealed, M> crate::sealed::Sealed for Meta<T, M> {}
+impl<T: crate::__seal::Sealed, M> crate::__seal::Sealed for Meta<T, M> {}
 impl<T: IsSubject, M> IsSubject for Meta<T, M> {}
 impl<T: IsPredicate, M> IsPredicate for Meta<T, M> {}
 impl<T: IsObject, M> IsObject for Meta<T, M> {}

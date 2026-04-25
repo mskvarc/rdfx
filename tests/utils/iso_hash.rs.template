@@ -15,7 +15,7 @@ pub enum TestId {
 }
 
 impl TestId {
-	pub fn is_blank(&self) -> bool {
+	pub const fn is_blank(&self) -> bool {
 		matches!(self, Self::Blank(_))
 	}
 }

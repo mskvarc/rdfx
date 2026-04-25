@@ -243,8 +243,9 @@ where
     B: TraversableGraph<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource>,
 {
     // Project triples as quads with default graph (None).
-    let a_quads: Vec<Quad<&I::Resource, &I::Resource, &I::Resource, &I::Resource>> = a.triples().map(|t| Quad(t.0, t.1, t.2, None)).collect();
-    let b_quads: Vec<Quad<&I::Resource, &I::Resource, &I::Resource, &I::Resource>> = b.triples().map(|t| Quad(t.0, t.1, t.2, None)).collect();
+    type RefQuad<'a, R> = Quad<&'a R, &'a R, &'a R, &'a R>;
+    let a_quads: Vec<RefQuad<I::Resource>> = a.triples().map(|t| Quad(t.0, t.1, t.2, None)).collect();
+    let b_quads: Vec<RefQuad<I::Resource>> = b.triples().map(|t| Quad(t.0, t.1, t.2, None)).collect();
 
     if a_quads.len() != b_quads.len() {
         return None;
