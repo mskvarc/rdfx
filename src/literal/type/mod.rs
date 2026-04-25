@@ -1,8 +1,7 @@
 use core::fmt;
-use iri_rs::IriBuf;
+use iri_rs::{Iri, IriBuf};
 use langtag::{LangTag, LangTagBuf};
 use std::{borrow::Cow, fmt::Write, ops::Deref};
-use iri_rs::Iri;
 
 use crate::{RdfDisplay, XSD_STRING};
 

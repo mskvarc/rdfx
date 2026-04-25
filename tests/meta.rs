@@ -67,8 +67,6 @@ fn round_trip_strip() {
 
 #[test]
 fn meta_quad_full_alias_compiles() {
-    let _q: MetaQuadFull<LocalTerm, LocalTerm, LocalTerm, LocalTerm, u8> = Meta(
-        Quad(Meta(iri_term(0), 0), Meta(iri_term(1), 0), Meta(iri_term(2), 0), None),
-        0,
-    );
+    let _q: MetaQuadFull<LocalTerm, LocalTerm, LocalTerm, LocalTerm, u8> =
+        Meta(Quad(Meta(iri_term(0), 0), Meta(iri_term(1), 0), Meta(iri_term(2), 0), None), 0);
 }

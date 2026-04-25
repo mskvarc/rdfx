@@ -155,11 +155,7 @@ impl<R: Clone + Eq + Hash> HashDataset<R> {
             let h = self.hasher.hash_one(&resolved);
             let resources = &self.resources;
             let quads = &self.quads;
-            if self
-                .quads_indexes
-                .find(h, |&i| quad_with_resources(resources, quads[i]) == resolved)
-                .is_some()
-            {
+            if self.quads_indexes.find(h, |&i| quad_with_resources(resources, quads[i]) == resolved).is_some() {
                 return false;
             }
             precomputed_hash = Some(h);

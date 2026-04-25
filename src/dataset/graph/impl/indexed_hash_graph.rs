@@ -181,7 +181,9 @@ impl<R: Eq + Hash> IndexedHashGraph<R> {
         let h = self.hash_triple(&triple);
         let resources = &self.resources;
         let triples = &self.triples;
-        self.triples_indexes.find(h, |&i| triple_with_resources(resources, triples[i]) == triple).copied()
+        self.triples_indexes
+            .find(h, |&i| triple_with_resources(resources, triples[i]) == triple)
+            .copied()
     }
 
     pub fn contains_resource(&self, r: &R) -> bool {
@@ -266,9 +268,7 @@ impl<R: Clone + Eq + Hash> IndexedHashGraph<R> {
         let h = self.hash_triple(&triple);
         let resources = &self.resources;
         let triples = &self.triples;
-        let entry = self
-            .triples_indexes
-            .find_entry(h, |&i| triple_with_resources(resources, triples[i]) == triple);
+        let entry = self.triples_indexes.find_entry(h, |&i| triple_with_resources(resources, triples[i]) == triple);
 
         let i = match entry {
             Ok(e) => {
@@ -293,7 +293,6 @@ impl<R: Clone + Eq + Hash> IndexedHashGraph<R> {
 
         true
     }
-
 }
 
 impl<R: Eq + Hash> IndexedHashGraph<R> {
