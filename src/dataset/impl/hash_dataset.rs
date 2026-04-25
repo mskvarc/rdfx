@@ -148,6 +148,7 @@ impl<R: Clone + Eq + Hash> HashDataset<R> {
             Some(None) => None,
         };
 
+        let mut precomputed_hash: Option<u64> = None;
         if let (Some(s_i), Some(p_i), Some(o_i), Some(g_slot)) = (s_pre, p_pre, o_pre, g_existing) {
             let target = Quad(s_i, p_i, o_i, g_slot);
             let resolved = quad_with_resources(&self.resources, target);
@@ -161,6 +162,7 @@ impl<R: Clone + Eq + Hash> HashDataset<R> {
             {
                 return false;
             }
+            precomputed_hash = Some(h);
         }
 
         let s_i = self.intern_resource(quad.0, s_pre);
@@ -173,7 +175,10 @@ impl<R: Clone + Eq + Hash> HashDataset<R> {
         };
 
         let stored = Quad(s_i, p_i, o_i, g_i);
-        let h = self.hasher.hash_one(&quad_with_resources(&self.resources, stored));
+        let h = match precomputed_hash {
+            Some(h) => h,
+            None => self.hasher.hash_one(&quad_with_resources(&self.resources, stored)),
+        };
         let i = self.quads.insert(stored);
 
         let hasher = self.hasher.clone();

@@ -136,18 +136,21 @@ impl<R: Clone + Eq + Hash> HashGraph<R> {
         let p_pre = self.index_of_resource(&triple.1);
         let o_pre = self.index_of_resource(&triple.2);
 
+        let mut precomputed_hash: Option<u64> = None;
         if let (Some(s_i), Some(p_i), Some(o_i)) = (s_pre, p_pre, o_pre) {
             let target = Triple(s_i, p_i, o_i);
-            let h = self.hasher.hash_one(&triple_with_resources(&self.resources, target));
+            let resolved = triple_with_resources(&self.resources, target);
+            let h = self.hasher.hash_one(&resolved);
             let resources = &self.resources;
             let triples = &self.triples;
             if self
                 .triples_indexes
-                .find(h, |&i| triple_with_resources(resources, triples[i]) == triple_with_resources(resources, target))
+                .find(h, |&i| triple_with_resources(resources, triples[i]) == resolved)
                 .is_some()
             {
                 return false;
             }
+            precomputed_hash = Some(h);
         }
 
         let s_i = self.intern_resource(triple.0, s_pre);
@@ -155,7 +158,10 @@ impl<R: Clone + Eq + Hash> HashGraph<R> {
         let o_i = self.intern_resource(triple.2, o_pre);
 
         let stored = Triple(s_i, p_i, o_i);
-        let h = self.hasher.hash_one(&triple_with_resources(&self.resources, stored));
+        let h = match precomputed_hash {
+            Some(h) => h,
+            None => self.hasher.hash_one(&triple_with_resources(&self.resources, stored)),
+        };
         let i = self.triples.insert(stored);
 
         let hasher = self.hasher.clone();
