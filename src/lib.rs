@@ -25,6 +25,7 @@ mod display;
 mod id;
 mod literal;
 mod r#macro;
+mod positions;
 mod quad;
 mod schema;
 mod swar;
@@ -35,6 +36,9 @@ pub use blankid::*;
 pub use display::*;
 pub use id::*;
 pub use literal::*;
+pub use positions::{IsGraph, IsObject, IsPredicate, IsSubject, Resource};
+#[doc(hidden)]
+pub use positions::sealed;
 pub use quad::*;
 pub use schema::*;
 pub use term::*;
