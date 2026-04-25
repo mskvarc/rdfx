@@ -3,7 +3,8 @@ use iri_rs::{Iri, IriBuf};
 use langtag::{LangTag, LangTagBuf};
 use std::{borrow::Cow, fmt::Write, ops::Deref};
 
-use crate::{Datatype, RdfDisplay, RdfLangStringDatatypeError, XSD_STRING};
+use super::{Datatype, RdfLangStringDatatypeError};
+use crate::{RdfDisplay, XSD_STRING};
 
 mod r#ref;
 pub use r#ref::*;

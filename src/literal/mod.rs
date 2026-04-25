@@ -1,6 +1,9 @@
 use crate::RdfDisplay;
-use langtag::LangTag;
+use langtag::{LangTag, LangTagBuf};
 use std::{borrow::Borrow, fmt};
+
+mod datatype;
+pub use datatype::*;
 
 mod r#ref;
 pub use r#ref::*;
@@ -10,9 +13,6 @@ pub use cow::*;
 
 mod r#type;
 pub use r#type::*;
-
-mod datatype;
-pub use datatype::*;
 
 /// RDF Literal.
 #[derive(Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
@@ -30,6 +30,35 @@ impl Literal {
         Self {
             value: value.into(),
             type_: type_.into(),
+        }
+    }
+
+    /// Constructs a simple literal — equivalent to a typed literal with
+    /// datatype `xsd:string` per [RDF 1.1 Concepts §3.3][s].
+    ///
+    /// Round-trips: `Literal::plain(v) == Literal::typed(v, Datatype::xsd_string())`.
+    ///
+    /// [s]: https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal
+    pub fn plain(value: impl Into<String>) -> Self {
+        Self {
+            value: value.into(),
+            type_: LiteralType::xsd_string(),
+        }
+    }
+
+    /// Constructs a typed literal with the given datatype.
+    pub fn typed(value: impl Into<String>, dt: Datatype) -> Self {
+        Self {
+            value: value.into(),
+            type_: LiteralType::Any(dt),
+        }
+    }
+
+    /// Constructs a language-tagged literal.
+    pub fn lang_string(value: impl Into<String>, tag: LangTagBuf) -> Self {
+        Self {
+            value: value.into(),
+            type_: LiteralType::LangString(tag),
         }
     }
 

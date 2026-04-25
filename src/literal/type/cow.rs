@@ -4,9 +4,9 @@ use educe::Educe;
 use iri_rs::{Iri, IriBuf};
 use langtag::{LangTag, LangTagBuf};
 
-use crate::{Datatype, RDF_LANG_STRING, RdfLangStringDatatypeError};
+use crate::RDF_LANG_STRING;
 
-use super::{LiteralType, LiteralTypeRef};
+use super::{Datatype, LiteralType, LiteralTypeRef, RdfLangStringDatatypeError};
 
 /// Owned or referenced RDF literal type.
 #[derive(Educe, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]

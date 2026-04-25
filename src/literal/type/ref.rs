@@ -5,9 +5,9 @@ use educe::Educe;
 use iri_rs::Iri;
 use langtag::LangTag;
 
-use crate::{Datatype, RdfDisplay, XSD_STRING};
+use crate::{RdfDisplay, XSD_STRING};
 
-use super::LiteralType;
+use super::{Datatype, LiteralType};
 
 /// RDF literal type reference.
 ///
