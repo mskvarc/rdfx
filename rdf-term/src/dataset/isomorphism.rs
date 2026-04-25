@@ -107,6 +107,9 @@ where
         candidates.push((*a_blank_id, a_blank_id_candidates));
     }
 
+    // Order by candidate-set size ascending: smallest sets first prunes the search tree fastest.
+    candidates.sort_by_key(|(_, set)| set.len());
+
     let mut bijection = BTreeBijection::new();
     if bijection.find_from_candidates(interpretation, &candidates, 0, &a_blanks_map, &b_blanks_map) {
         Some(bijection)
