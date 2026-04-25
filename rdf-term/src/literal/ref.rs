@@ -106,7 +106,7 @@ impl<'a> PartialOrd<LiteralRef<'a>> for Literal {
 
 impl PartialOrd<Literal> for LiteralRef<'_> {
     fn partial_cmp(&self, other: &Literal) -> Option<Ordering> {
-        Some(self.value.partial_cmp(&other.value)?.then(self.type_.partial_cmp(&other.type_)?))
+        Some(self.value.partial_cmp(other.value.as_str())?.then(self.type_.partial_cmp(&other.type_)?))
     }
 }
 
