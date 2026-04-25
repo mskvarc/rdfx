@@ -263,7 +263,7 @@ impl HashDataset<LocalTerm> {
         self.into_iter()
             .map(|q| {
                 q.map(|t| match t {
-                    LocalTerm::Anonymous(b) => LocalTerm::Anonymous(f(b)),
+                    LocalTerm::BlankId(b) => LocalTerm::BlankId(f(b)),
                     named => named,
                 })
             })

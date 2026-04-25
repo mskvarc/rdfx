@@ -15,7 +15,7 @@ fn iri_term(i: usize) -> LocalTerm {
 }
 
 fn blank_term(label: &str) -> LocalTerm {
-    LocalTerm::Anonymous(BlankIdBuf::new(format!("_:{label}")).unwrap())
+    LocalTerm::BlankId(BlankIdBuf::new(format!("_:{label}")).unwrap())
 }
 
 /// Build a blank-chain dataset of `n` quads.

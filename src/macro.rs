@@ -21,7 +21,7 @@ macro_rules! grdf_triple {
 	{
 		@from ($($acc:tt)*) _ : $id:literal $($rest:tt)*
 	} => {
-		$crate::grdf_triple!(@from ($($acc)* $crate::LocalTerm::Anonymous($crate::BlankIdBuf::from_suffix($id).unwrap()),) $($rest)*)
+		$crate::grdf_triple!(@from ($($acc)* $crate::LocalTerm::BlankId($crate::BlankIdBuf::from_suffix($id).unwrap()),) $($rest)*)
 	};
 	{
 		@from ($($acc:tt)*) $value:literal ^^ $ty:literal $($rest:tt)*
@@ -152,7 +152,7 @@ macro_rules! grdf_quad {
 	{
 		@from ($($acc:tt)*) _ : $id:literal $($rest:tt)*
 	} => {
-		$crate::grdf_quad!(@from ($($acc)* $crate::LocalTerm::Anonymous($crate::BlankIdBuf::from_suffix($id).unwrap()),) $($rest)*)
+		$crate::grdf_quad!(@from ($($acc)* $crate::LocalTerm::BlankId($crate::BlankIdBuf::from_suffix($id).unwrap()),) $($rest)*)
 	};
 	{
 		@from ($($acc:tt)*) $value:literal ^^ $ty:literal $($rest:tt)*
@@ -225,7 +225,7 @@ macro_rules! grdf_quad_pattern {
 	{
 		@from ($($acc:tt)*) _ : $id:literal $($rest:tt)*
 	} => {
-		$crate::grdf_quad_pattern!(@from ($($acc)* $crate::pattern::ResourceOrVar::Resource($crate::LocalTerm::Anonymous($crate::BlankIdBuf::from_suffix($id).unwrap())),) $($rest)*)
+		$crate::grdf_quad_pattern!(@from ($($acc)* $crate::pattern::ResourceOrVar::Resource($crate::LocalTerm::BlankId($crate::BlankIdBuf::from_suffix($id).unwrap())),) $($rest)*)
 	};
 	{
 		@from ($($acc:tt)*) $value:literal ^^ $ty:literal $($rest:tt)*

@@ -88,7 +88,7 @@ pub trait ReverseInterpretation: Interpretation {
         }
     }
 
-    fn is_anonymous(&self, resource: &Self::Resource) -> bool {
+    fn is_blank_id(&self, resource: &Self::Resource) -> bool {
         self.terms_of(resource).next().is_none()
     }
 }
@@ -111,7 +111,7 @@ pub trait LocalInterpretation: Interpretation {
 
     fn local_term<'a>(&self, term: impl Into<LocalTermRef<'a>>) -> Option<Self::Resource> {
         match term.into() {
-            LocalTermRef::Anonymous(blank_id) => self.blank_id(blank_id),
+            LocalTermRef::BlankId(blank_id) => self.blank_id(blank_id),
             LocalTermRef::Named(term) => self.term(term),
         }
     }
@@ -129,7 +129,7 @@ pub trait LocalInterpretationMut: InterpretationMut {
 
     fn insert_local_term<'a>(&mut self, term: impl Into<CowLocalTerm<'a>>) -> Self::Resource {
         match term.into() {
-            CowLocalTerm::Anonymous(blank_id) => self.insert_blank_id(blank_id),
+            CowLocalTerm::BlankId(blank_id) => self.insert_blank_id(blank_id),
             CowLocalTerm::Named(term) => self.insert_term(term),
         }
     }
@@ -169,6 +169,6 @@ impl<'a, I: 'a + ?Sized + ReverseLocalInterpretation> Iterator for LocalTermsOf<
         self.terms
             .next()
             .map(CowLocalTerm::Named)
-            .or_else(|| self.blank_ids.next().map(CowLocalTerm::Anonymous))
+            .or_else(|| self.blank_ids.next().map(CowLocalTerm::BlankId))
     }
 }

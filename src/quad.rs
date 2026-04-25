@@ -5,10 +5,10 @@ use iri_rs::{Iri, IriBuf};
 use crate::{Id, IdRef, LocalTerm, LocalTermRef, RdfDisplay, Triple};
 
 /// Lexical RDF quad.
-pub type RdfQuad = Quad<Id, IriBuf, LocalTerm, Id>;
+pub type LexicalQuad = Quad<Id, IriBuf, LocalTerm, Id>;
 
 /// Lexical RDF quad reference.
-pub type RdfQuadRef<'a> = Quad<IdRef<'a>, Iri<&'a str>, LocalTermRef<'a>, IdRef<'a>>;
+pub type LexicalQuadRef<'a> = Quad<IdRef<'a>, Iri<&'a str>, LocalTermRef<'a>, IdRef<'a>>;
 
 /// RDF quad.
 #[derive(Clone, Copy, Eq, Ord, Hash, Debug)]
@@ -66,14 +66,14 @@ impl<S, P, O, G> Quad<&S, &P, &O, &G> {
     }
 }
 
-impl RdfQuad {
-    pub fn as_lexical_quad_ref(&self) -> RdfQuadRef<'_> {
+impl LexicalQuad {
+    pub fn as_lexical_quad_ref(&self) -> LexicalQuadRef<'_> {
         Quad(self.0.as_ref(), self.1.as_ref(), self.2.as_ref(), self.3.as_ref().map(Id::as_ref))
     }
 }
 
-impl RdfQuadRef<'_> {
-    pub fn into_owned(self) -> RdfQuad {
+impl LexicalQuadRef<'_> {
+    pub fn into_owned(self) -> LexicalQuad {
         Quad(self.0.to_owned(), self.1.into(), self.2.to_owned(), self.3.map(IdRef::into_owned))
     }
 }
@@ -213,7 +213,7 @@ impl<T> Quad<T, T, T, T> {
 pub trait TryExportQuad<S, P, O, G> {
     type Error;
 
-    fn try_export_quad(&self, quad: Quad<S, P, O, G>) -> Result<RdfQuad, Self::Error>;
+    fn try_export_quad(&self, quad: Quad<S, P, O, G>) -> Result<LexicalQuad, Self::Error>;
 }
 
 /// Error returned when calling `try_extract_from_vocabulary` on a [`Quad`].

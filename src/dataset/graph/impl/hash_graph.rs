@@ -249,7 +249,7 @@ impl HashGraph<LocalTerm> {
         self.into_iter()
             .map(|t| {
                 t.map(|x| match x {
-                    LocalTerm::Anonymous(b) => LocalTerm::Anonymous(f(b)),
+                    LocalTerm::BlankId(b) => LocalTerm::BlankId(f(b)),
                     named => named,
                 })
             })

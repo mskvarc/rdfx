@@ -133,7 +133,7 @@ where
         }
     }
 
-    interpretation.is_anonymous(a) && interpretation.is_anonymous(b)
+    interpretation.is_blank_id(a) && interpretation.is_blank_id(b)
 }
 
 fn quad_matches<I>(interpretation: &I, a: Quad<&I::Resource>, b: Quad<&I::Resource>) -> bool
@@ -156,20 +156,20 @@ where
 {
     let mut r = 0;
 
-    if interpretation.is_anonymous(s) {
+    if interpretation.is_blank_id(s) {
         r += 1
     }
 
-    if interpretation.is_anonymous(p) {
+    if interpretation.is_blank_id(p) {
         r += 1
     }
 
-    if interpretation.is_anonymous(o) {
+    if interpretation.is_blank_id(o) {
         r += 1
     }
 
     if let Some(g) = g {
-        if interpretation.is_anonymous(g) {
+        if interpretation.is_blank_id(g) {
             r += 1
         }
     }
@@ -184,20 +184,20 @@ where
     D: TraversableDataset<Resource = I::Resource>,
 {
     for quad in ds.quads() {
-        if interpretation.is_anonymous(quad.0) {
+        if interpretation.is_blank_id(quad.0) {
             map.entry(quad.0).or_default().insert(quad);
         }
 
-        if interpretation.is_anonymous(quad.1) {
+        if interpretation.is_blank_id(quad.1) {
             map.entry(quad.1).or_default().insert(quad);
         }
 
-        if interpretation.is_anonymous(quad.2) {
+        if interpretation.is_blank_id(quad.2) {
             map.entry(quad.2).or_default().insert(quad);
         }
 
         if let Some(g) = quad.3 {
-            if interpretation.is_anonymous(g) {
+            if interpretation.is_blank_id(g) {
                 map.entry(g).or_default().insert(quad);
             }
         }

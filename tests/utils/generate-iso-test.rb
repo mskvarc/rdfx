@@ -39,7 +39,7 @@ class BlankNode
 	end
 
 	def to_rust
-		"LocalTerm::Anonymous(BlankIdBuf::new(\"#{self.to_s}\".to_string()).unwrap())"
+		"LocalTerm::BlankId(BlankIdBuf::new(\"#{self.to_s}\".to_string()).unwrap())"
 	end
 
 	def substituted

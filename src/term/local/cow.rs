@@ -4,7 +4,7 @@ use std::borrow::Cow;
 use super::LocalTerm;
 
 pub enum CowLocalTerm<'a> {
-    Anonymous(Cow<'a, BlankId>),
+    BlankId(Cow<'a, BlankId>),
 
     Named(CowTerm<'a>),
 }

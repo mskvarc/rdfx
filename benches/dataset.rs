@@ -17,7 +17,7 @@ fn iri_term(i: usize) -> LocalTerm {
 }
 
 fn blank_term(i: usize) -> LocalTerm {
-    LocalTerm::Anonymous(BlankIdBuf::new(format!("_:b{i}")).unwrap())
+    LocalTerm::BlankId(BlankIdBuf::new(format!("_:b{i}")).unwrap())
 }
 
 /// N quads: `<http://example.org/r/i> <predicate> <http://example.org/r/(i+1)>`.

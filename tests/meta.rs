@@ -9,7 +9,7 @@ use rdf_rs::{
 };
 
 fn blank_term(i: usize) -> LocalTerm {
-    LocalTerm::Anonymous(BlankIdBuf::new(format!("_:b{i}")).unwrap())
+    LocalTerm::BlankId(BlankIdBuf::new(format!("_:b{i}")).unwrap())
 }
 
 fn iri_term(i: usize) -> LocalTerm {

@@ -70,6 +70,6 @@ impl Blank {
 
 impl LocalGenerator for Blank {
     fn next_local_term(&mut self) -> LocalTerm {
-        LocalTerm::Anonymous(self.next_blank_id())
+        LocalTerm::BlankId(self.next_blank_id())
     }
 }
