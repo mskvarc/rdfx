@@ -2,51 +2,31 @@
 
 use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 use rdf_rs::{
-    BlankIdBuf,
-    LocalTerm,
     Quad,
     dataset::{BTreeDataset, HashDataset, IndexedBTreeDataset, IndexedHashDataset, PatternMatchingDataset},
-    iri,
     pattern::CanonicalQuadPattern,
 };
 use std::hint::black_box;
 
 const SIZES: &[usize] = &[100, 1000, 10_000];
-const BLANK_RATIO: usize = 5;
 
-fn iri_term(i: usize) -> LocalTerm {
-    LocalTerm::iri(iri_rs::IriBuf::new(format!("http://example.org/r/{i}")).unwrap())
+/// N quads of `usize` resources: `(i, P, i+1)` with a fixed predicate `P = 0`.
+fn make_quads(n: usize) -> Vec<Quad<usize, usize, usize, usize>> {
+    (0..n).map(|i| Quad(i + 1, 0, i + 2, None)).collect()
 }
 
-fn blank_term(i: usize) -> LocalTerm {
-    LocalTerm::BlankId(BlankIdBuf::new(format!("_:b{i}")).unwrap())
-}
-
-/// N quads: `<http://example.org/r/i> <predicate> <http://example.org/r/(i+1)>`.
-/// Every `BLANK_RATIO`-th subject is a blank node.
-fn make_quads(n: usize) -> Vec<Quad<LocalTerm>> {
-    let predicate = LocalTerm::iri(iri_rs::IriBuf::from(iri!("http://example.org/p")));
-    (0..n)
-        .map(|i| {
-            let s = if i % BLANK_RATIO == 0 { blank_term(i) } else { iri_term(i) };
-            let o = iri_term(i + 1);
-            Quad(s, predicate.clone(), o, None)
-        })
-        .collect()
-}
-
-fn make_btree(quads: &[Quad<LocalTerm>]) -> BTreeDataset {
+fn make_btree(quads: &[Quad<usize, usize, usize, usize>]) -> BTreeDataset<usize> {
     let mut d = BTreeDataset::new();
     for q in quads {
-        d.insert(q.clone());
+        d.insert(*q);
     }
     d
 }
 
-fn make_hash(quads: &[Quad<LocalTerm>]) -> HashDataset {
+fn make_hash(quads: &[Quad<usize, usize, usize, usize>]) -> HashDataset<usize> {
     let mut d = HashDataset::new();
     for q in quads {
-        d.insert(q.clone());
+        d.insert(*q);
     }
     d
 }
@@ -58,9 +38,9 @@ fn bench_btree_insert(c: &mut Criterion) {
         g.throughput(Throughput::Elements(n as u64));
         g.bench_with_input(BenchmarkId::from_parameter(n), &quads, |b, quads| {
             b.iter(|| {
-                let mut d = BTreeDataset::new();
+                let mut d: BTreeDataset<usize> = BTreeDataset::new();
                 for q in quads {
-                    d.insert(black_box(q.clone()));
+                    d.insert(black_box(*q));
                 }
                 black_box(d)
             });
@@ -116,9 +96,9 @@ fn bench_indexed_build(c: &mut Criterion) {
         g.throughput(Throughput::Elements(n as u64));
         g.bench_with_input(BenchmarkId::from_parameter(n), &quads, |b, quads| {
             b.iter(|| {
-                let mut d = IndexedBTreeDataset::new();
+                let mut d: IndexedBTreeDataset<usize> = IndexedBTreeDataset::new();
                 for q in quads {
-                    d.insert(black_box(q.clone()));
+                    d.insert(black_box(*q));
                 }
                 black_box(d)
             });
@@ -132,7 +112,7 @@ fn bench_indexed_pattern_given_subject(c: &mut Criterion) {
     for &n in SIZES {
         let quads = make_quads(n);
         let dataset = make_btree(&quads).into_indexed();
-        let subjects: Vec<_> = quads.iter().map(|q| q.0.clone()).collect();
+        let subjects: Vec<usize> = quads.iter().map(|q| q.0).collect();
         g.throughput(Throughput::Elements(n as u64));
         g.bench_with_input(BenchmarkId::from_parameter(n), &(dataset, subjects), |b, (d, subjects)| {
             b.iter(|| {
@@ -179,9 +159,9 @@ fn bench_hash_insert(c: &mut Criterion) {
         g.throughput(Throughput::Elements(n as u64));
         g.bench_with_input(BenchmarkId::from_parameter(n), &quads, |b, quads| {
             b.iter(|| {
-                let mut d = HashDataset::new();
+                let mut d: HashDataset<usize> = HashDataset::new();
                 for q in quads {
-                    d.insert(black_box(q.clone()));
+                    d.insert(black_box(*q));
                 }
                 black_box(d)
             });
@@ -237,9 +217,9 @@ fn bench_indexed_hash_build(c: &mut Criterion) {
         g.throughput(Throughput::Elements(n as u64));
         g.bench_with_input(BenchmarkId::from_parameter(n), &quads, |b, quads| {
             b.iter(|| {
-                let mut d = IndexedHashDataset::new();
+                let mut d: IndexedHashDataset<usize> = IndexedHashDataset::new();
                 for q in quads {
-                    d.insert(black_box(q.clone()));
+                    d.insert(black_box(*q));
                 }
                 black_box(d)
             });
@@ -253,7 +233,7 @@ fn bench_indexed_hash_pattern_given_subject(c: &mut Criterion) {
     for &n in SIZES {
         let quads = make_quads(n);
         let dataset = make_hash(&quads).into_indexed();
-        let subjects: Vec<_> = quads.iter().map(|q| q.0.clone()).collect();
+        let subjects: Vec<usize> = quads.iter().map(|q| q.0).collect();
         g.throughput(Throughput::Elements(n as u64));
         g.bench_with_input(BenchmarkId::from_parameter(n), &(dataset, subjects), |b, (d, subjects)| {
             b.iter(|| {

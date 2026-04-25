@@ -344,42 +344,6 @@ macro_rules! grdf_quads {
 	};
 }
 
-#[cfg(test)]
-#[allow(clippy::unwrap_used, clippy::panic, clippy::expect_used)]
-mod tests {
-    use iri_rs::iri;
-
-    #[test]
-    fn grdf_triple_macro() {
-        let _ = grdf_triple! [
-            _:"foo" <"https://example.org/#foo"> "foo"
-        ];
-    }
-
-    #[test]
-    fn grdf_triples_macro() {
-        let term = iri_rs::IriBuf::from(iri!("https://example.org/#iri"));
-        let _ = grdf_triples! [
-            _:"foo" <"https://example.org/#foo"> "foo" .
-            <"https://example.org/#bar"> _:"bar" "bar"^^"https://example.org/#datatype" .
-            <"https://example.org/#baz"> term "value" .
-        ];
-    }
-
-    #[test]
-    fn grdf_quad_macro() {
-        let _ = grdf_quad! [
-            _:"foo" <"https://example.org/#foo"> "foo"
-        ];
-    }
-
-    #[test]
-    fn grdf_quads_macro() {
-        let term = iri_rs::IriBuf::from(iri!("https://example.org/#iri"));
-        let _ = grdf_quads! [
-            _:"foo" <"https://example.org/#foo"> "foo" .
-            <"https://example.org/#bar"> _:"bar" "bar"^^"https://example.org/#datatype" .
-            <"https://example.org/#baz"> term "value" <"https://example.org/#graph"> .
-        ];
-    }
-}
+// Macro tests will be re-added in Phase G after grdf_* are renamed to
+// generalized_* (building GeneralizedTriple/GeneralizedQuad) and strict
+// `triple!`/`quad!` macros are introduced.

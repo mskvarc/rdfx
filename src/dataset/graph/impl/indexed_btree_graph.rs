@@ -1038,7 +1038,7 @@ mod tests {
         test_eq(graph, triples)
     }
 
-    fn test_eq(graph: IndexedBTreeGraph<u32>, triples: Vec<Triple<u32>>) {
+    fn test_eq(graph: IndexedBTreeGraph<u32>, triples: Vec<Triple<u32, u32, u32>>) {
         assert_eq!(graph.len(), triples.len());
 
         let mut a = triples.iter().copied();

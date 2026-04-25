@@ -1,19 +1,69 @@
 #![allow(clippy::unwrap_used, clippy::panic, clippy::expect_used, clippy::get_unwrap)]
 
-use rdf_rs::{BlankIdBuf, Quad, LocalTerm, dataset::HashDataset, iri};
-use rdf_rs::dataset::isomorphism::Bijection;
+use iri_rs::{Iri, IriBuf};
+use rdf_rs::{BlankId, BlankIdBuf, CowLiteral, Quad, dataset::HashDataset, impl_resource, iri};
+use rdf_rs::dataset::isomorphism::{Bijection, find_bijection_with};
+use rdf_rs::interpretation::{Interpretation, LocalInterpretation, ReverseInterpretation, ReverseLocalInterpretation};
+use rdf_rs::LiteralRef;
+use std::borrow::Cow;
 use std::collections::HashMap;
 
-fn test(a: HashDataset, b: HashDataset) {
-	let substitution: HashMap<_, _> = match rdf_rs::dataset::isomorphism::find_bijection(&a, &b) {
-		Some(Bijection { forward, .. }) => forward.into_iter().map(|(a, b)| (a.to_owned(), b.clone())).collect(),
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum TestId {
+	Iri(IriBuf),
+	Blank(BlankIdBuf),
+}
+
+impl TestId {
+	pub fn is_blank(&self) -> bool {
+		matches!(self, Self::Blank(_))
+	}
+}
+
+impl_resource!(TestId);
+
+pub struct TestInterp;
+
+impl Interpretation for TestInterp {
+	type Resource = TestId;
+	fn iri(&self, iri: Iri<&str>) -> Option<TestId> {
+		Some(TestId::Iri(iri.into()))
+	}
+	fn literal<'a>(&self, _literal: impl Into<LiteralRef<'a>>) -> Option<TestId> { None }
+}
+
+impl LocalInterpretation for TestInterp {
+	fn blank_id(&self, blank_id: &BlankId) -> Option<TestId> {
+		Some(TestId::Blank(blank_id.to_owned()))
+	}
+}
+
+impl ReverseInterpretation for TestInterp {
+	type Iris<'a> = std::option::IntoIter<Cow<'a, IriBuf>>;
+	type Literals<'a> = std::option::IntoIter<CowLiteral<'a>>;
+	fn iris_of<'a>(&'a self, r: &'a Self::Resource) -> Self::Iris<'a> {
+		match r { TestId::Iri(i) => Some(Cow::Borrowed(i)).into_iter(), _ => None.into_iter() }
+	}
+	fn literals_of<'a>(&'a self, _r: &'a Self::Resource) -> Self::Literals<'a> { None.into_iter() }
+}
+
+impl ReverseLocalInterpretation for TestInterp {
+	type BlankIds<'a> = std::option::IntoIter<Cow<'a, BlankId>>;
+	fn blank_ids_of<'a>(&'a self, r: &'a Self::Resource) -> Self::BlankIds<'a> {
+		match r { TestId::Blank(b) => Some(Cow::Borrowed(b.as_blank_id_ref())).into_iter(), _ => None.into_iter() }
+	}
+}
+
+fn test(a: HashDataset<TestId>, b: HashDataset<TestId>) {
+	let substitution: HashMap<_, _> = match find_bijection_with(&TestInterp, &a, &b) {
+		Some(Bijection { forward, .. }) => forward.into_iter().map(|(a, b)| (a.clone(), b.clone())).collect(),
 		None => panic!("no substitution found"),
 	};
-	let c: HashDataset = a
+	let c: HashDataset<TestId> = a
 		.into_iter()
 		.map(|q| {
 			q.map(|t| {
-				if t.is_blank_id() {
+				if t.is_blank() {
 					substitution.get(&t).unwrap().clone()
 				} else {
 					t

@@ -1463,7 +1463,7 @@ mod tests {
         test_eq(dataset, quads)
     }
 
-    fn test_eq(dataset: IndexedBTreeDataset<u32>, quads: Vec<Quad<u32>>) {
+    fn test_eq(dataset: IndexedBTreeDataset<u32>, quads: Vec<Quad<u32, u32, u32, u32>>) {
         assert_eq!(dataset.len(), quads.len());
 
         let mut a = quads.iter().copied();

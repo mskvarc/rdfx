@@ -6,28 +6,27 @@
 //!
 //! # Examples
 //!
-//! Round-tripping a tagged term through [`Strip`]:
+//! Round-tripping a tagged value through [`Strip`]:
 //!
 //! ```
-//! use rdf_rs::{BlankIdBuf, LocalTerm, meta::{Meta, Span, Strip}};
+//! use rdf_rs::meta::{Meta, Span, Strip};
 //!
-//! let term = LocalTerm::BlankId(BlankIdBuf::new("_:b0".to_owned()).unwrap());
-//! let tagged = Meta(term.clone(), Span::new(0, 5));
-//! assert_eq!(tagged.strip(), term);
+//! let tagged = Meta(42usize, Span::new(0, 5));
+//! assert_eq!(tagged.strip(), 42usize);
 //! ```
 //!
 //! Using [`Meta`] as a dataset key to keep otherwise-equal quads distinct
 //! by their metadata:
 //!
 //! ```
-//! use rdf_rs::{BlankIdBuf, LocalTerm, Quad, dataset::BTreeDataset, meta::{Meta, Span}};
+//! use rdf_rs::{Quad, dataset::BTreeDataset, meta::{Meta, Span}};
 //!
-//! let s = LocalTerm::BlankId(BlankIdBuf::new("_:s".to_owned()).unwrap());
-//! let p = LocalTerm::iri(iri_rs::IriBuf::new("http://example.org/p".to_owned()).unwrap());
-//! let o = LocalTerm::iri(iri_rs::IriBuf::new("http://example.org/o".to_owned()).unwrap());
+//! let s: usize = 0;
+//! let p: usize = 1;
+//! let o: usize = 2;
 //!
-//! let mut d: BTreeDataset<Meta<LocalTerm, Span>> = BTreeDataset::new();
-//! d.insert(Quad(Meta(s.clone(), Span::new(0, 1)), Meta(p.clone(), Span::new(0, 1)), Meta(o.clone(), Span::new(0, 1)), None));
+//! let mut d: BTreeDataset<Meta<usize, Span>> = BTreeDataset::new();
+//! d.insert(Quad(Meta(s, Span::new(0, 1)), Meta(p, Span::new(0, 1)), Meta(o, Span::new(0, 1)), None));
 //! d.insert(Quad(Meta(s, Span::new(2, 3)), Meta(p, Span::new(2, 3)), Meta(o, Span::new(2, 3)), None));
 //! assert_eq!(d.len(), 2);
 //! ```
@@ -104,7 +103,7 @@ macro_rules! identity_strip {
     };
 }
 
-identity_strip!(BlankIdBuf, IriBuf, Id, Datatype, Literal, LiteralType, Term, LocalTerm);
+identity_strip!(BlankIdBuf, IriBuf, Id, Datatype, Literal, LiteralType, Term, LocalTerm, usize, u32, u64, i32, i64, String);
 
 impl<S, P, O> Strip for Triple<S, P, O>
 where

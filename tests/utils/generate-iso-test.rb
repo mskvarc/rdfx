@@ -39,7 +39,7 @@ class BlankNode
 	end
 
 	def to_rust
-		"LocalTerm::BlankId(BlankIdBuf::new(\"#{self.to_s}\".to_string()).unwrap())"
+		"TestId::Blank(BlankIdBuf::new(\"#{self.to_s}\".to_string()).unwrap())"
 	end
 
 	def substituted
@@ -74,7 +74,7 @@ class Iri
 	end
 
 	def to_rust
-		"LocalTerm::iri(iri_rs::IriBuf::from(iri!(\"#{self.to_s}\")))"
+		"TestId::Iri(iri_rs::IriBuf::from(iri!(\"#{self.to_s}\")))"
 	end
 
 	def substituted
@@ -145,7 +145,7 @@ class Dataset
 	end
 
 	def to_rust(id)
-		result = "\tlet mut #{id} = #{DATASET_TYPE}::new();"
+		result = "\tlet mut #{id}: #{DATASET_TYPE}<TestId> = #{DATASET_TYPE}::new();"
 		@triples.each do |triple|
 			result += "\n\t#{id}.insert(#{triple.to_rust});"
 		end
