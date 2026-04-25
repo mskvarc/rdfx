@@ -38,7 +38,15 @@ fn resource_index_cmp<R: Ord>(resources: &Slab<Resource<R>>) -> impl '_ + Fn(&us
 }
 
 fn quad_with_resources<R>(resources: &Slab<Resource<R>>, Quad(s, p, o, g): Quad<usize>) -> Quad<&R> {
-    Quad(&resources[s].value, &resources[p].value, &resources[o].value, g.map(|g| &resources[g].value))
+    // Safety: resource indexes in stored quads always point to live entries in `resources`.
+    unsafe {
+        Quad(
+            &resources.get_unchecked(s).value,
+            &resources.get_unchecked(p).value,
+            &resources.get_unchecked(o).value,
+            g.map(|g| &resources.get_unchecked(g).value),
+        )
+    }
 }
 
 fn quad_cmp<'a, R: Ord>(resources: &'a Slab<Resource<R>>, quads: &'a Slab<Quad<usize>>) -> impl 'a + Fn(&usize, &Quad<&R>) -> Ordering {
