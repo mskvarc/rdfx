@@ -17,14 +17,12 @@ categories = ["web-programming", "internationalization"]
 default = []
 serde = ["dep:serde", "iri-rs/serde", "langtag/serde"]
 meta = ["dep:locspan"]
-ahash = ["dep:ahash"]
 uuid-generator = ["uuid-generator-v3", "uuid-generator-v4", "uuid-generator-v5"]
 uuid-generator-v3 = ["uuid", "uuid/v3"]
 uuid-generator-v4 = ["uuid", "uuid/v4"]
 uuid-generator-v5 = ["uuid", "uuid/v5"]
 
 [dependencies]
-ahash = { version = "0.8.12", optional = true }
 contextual = { version = "0.1.6", optional = true }
 educe = "0.6.0"
 equivalent = "1.0.2"

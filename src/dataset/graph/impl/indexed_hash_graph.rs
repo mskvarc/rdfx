@@ -1,6 +1,10 @@
-use std::{cmp::Ordering, fmt::Debug, hash::Hash};
+use std::{
+    cmp::Ordering,
+    fmt::Debug,
+    hash::{BuildHasher, Hash},
+};
 
-use hashbrown::HashTable;
+use hashbrown::{DefaultHashBuilder, HashSet, HashTable};
 use slab::Slab;
 
 use super::{super::Graph, hash_graph::HashGraph};
@@ -23,7 +27,6 @@ use crate::{
         CanonicalTriplePattern,
         triple::canonical::{PatternObject, PatternPredicate, PatternSubject},
     },
-    utils::hash_map::{DefaultHashBuilder, HashSet, hash_one},
 };
 
 fn triple_with_resources<R>(resources: &Slab<Resource<R>>, Triple(s, p, o): Triple<usize>) -> Triple<&R> {
@@ -156,11 +159,11 @@ impl<R: Eq + Hash> IndexedHashGraph<R> {
     }
 
     fn hash_resource(&self, r: &R) -> u64 {
-        hash_one(&self.hasher, r)
+        self.hasher.hash_one(r)
     }
 
     fn hash_triple(&self, t: &Triple<&R>) -> u64 {
-        hash_one(&self.hasher, t)
+        self.hasher.hash_one(t)
     }
 
     fn index_of_resource(&self, r: &R) -> Option<usize> {
@@ -194,11 +197,11 @@ impl<R: Clone + Eq + Hash> IndexedHashGraph<R> {
         match pre {
             Some(j) => j,
             None => {
-                let h = hash_one(&self.hasher, &r);
+                let h = self.hasher.hash_one(&r);
                 let j = self.resources.insert(mk(r, i));
                 let hasher = self.hasher.clone();
                 let resources = &self.resources;
-                self.resources_indexes.insert_unique(h, j, |&k| hash_one(&hasher, &resources[k].value));
+                self.resources_indexes.insert_unique(h, j, |&k| hasher.hash_one(&resources[k].value));
                 j
             }
         }
@@ -238,12 +241,12 @@ impl<R: Clone + Eq + Hash> IndexedHashGraph<R> {
         let inserted = self.triples.insert(stored);
         debug_assert_eq!(inserted, i);
 
-        let h = hash_one(&self.hasher, &triple_with_resources(&self.resources, stored));
+        let h = self.hasher.hash_one(&triple_with_resources(&self.resources, stored));
         let hasher = self.hasher.clone();
         let resources = &self.resources;
         let triples = &self.triples;
         self.triples_indexes
-            .insert_unique(h, i, |&j| hash_one(&hasher, &triple_with_resources(resources, triples[j])));
+            .insert_unique(h, i, |&j| hasher.hash_one(&triple_with_resources(resources, triples[j])));
 
         true
     }

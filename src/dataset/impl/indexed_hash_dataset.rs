@@ -1,6 +1,10 @@
-use std::{cmp::Ordering, fmt::Debug, hash::Hash};
+use std::{
+    cmp::Ordering,
+    fmt::Debug,
+    hash::{BuildHasher, Hash},
+};
 
-use hashbrown::HashTable;
+use hashbrown::{DefaultHashBuilder, HashSet, HashTable};
 use slab::Slab;
 
 use super::{
@@ -28,7 +32,6 @@ use crate::{
         CanonicalQuadPattern,
         quad::canonical::{PatternGraph, PatternObject, PatternPredicate, PatternSubject},
     },
-    utils::hash_map::{DefaultHashBuilder, HashSet, hash_one},
 };
 
 fn quad_with_resources<R>(resources: &Slab<Resource<R>>, Quad(s, p, o, g): Quad<usize>) -> Quad<&R> {
@@ -194,11 +197,11 @@ impl<R: Eq + Hash> IndexedHashDataset<R> {
     }
 
     fn hash_resource(&self, r: &R) -> u64 {
-        hash_one(&self.hasher, r)
+        self.hasher.hash_one(r)
     }
 
     fn hash_quad(&self, q: &Quad<&R>) -> u64 {
-        hash_one(&self.hasher, q)
+        self.hasher.hash_one(q)
     }
 
     fn index_of_resource(&self, r: &R) -> Option<usize> {
@@ -262,11 +265,11 @@ impl<R: Clone + Eq + Hash> IndexedHashDataset<R> {
         match pre {
             Some(j) => j,
             None => {
-                let h = hash_one(&self.hasher, &r);
+                let h = self.hasher.hash_one(&r);
                 let j = self.resources.insert(mk(r, i));
                 let hasher = self.hasher.clone();
                 let resources = &self.resources;
-                self.resources_indexes.insert_unique(h, j, |&k| hash_one(&hasher, &resources[k].value));
+                self.resources_indexes.insert_unique(h, j, |&k| hasher.hash_one(&resources[k].value));
                 j
             }
         }
@@ -325,12 +328,12 @@ impl<R: Clone + Eq + Hash> IndexedHashDataset<R> {
         let inserted = self.quads.insert(stored);
         debug_assert_eq!(inserted, i);
 
-        let h = hash_one(&self.hasher, &quad_with_resources(&self.resources, stored));
+        let h = self.hasher.hash_one(&quad_with_resources(&self.resources, stored));
         let hasher = self.hasher.clone();
         let resources = &self.resources;
         let quads = &self.quads;
         self.quads_indexes
-            .insert_unique(h, i, |&j| hash_one(&hasher, &quad_with_resources(resources, quads[j])));
+            .insert_unique(h, i, |&j| hasher.hash_one(&quad_with_resources(resources, quads[j])));
 
         true
     }
@@ -394,7 +397,7 @@ impl<R: Clone + Eq + Hash> IndexedHashDataset<R> {
             let resources = &self.resources;
             let quads = &self.quads;
             let q = quad_with_resources(resources, quads[i]);
-            let h = hash_one(&self.hasher, &q);
+            let h = self.hasher.hash_one(&q);
             if let Ok(entry) = self.quads_indexes.find_entry(h, |&j| j == i) {
                 entry.remove();
             }

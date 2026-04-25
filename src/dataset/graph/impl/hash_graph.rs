@@ -1,6 +1,9 @@
-use std::{fmt::Debug, hash::Hash};
+use std::{
+    fmt::Debug,
+    hash::{BuildHasher, Hash},
+};
 
-use hashbrown::HashTable;
+use hashbrown::{DefaultHashBuilder, HashTable};
 use slab::Slab;
 
 use crate::{
@@ -16,7 +19,6 @@ use crate::{
         TraversableGraph,
         isomorphism::{Bijection, are_isomorphic, find_bijection},
     },
-    utils::hash_map::{DefaultHashBuilder, hash_one},
 };
 
 fn triple_with_resources<R>(resources: &Slab<Resource<R>>, Triple(s, p, o): Triple<usize>) -> Triple<&R> {
@@ -82,11 +84,11 @@ impl<R: Eq + Hash> HashGraph<R> {
 
 impl<R: Eq + Hash> HashGraph<R> {
     fn hash_resource(&self, r: &R) -> u64 {
-        hash_one(&self.hasher, r)
+        self.hasher.hash_one(r)
     }
 
     fn hash_triple(&self, t: &Triple<&R>) -> u64 {
-        hash_one(&self.hasher, t)
+        self.hasher.hash_one(t)
     }
 
     fn index_of_resource(&self, r: &R) -> Option<usize> {
@@ -119,11 +121,11 @@ impl<R: Clone + Eq + Hash> HashGraph<R> {
                 i
             }
             None => {
-                let h = hash_one(&self.hasher, &r);
+                let h = self.hasher.hash_one(&r);
                 let i = self.resources.insert(Resource::new(r));
                 let hasher = self.hasher.clone();
                 let resources = &self.resources;
-                self.resources_indexes.insert_unique(h, i, |&j| hash_one(&hasher, &resources[j].value));
+                self.resources_indexes.insert_unique(h, i, |&j| hasher.hash_one(&resources[j].value));
                 i
             }
         }
@@ -136,7 +138,7 @@ impl<R: Clone + Eq + Hash> HashGraph<R> {
 
         if let (Some(s_i), Some(p_i), Some(o_i)) = (s_pre, p_pre, o_pre) {
             let target = Triple(s_i, p_i, o_i);
-            let h = hash_one(&self.hasher, &triple_with_resources(&self.resources, target));
+            let h = self.hasher.hash_one(&triple_with_resources(&self.resources, target));
             let resources = &self.resources;
             let triples = &self.triples;
             if self
@@ -153,14 +155,14 @@ impl<R: Clone + Eq + Hash> HashGraph<R> {
         let o_i = self.intern_resource(triple.2, o_pre);
 
         let stored = Triple(s_i, p_i, o_i);
-        let h = hash_one(&self.hasher, &triple_with_resources(&self.resources, stored));
+        let h = self.hasher.hash_one(&triple_with_resources(&self.resources, stored));
         let i = self.triples.insert(stored);
 
         let hasher = self.hasher.clone();
         let resources = &self.resources;
         let triples = &self.triples;
         self.triples_indexes
-            .insert_unique(h, i, |&j| hash_one(&hasher, &triple_with_resources(resources, triples[j])));
+            .insert_unique(h, i, |&j| hasher.hash_one(&triple_with_resources(resources, triples[j])));
 
         true
     }
@@ -169,7 +171,7 @@ impl<R: Clone + Eq + Hash> HashGraph<R> {
         let r = &mut self.resources[i];
         r.occurrences -= 1;
         if r.is_empty() {
-            let h = hash_one(&self.hasher, value);
+            let h = self.hasher.hash_one(value);
             if let Ok(entry) = self.resources_indexes.find_entry(h, |&j| j == i) {
                 entry.remove();
             }
