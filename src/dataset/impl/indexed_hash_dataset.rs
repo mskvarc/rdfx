@@ -1,5 +1,6 @@
 use std::{
     cmp::Ordering,
+    collections::BTreeSet,
     fmt::Debug,
     hash::{BuildHasher, Hash},
 };
@@ -56,7 +57,7 @@ pub struct IndexedHashDataset<R = LocalTerm> {
     subjects: HashSet<usize>,
     predicates: HashSet<usize>,
     objects: HashSet<usize>,
-    default_graph: HashSet<usize>,
+    default_graph: BTreeSet<usize>,
     named_graphs: HashSet<usize>,
 }
 
@@ -68,7 +69,7 @@ impl<R> Default for IndexedHashDataset<R> {
             hasher: DefaultHashBuilder::default(),
             quads_indexes: HashTable::new(),
             resources_indexes: HashTable::new(),
-            default_graph: HashSet::default(),
+            default_graph: BTreeSet::new(),
             subjects: HashSet::default(),
             predicates: HashSet::default(),
             objects: HashSet::default(),
@@ -144,10 +145,10 @@ impl<R: Eq + Hash> IndexedHashDataset<R> {
                     i,
                     Resource {
                         value: r.value,
-                        as_subject: HashSet::default(),
-                        as_predicate: HashSet::default(),
-                        as_object: HashSet::default(),
-                        as_graph: HashSet::default(),
+                        as_subject: BTreeSet::new(),
+                        as_predicate: BTreeSet::new(),
+                        as_object: BTreeSet::new(),
+                        as_graph: BTreeSet::new(),
                     },
                 )
             })
@@ -157,7 +158,7 @@ impl<R: Eq + Hash> IndexedHashDataset<R> {
         let mut predicates = HashSet::default();
         let mut objects = HashSet::default();
         let mut named_graphs = HashSet::default();
-        let mut default_graph = HashSet::default();
+        let mut default_graph = BTreeSet::new();
 
         for &i in &dataset.quads_indexes {
             let Quad(s, p, o, g) = dataset.quads[i];
@@ -882,10 +883,8 @@ impl<R: Clone + Eq + Hash> Iterator for ExtractPatternMatching<'_, R> {
 
 type SortedIndexes = std::iter::Peekable<std::vec::IntoIter<usize>>;
 
-fn sorted_set(set: &HashSet<usize>) -> SortedIndexes {
-    let mut v: Vec<usize> = set.iter().copied().collect();
-    v.sort_unstable();
-    v.into_iter().peekable()
+fn sorted_set(set: &BTreeSet<usize>) -> SortedIndexes {
+    set.iter().copied().collect::<Vec<_>>().into_iter().peekable()
 }
 
 enum SubjectConstraints {
@@ -1203,57 +1202,57 @@ impl GraphConstraints {
 #[derive(Default, Clone)]
 struct Resource<R> {
     value: R,
-    as_subject: HashSet<usize>,
-    as_predicate: HashSet<usize>,
-    as_object: HashSet<usize>,
-    as_graph: HashSet<usize>,
+    as_subject: BTreeSet<usize>,
+    as_predicate: BTreeSet<usize>,
+    as_object: BTreeSet<usize>,
+    as_graph: BTreeSet<usize>,
 }
 
 impl<R> Resource<R> {
     pub fn subject(value: R, i: usize) -> Self {
-        let mut s = HashSet::default();
+        let mut s = BTreeSet::new();
         s.insert(i);
         Self {
             value,
             as_subject: s,
-            as_predicate: HashSet::default(),
-            as_object: HashSet::default(),
-            as_graph: HashSet::default(),
+            as_predicate: BTreeSet::new(),
+            as_object: BTreeSet::new(),
+            as_graph: BTreeSet::new(),
         }
     }
 
     pub fn predicate(value: R, i: usize) -> Self {
-        let mut s = HashSet::default();
+        let mut s = BTreeSet::new();
         s.insert(i);
         Self {
             value,
-            as_subject: HashSet::default(),
+            as_subject: BTreeSet::new(),
             as_predicate: s,
-            as_object: HashSet::default(),
-            as_graph: HashSet::default(),
+            as_object: BTreeSet::new(),
+            as_graph: BTreeSet::new(),
         }
     }
 
     pub fn object(value: R, i: usize) -> Self {
-        let mut s = HashSet::default();
+        let mut s = BTreeSet::new();
         s.insert(i);
         Self {
             value,
-            as_subject: HashSet::default(),
-            as_predicate: HashSet::default(),
+            as_subject: BTreeSet::new(),
+            as_predicate: BTreeSet::new(),
             as_object: s,
-            as_graph: HashSet::default(),
+            as_graph: BTreeSet::new(),
         }
     }
 
     pub fn graph(value: R, i: usize) -> Self {
-        let mut s = HashSet::default();
+        let mut s = BTreeSet::new();
         s.insert(i);
         Self {
             value,
-            as_subject: HashSet::default(),
-            as_predicate: HashSet::default(),
-            as_object: HashSet::default(),
+            as_subject: BTreeSet::new(),
+            as_predicate: BTreeSet::new(),
+            as_object: BTreeSet::new(),
             as_graph: s,
         }
     }

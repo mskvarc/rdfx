@@ -1,5 +1,6 @@
 use std::{
     cmp::Ordering,
+    collections::BTreeSet,
     fmt::Debug,
     hash::{BuildHasher, Hash},
 };
@@ -121,9 +122,9 @@ impl<R: Eq + Hash> IndexedHashGraph<R> {
                     i,
                     Resource {
                         value: r.value,
-                        as_subject: HashSet::default(),
-                        as_predicate: HashSet::default(),
-                        as_object: HashSet::default(),
+                        as_subject: BTreeSet::new(),
+                        as_predicate: BTreeSet::new(),
+                        as_object: BTreeSet::new(),
                     },
                 )
             })
@@ -628,10 +629,8 @@ impl<'a, R> Iterator for PatternMatching<'a, R> {
 
 type SortedIndexes = std::iter::Peekable<std::vec::IntoIter<usize>>;
 
-fn sorted_set(set: &HashSet<usize>) -> SortedIndexes {
-    let mut v: Vec<usize> = set.iter().copied().collect();
-    v.sort_unstable();
-    v.into_iter().peekable()
+fn sorted_set(set: &BTreeSet<usize>) -> SortedIndexes {
+    set.iter().copied().collect::<Vec<_>>().into_iter().peekable()
 }
 
 enum SubjectConstraints {
@@ -776,41 +775,41 @@ impl ObjectConstraints {
 #[derive(Default, Clone)]
 pub(crate) struct Resource<R> {
     pub value: R,
-    pub as_subject: HashSet<usize>,
-    pub as_predicate: HashSet<usize>,
-    pub as_object: HashSet<usize>,
+    pub as_subject: BTreeSet<usize>,
+    pub as_predicate: BTreeSet<usize>,
+    pub as_object: BTreeSet<usize>,
 }
 
 impl<R> Resource<R> {
     pub fn subject(value: R, i: usize) -> Self {
-        let mut as_subject = HashSet::default();
+        let mut as_subject = BTreeSet::new();
         as_subject.insert(i);
         Self {
             value,
             as_subject,
-            as_predicate: HashSet::default(),
-            as_object: HashSet::default(),
+            as_predicate: BTreeSet::new(),
+            as_object: BTreeSet::new(),
         }
     }
 
     pub fn predicate(value: R, i: usize) -> Self {
-        let mut as_predicate = HashSet::default();
+        let mut as_predicate = BTreeSet::new();
         as_predicate.insert(i);
         Self {
             value,
-            as_subject: HashSet::default(),
+            as_subject: BTreeSet::new(),
             as_predicate,
-            as_object: HashSet::default(),
+            as_object: BTreeSet::new(),
         }
     }
 
     pub fn object(value: R, i: usize) -> Self {
-        let mut as_object = HashSet::default();
+        let mut as_object = BTreeSet::new();
         as_object.insert(i);
         Self {
             value,
-            as_subject: HashSet::default(),
-            as_predicate: HashSet::default(),
+            as_subject: BTreeSet::new(),
+            as_predicate: BTreeSet::new(),
             as_object,
         }
     }
