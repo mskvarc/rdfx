@@ -85,7 +85,7 @@ where
     }
 
     // Step 3: find candidates for each blank id.
-    let mut candidates: BTreeMap<&'a I::Resource, BTreeSet<&'b I::Resource>> = BTreeMap::new();
+    let mut candidates: Vec<(&'a I::Resource, BTreeSet<&'b I::Resource>)> = Vec::new();
     for (len, a_group) in a_groups {
         let b_group = b_groups.get(&len).unwrap();
 
@@ -101,11 +101,16 @@ where
                 return None;
             }
 
-            candidates.insert(a_blank_id, a_blank_id_candidates);
+            candidates.push((a_blank_id, a_blank_id_candidates));
         }
     }
 
-    BTreeBijection::new().find_from_candidates(interpretation, candidates.iter(), &a_blanks_map, &b_blanks_map)
+    let mut bijection = BTreeBijection::new();
+    if bijection.find_from_candidates(interpretation, &candidates, 0, &a_blanks_map, &b_blanks_map) {
+        Some(bijection)
+    } else {
+        None
+    }
 }
 
 fn resource_matches<I>(interpretation: &I, a: &I::Resource, b: &I::Resource) -> bool
@@ -232,15 +237,6 @@ pub struct BTreeBijection<'a, 'b, R = LocalTerm> {
     pub backward: BTreeMap<&'b R, &'a R>,
 }
 
-impl<R> Clone for BTreeBijection<'_, '_, R> {
-    fn clone(&self) -> Self {
-        Self {
-            forward: self.forward.clone(),
-            backward: self.backward.clone(),
-        }
-    }
-}
-
 impl<R> BTreeBijection<'_, '_, R> {
     fn new() -> Self {
         Self {
@@ -251,11 +247,6 @@ impl<R> BTreeBijection<'_, '_, R> {
 }
 
 impl<'a, 'b, R: Ord> BTreeBijection<'a, 'b, R> {
-    fn insert(&mut self, a: &'a R, b: &'b R) {
-        self.forward.insert(a, b);
-        self.backward.insert(b, a);
-    }
-
     fn resource_matches_with<I>(&self, interpretation: &I, a: &'a R, b: &'b R) -> bool
     where
         I: ReverseInterpretation<Resource = R>,
@@ -327,38 +318,38 @@ impl<'a, 'b, R: Ord> BTreeBijection<'a, 'b, R> {
     }
 
     fn find_from_candidates<I>(
-        self,
+        &mut self,
         interpretation: &I,
-        mut candidates: std::collections::btree_map::Iter<&'a R, BTreeSet<&'b R>>,
+        candidates: &[(&'a R, BTreeSet<&'b R>)],
+        depth: usize,
         a: &BTreeMap<&'a R, BlankSignature<'a, R>>,
         b: &BTreeMap<&'b R, BlankSignature<'b, R>>,
-    ) -> Option<Self>
+    ) -> bool
     where
         I: ReverseInterpretation<Resource = R>,
     {
-        match candidates.next() {
-            Some((a_blank_id, b_candidates)) => {
-                for b_candidate in b_candidates {
-                    if !self.backward.contains_key(b_candidate) {
-                        // eprintln!("analyzing candidate {} for {}", b_candidate, a_blank_id);
+        let Some((a_blank_id, b_candidates)) = candidates.get(depth) else {
+            return true;
+        };
 
-                        let mut new_sigma = self.clone();
-                        new_sigma.insert(a_blank_id, b_candidate);
-                        if new_sigma.signature_matches_with(interpretation, a.get(a_blank_id).unwrap(), b.get(b_candidate).unwrap()) {
-                            // eprintln!("this is a valid candidate. continuing.");
-                            if let Some(final_sigma) = new_sigma.find_from_candidates(interpretation, candidates.clone(), a, b) {
-                                return Some(final_sigma);
-                            }
-                            // eprintln!("it didn't work out in the end. next candidate for {}.", a_blank_id);
-                        }
-                    }
-                }
-
-                // eprintln!("no valid candidate for {}", a_blank_id);
-                None
+        for b_candidate in b_candidates {
+            if self.backward.contains_key(b_candidate) {
+                continue;
             }
-            None => Some(self),
+
+            self.forward.insert(a_blank_id, b_candidate);
+            self.backward.insert(b_candidate, a_blank_id);
+
+            let sig_ok = self.signature_matches_with(interpretation, a.get(a_blank_id).unwrap(), b.get(b_candidate).unwrap());
+            if sig_ok && self.find_from_candidates(interpretation, candidates, depth + 1, a, b) {
+                return true;
+            }
+
+            self.forward.remove(a_blank_id);
+            self.backward.remove(b_candidate);
         }
+
+        false
     }
 }
 
