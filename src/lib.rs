@@ -22,6 +22,7 @@ pub use iri_rs;
 
 mod blankid;
 mod display;
+mod generalized;
 mod id;
 mod literal;
 mod r#macro;
@@ -34,6 +35,7 @@ mod triple;
 
 pub use blankid::*;
 pub use display::*;
+pub use generalized::*;
 pub use id::*;
 pub use literal::*;
 pub use positions::{IsGraph, IsObject, IsPredicate, IsSubject, Resource};
