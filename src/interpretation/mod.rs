@@ -88,8 +88,21 @@ pub trait ReverseInterpretation: Interpretation {
         }
     }
 
+    /// RDF 1.2: returns the components of a triple-term resource as
+    /// `(subject, predicate, object)` if `resource` denotes a triple term.
+    /// Default returns `None` (no triple-term recognition); interpretations
+    /// that store triple terms should override.
+    ///
+    /// Components are returned by value because the underlying triple-term
+    /// body may use a different concrete type from `Self::Resource`
+    /// (e.g. lexical bodies use `Id` for the subject, `IriBuf` for the
+    /// predicate).
+    fn triple_term_components(&self, _resource: &Self::Resource) -> Option<(Self::Resource, Self::Resource, Self::Resource)> {
+        None
+    }
+
     fn is_blank_id(&self, resource: &Self::Resource) -> bool {
-        self.terms_of(resource).next().is_none()
+        self.terms_of(resource).next().is_none() && self.triple_term_components(resource).is_none()
     }
 }
 

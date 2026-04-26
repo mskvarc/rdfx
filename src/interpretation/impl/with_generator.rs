@@ -111,6 +111,10 @@ impl<I: ReverseInterpretation, G> ReverseInterpretation for WithGenerator<G, I> 
     fn literals_of<'a>(&'a self, resource: &'a Self::Resource) -> Self::Literals<'a> {
         self.interpretation.literals_of(resource)
     }
+
+    fn triple_term_components(&self, resource: &Self::Resource) -> Option<(Self::Resource, Self::Resource, Self::Resource)> {
+        self.interpretation.triple_term_components(resource)
+    }
 }
 
 impl<I: InterpretationMut, G: Generator> GenerativeInterpretation for WithGenerator<G, I> {
@@ -209,6 +213,10 @@ impl<I: ReverseInterpretation, G> ReverseInterpretation for WithLocalGenerator<G
 
     fn literals_of<'a>(&'a self, resource: &'a Self::Resource) -> Self::Literals<'a> {
         self.interpretation.literals_of(resource)
+    }
+
+    fn triple_term_components(&self, resource: &Self::Resource) -> Option<(Self::Resource, Self::Resource, Self::Resource)> {
+        self.interpretation.triple_term_components(resource)
     }
 }
 

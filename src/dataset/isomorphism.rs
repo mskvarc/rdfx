@@ -375,6 +375,16 @@ where
         }
     }
 
+    // RDF 1.2: descend through triple-term components.
+    if let (Some((sa, pa, oa)), Some((sb, pb, ob))) = (
+        interpretation.triple_term_components(a),
+        interpretation.triple_term_components(b),
+    ) {
+        return resource_matches(interpretation, &sa, &sb)
+            && resource_matches(interpretation, &pa, &pb)
+            && resource_matches(interpretation, &oa, &ob);
+    }
+
     interpretation.is_blank_id(a) && interpretation.is_blank_id(b)
 }
 
@@ -511,11 +521,65 @@ impl<'a, 'b, R: Resource + Ord> Bijection<'a, 'b, R> {
             }
         }
 
+        // RDF 1.2: descend through triple-term components. Components are
+        // owned (cloned) — bijection lookup falls back to value-based
+        // comparison via `Borrow<R>` on the map keys.
+        if let (Some((sa, pa, oa)), Some((sb, pb, ob))) = (
+            interpretation.triple_term_components(a),
+            interpretation.triple_term_components(b),
+        ) {
+            return self.resource_matches_value(interpretation, &sa, &sb)
+                && self.resource_matches_value(interpretation, &pa, &pb)
+                && self.resource_matches_value(interpretation, &oa, &ob);
+        }
+
         match self.forward.get(a) {
             Some(&c) => c == b,
             None => match self.backward.get(b) {
                 Some(&c) => a == c,
                 None => true,
+            },
+        }
+    }
+
+    /// Value-based variant of [`Self::resource_matches_with`] used when
+    /// recursing into triple-term components, where the cloned components
+    /// have a shorter lifetime than `'a` / `'b`.
+    fn resource_matches_value<I>(&self, interpretation: &I, a: &R, b: &R) -> bool
+    where
+        I: ReverseInterpretation<Resource = R>,
+    {
+        for ai in interpretation.iris_of(a) {
+            for bi in interpretation.iris_of(b) {
+                if ai == bi {
+                    return true;
+                }
+            }
+        }
+
+        for al in interpretation.literals_of(a) {
+            for bl in interpretation.literals_of(b) {
+                if al == bl {
+                    return true;
+                }
+            }
+        }
+
+        if let (Some((sa, pa, oa)), Some((sb, pb, ob))) = (
+            interpretation.triple_term_components(a),
+            interpretation.triple_term_components(b),
+        ) {
+            return self.resource_matches_value(interpretation, &sa, &sb)
+                && self.resource_matches_value(interpretation, &pa, &pb)
+                && self.resource_matches_value(interpretation, &oa, &ob);
+        }
+
+        // Bijection lookup with value-based key (BTreeMap uses Ord on R).
+        match self.forward.get(a) {
+            Some(&c) => c == b,
+            None => match self.backward.get(b) {
+                Some(&c) => a == c,
+                None => interpretation.is_blank_id(a) && interpretation.is_blank_id(b),
             },
         }
     }

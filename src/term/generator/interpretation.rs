@@ -74,6 +74,19 @@ impl<G> ReverseInterpretation for LocalGeneratorInterpretation<G> {
     fn literals_of<'a>(&'a self, resource: &'a Self::Resource) -> Self::Literals<'a> {
         resource.as_literal().map(LiteralRef::into_cow).into_iter()
     }
+
+    fn triple_term_components(&self, resource: &LocalTerm) -> Option<(LocalTerm, LocalTerm, LocalTerm)> {
+        match resource {
+            LocalTerm::Triple(t) => {
+                let s = match &t.0 {
+                    crate::Id::Iri(iri) => LocalTerm::iri(iri.clone()),
+                    crate::Id::BlankId(b) => LocalTerm::BlankId(b.clone()),
+                };
+                Some((s, LocalTerm::iri(t.1.clone()), t.2.clone()))
+            }
+            _ => None,
+        }
+    }
 }
 
 impl<G> ReverseLocalInterpretation for LocalGeneratorInterpretation<G> {

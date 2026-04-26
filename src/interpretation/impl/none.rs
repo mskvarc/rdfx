@@ -4,6 +4,7 @@ use iri_rs::{Iri, IriBuf};
 
 use crate::{
     CowLiteral,
+    Id,
     InterpretationMut,
     LiteralRef,
     LocalTerm,
@@ -49,5 +50,19 @@ impl ReverseInterpretation for () {
             LocalTerm::Named(Term::Literal(l)) => Some(l.as_cow()).into_iter(),
             _ => None.into_iter(),
         }
+    }
+
+    fn triple_term_components(&self, resource: &LocalTerm) -> Option<(LocalTerm, LocalTerm, LocalTerm)> {
+        match resource {
+            LocalTerm::Triple(t) => Some((id_to_local_term(&t.0), LocalTerm::iri(t.1.clone()), t.2.clone())),
+            _ => None,
+        }
+    }
+}
+
+fn id_to_local_term(id: &Id) -> LocalTerm {
+    match id {
+        Id::Iri(iri) => LocalTerm::iri(iri.clone()),
+        Id::BlankId(b) => LocalTerm::BlankId(b.clone()),
     }
 }
