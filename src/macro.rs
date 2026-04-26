@@ -5,15 +5,22 @@ macro_rules! unexpected_token {
 }
 
 // ==========================================================================
-// Generalized RDF macros (RDF 1.1 §A) — no position bounds.
+// Generalized RDF macros (RDF 1.1 §A / RDF 1.2 §A.1) — no position bounds.
 //
 // `generalized_triple!` builds `GeneralizedTriple<LocalTerm>`. Use these for
-// generalized RDF where literals/blanks may appear in any position.
+// generalized RDF where literals/blanks may appear in any position. RDF 1.2
+// triple terms `<<( s p o )>>` are accepted in any position; their body is
+// strict (built via `triple!`).
 // ==========================================================================
 
 /// Creates a generalized RDF triple ([`GeneralizedTriple<LocalTerm>`](crate::GeneralizedTriple)).
 #[macro_export]
 macro_rules! generalized_triple {
+    {
+        @from ($($acc:tt)*) << ( $($body:tt)* ) >> $($rest:tt)*
+    } => {
+        $crate::generalized_triple!(@from ($($acc)* $crate::LocalTerm::triple($crate::triple!($($body)*)),) $($rest)*)
+    };
     {
         @from ($($acc:tt)*) $id:ident $($rest:tt)*
     } => {
@@ -34,7 +41,16 @@ macro_rules! generalized_triple {
     } => {
         $crate::generalized_triple!(@from ($($acc)* $crate::LocalTerm::literal($crate::Literal::typed(
             $value.to_owned(),
-            $crate::Datatype::new($crate::IriBuf::from($crate::iri!($ty))).expect("compile-time IRI is not rdf:langString")
+            $crate::Datatype::new($crate::IriBuf::from($crate::iri!($ty))).expect("compile-time IRI is not a reserved language-string datatype")
+        )),) $($rest)*)
+    };
+    {
+        @from ($($acc:tt)*) $value:literal @ $lang:literal / $dir:literal $($rest:tt)*
+    } => {
+        $crate::generalized_triple!(@from ($($acc)* $crate::LocalTerm::literal($crate::Literal::dir_lang_string(
+            $value.to_owned(),
+            <$crate::langtag::LangTagBuf as ::std::str::FromStr>::from_str($lang).expect("compile-time lang tag is well-formed BCP47"),
+            { const __DIR: $crate::Direction = match $crate::Direction::parse_const($dir) { Some(d) => d, None => panic!("invalid direction literal: must be \"ltr\" or \"rtl\"") }; __DIR }
         )),) $($rest)*)
     };
     {
@@ -76,6 +92,16 @@ macro_rules! generalized_triples {
         $crate::generalized_triples!(@tokenize [$($acc)*] [$($current)* $i] $($rest)*)
     };
     {
+        @tokenize [$($acc:tt)*] [$($current:tt)*] << $($rest:tt)*
+    } => {
+        $crate::generalized_triples!(@tokenize [$($acc)*] [$($current)* <<] $($rest)*)
+    };
+    {
+        @tokenize [$($acc:tt)*] [$($current:tt)*] >> $($rest:tt)*
+    } => {
+        $crate::generalized_triples!(@tokenize [$($acc)*] [$($current)* >>] $($rest)*)
+    };
+    {
         @tokenize [$($acc:tt)*] [$($current:tt)*] < $($rest:tt)*
     } => {
         $crate::generalized_triples!(@tokenize [$($acc)*] [$($current)* <] $($rest)*)
@@ -104,6 +130,16 @@ macro_rules! generalized_triples {
         @tokenize [$($acc:tt)*] [$($current:tt)*] @ $($rest:tt)*
     } => {
         $crate::generalized_triples!(@tokenize [$($acc)*] [$($current)* @] $($rest)*)
+    };
+    {
+        @tokenize [$($acc:tt)*] [$($current:tt)*] / $($rest:tt)*
+    } => {
+        $crate::generalized_triples!(@tokenize [$($acc)*] [$($current)* /] $($rest)*)
+    };
+    {
+        @tokenize [$($acc:tt)*] [$($current:tt)*] ( $($body:tt)* ) $($rest:tt)*
+    } => {
+        $crate::generalized_triples!(@tokenize [$($acc)*] [$($current)* ( $($body)* )] $($rest)*)
     };
     {
         @tokenize [$($acc:tt)*] [$($current:tt)*] $l:literal $($rest:tt)*
@@ -146,6 +182,11 @@ macro_rules! generalized_triples {
 #[macro_export]
 macro_rules! generalized_quad {
     {
+        @from ($($acc:tt)*) << ( $($body:tt)* ) >> $($rest:tt)*
+    } => {
+        $crate::generalized_quad!(@from ($($acc)* $crate::LocalTerm::triple($crate::triple!($($body)*)),) $($rest)*)
+    };
+    {
         @from ($($acc:tt)*) $id:ident $($rest:tt)*
     } => {
         $crate::generalized_quad!(@from ($($acc)* ($crate::LocalTerm::from($id)),) $($rest)*)
@@ -165,7 +206,16 @@ macro_rules! generalized_quad {
     } => {
         $crate::generalized_quad!(@from ($($acc)* $crate::LocalTerm::literal($crate::Literal::typed(
             $value.to_owned(),
-            $crate::Datatype::new($crate::IriBuf::from($crate::iri!($ty))).expect("compile-time IRI is not rdf:langString")
+            $crate::Datatype::new($crate::IriBuf::from($crate::iri!($ty))).expect("compile-time IRI is not a reserved language-string datatype")
+        )),) $($rest)*)
+    };
+    {
+        @from ($($acc:tt)*) $value:literal @ $lang:literal / $dir:literal $($rest:tt)*
+    } => {
+        $crate::generalized_quad!(@from ($($acc)* $crate::LocalTerm::literal($crate::Literal::dir_lang_string(
+            $value.to_owned(),
+            <$crate::langtag::LangTagBuf as ::std::str::FromStr>::from_str($lang).expect("compile-time lang tag is well-formed BCP47"),
+            { const __DIR: $crate::Direction = match $crate::Direction::parse_const($dir) { Some(d) => d, None => panic!("invalid direction literal: must be \"ltr\" or \"rtl\"") }; __DIR }
         )),) $($rest)*)
     };
     {
@@ -210,6 +260,11 @@ macro_rules! generalized_quad {
 #[macro_export]
 macro_rules! generalized_quad_pattern {
     {
+        @from ($($acc:tt)*) << ( $($body:tt)* ) >> $($rest:tt)*
+    } => {
+        $crate::generalized_quad_pattern!(@from ($($acc)* $crate::pattern::ResourceOrVar::Resource($crate::LocalTerm::triple($crate::triple!($($body)*))),) $($rest)*)
+    };
+    {
         @from ($($acc:tt)*) ? $id:ident $($rest:tt)*
     } => {
         $crate::generalized_quad_pattern!(@from ($($acc)* $crate::pattern::ResourceOrVar::Var($id),) $($rest)*)
@@ -234,7 +289,16 @@ macro_rules! generalized_quad_pattern {
     } => {
         $crate::generalized_quad_pattern!(@from ($($acc)* $crate::pattern::ResourceOrVar::Resource($crate::LocalTerm::literal($crate::Literal::typed(
             $value.to_owned(),
-            $crate::Datatype::new($crate::IriBuf::from($crate::iri!($ty))).expect("compile-time IRI is not rdf:langString")
+            $crate::Datatype::new($crate::IriBuf::from($crate::iri!($ty))).expect("compile-time IRI is not a reserved language-string datatype")
+        ))),) $($rest)*)
+    };
+    {
+        @from ($($acc:tt)*) $value:literal @ $lang:literal / $dir:literal $($rest:tt)*
+    } => {
+        $crate::generalized_quad_pattern!(@from ($($acc)* $crate::pattern::ResourceOrVar::Resource($crate::LocalTerm::literal($crate::Literal::dir_lang_string(
+            $value.to_owned(),
+            <$crate::langtag::LangTagBuf as ::std::str::FromStr>::from_str($lang).expect("compile-time lang tag is well-formed BCP47"),
+            { const __DIR: $crate::Direction = match $crate::Direction::parse_const($dir) { Some(d) => d, None => panic!("invalid direction literal: must be \"ltr\" or \"rtl\"") }; __DIR }
         ))),) $($rest)*)
     };
     {
@@ -281,6 +345,16 @@ macro_rules! generalized_quads {
         $crate::generalized_quads!(@tokenize [$($acc)*] [$($current)* $i] $($rest)*)
     };
     {
+        @tokenize [$($acc:tt)*] [$($current:tt)*] << $($rest:tt)*
+    } => {
+        $crate::generalized_quads!(@tokenize [$($acc)*] [$($current)* <<] $($rest)*)
+    };
+    {
+        @tokenize [$($acc:tt)*] [$($current:tt)*] >> $($rest:tt)*
+    } => {
+        $crate::generalized_quads!(@tokenize [$($acc)*] [$($current)* >>] $($rest)*)
+    };
+    {
         @tokenize [$($acc:tt)*] [$($current:tt)*] < $($rest:tt)*
     } => {
         $crate::generalized_quads!(@tokenize [$($acc)*] [$($current)* <] $($rest)*)
@@ -309,6 +383,16 @@ macro_rules! generalized_quads {
         @tokenize [$($acc:tt)*] [$($current:tt)*] @ $($rest:tt)*
     } => {
         $crate::generalized_quads!(@tokenize [$($acc)*] [$($current)* @] $($rest)*)
+    };
+    {
+        @tokenize [$($acc:tt)*] [$($current:tt)*] / $($rest:tt)*
+    } => {
+        $crate::generalized_quads!(@tokenize [$($acc)*] [$($current)* /] $($rest)*)
+    };
+    {
+        @tokenize [$($acc:tt)*] [$($current:tt)*] ( $($body:tt)* ) $($rest:tt)*
+    } => {
+        $crate::generalized_quads!(@tokenize [$($acc)*] [$($current)* ( $($body)* )] $($rest)*)
     };
     {
         @tokenize [$($acc:tt)*] [$($current:tt)*] $l:literal $($rest:tt)*
@@ -348,21 +432,27 @@ macro_rules! generalized_quads {
 }
 
 // ==========================================================================
-// Strict RDF 1.1 macros — position-aware, reject invalid forms at compile time.
+// Strict RDF 1.1 / 1.2 macros — position-aware, reject invalid forms at compile time.
 //
 // `triple!` builds `Triple<Id, IriBuf, LocalTerm>` (= `LexicalTriple`).
-// Subjects: `<iri>` or `_:label`. Predicates: `<iri>` only. Objects: any term.
+// Subjects: `<iri>` or `_:label`. Predicates: `<iri>` only. Objects: any term,
+// including RDF 1.2 triple terms `<<( s p o )>>` and directional language
+// strings `"v" @ "lang" / "ltr"|"rtl"`.
 // `quad!` adds a graph-name position accepting IRI or blank.
 // ==========================================================================
 
-/// Creates a strict RDF 1.1 triple ([`Triple<Id, IriBuf, LocalTerm>`](crate::Triple)).
+/// Creates a strict RDF 1.1 / 1.2 triple ([`Triple<Id, IriBuf, LocalTerm>`](crate::Triple)).
 ///
 /// Subjects must be IRIs or blank nodes; predicates must be IRIs; objects may
-/// be IRIs, blank nodes, or literals. Literal subjects, literal predicates,
-/// and blank predicates are rejected at compile time.
+/// be IRIs, blank nodes, literals, or RDF 1.2 triple terms `<<( s p o )>>`.
+/// Literal subjects, literal predicates, blank predicates, and triple terms
+/// outside object position are rejected at compile time.
 #[macro_export]
 macro_rules! triple {
     // --- subject ---
+    { @sub ($($acc:tt)*) << ( $($body:tt)* ) >> $($rest:tt)* } => {
+        ::std::compile_error!("triple terms (RDF 1.2) are only allowed in object position in strict RDF; use generalized_triple! for unrestricted positions")
+    };
     { @sub ($($acc:tt)*) < $iri:literal > $($rest:tt)* } => {
         $crate::triple!(@pred ($($acc)* $crate::Id::iri($crate::IriBuf::from($crate::iri!($iri))),) $($rest)*)
     };
@@ -380,6 +470,9 @@ macro_rules! triple {
     };
 
     // --- predicate ---
+    { @pred ($($acc:tt)*) << ( $($body:tt)* ) >> $($rest:tt)* } => {
+        ::std::compile_error!("triple terms (RDF 1.2) are only allowed in object position in strict RDF; use generalized_triple! for unrestricted positions")
+    };
     { @pred ($($acc:tt)*) < $iri:literal > $($rest:tt)* } => {
         $crate::triple!(@obj ($($acc)* $crate::IriBuf::from($crate::iri!($iri)),) $($rest)*)
     };
@@ -397,6 +490,9 @@ macro_rules! triple {
     };
 
     // --- object (terminal) ---
+    { @obj ($($acc:tt)*) << ( $($body:tt)* ) >> } => {
+        $crate::triple!(@end ($($acc)* $crate::LocalTerm::triple($crate::triple!($($body)*)),))
+    };
     { @obj ($($acc:tt)*) < $iri:literal > } => {
         $crate::triple!(@end ($($acc)* $crate::LocalTerm::iri($crate::IriBuf::from($crate::iri!($iri))),))
     };
@@ -406,7 +502,14 @@ macro_rules! triple {
     { @obj ($($acc:tt)*) $value:literal ^^ $ty:literal } => {
         $crate::triple!(@end ($($acc)* $crate::LocalTerm::literal($crate::Literal::typed(
             $value.to_owned(),
-            $crate::Datatype::new($crate::IriBuf::from($crate::iri!($ty))).expect("compile-time IRI is not rdf:langString")
+            $crate::Datatype::new($crate::IriBuf::from($crate::iri!($ty))).expect("compile-time IRI is not a reserved language-string datatype")
+        )),))
+    };
+    { @obj ($($acc:tt)*) $value:literal @ $lang:literal / $dir:literal } => {
+        $crate::triple!(@end ($($acc)* $crate::LocalTerm::literal($crate::Literal::dir_lang_string(
+            $value.to_owned(),
+            <$crate::langtag::LangTagBuf as ::std::str::FromStr>::from_str($lang).expect("compile-time lang tag is well-formed BCP47"),
+            { const __DIR: $crate::Direction = match $crate::Direction::parse_const($dir) { Some(d) => d, None => panic!("invalid direction literal: must be \"ltr\" or \"rtl\"") }; __DIR }
         )),))
     };
     { @obj ($($acc:tt)*) $value:literal @ $lang:literal } => {
@@ -431,12 +534,15 @@ macro_rules! triple {
     };
 }
 
-/// Creates a strict RDF 1.1 quad ([`Quad<Id, IriBuf, LocalTerm, Id>`](crate::Quad)).
+/// Creates a strict RDF 1.1 / 1.2 quad ([`Quad<Id, IriBuf, LocalTerm, Id>`](crate::Quad)).
 ///
 /// Same shape as [`triple!`] with an optional graph-name (IRI or blank node).
 #[macro_export]
 macro_rules! quad {
     // --- subject ---
+    { @sub ($($acc:tt)*) << ( $($body:tt)* ) >> $($rest:tt)* } => {
+        ::std::compile_error!("triple terms (RDF 1.2) are only allowed in object position in strict RDF; use generalized_quad! for unrestricted positions")
+    };
     { @sub ($($acc:tt)*) < $iri:literal > $($rest:tt)* } => {
         $crate::quad!(@pred ($($acc)* $crate::Id::iri($crate::IriBuf::from($crate::iri!($iri))),) $($rest)*)
     };
@@ -454,6 +560,9 @@ macro_rules! quad {
     };
 
     // --- predicate ---
+    { @pred ($($acc:tt)*) << ( $($body:tt)* ) >> $($rest:tt)* } => {
+        ::std::compile_error!("triple terms (RDF 1.2) are only allowed in object position in strict RDF; use generalized_quad! for unrestricted positions")
+    };
     { @pred ($($acc:tt)*) < $iri:literal > $($rest:tt)* } => {
         $crate::quad!(@obj ($($acc)* $crate::IriBuf::from($crate::iri!($iri)),) $($rest)*)
     };
@@ -471,6 +580,9 @@ macro_rules! quad {
     };
 
     // --- object (then maybe graph) ---
+    { @obj ($($acc:tt)*) << ( $($body:tt)* ) >> $($rest:tt)* } => {
+        $crate::quad!(@graph ($($acc)* $crate::LocalTerm::triple($crate::triple!($($body)*)),) $($rest)*)
+    };
     { @obj ($($acc:tt)*) < $iri:literal > $($rest:tt)* } => {
         $crate::quad!(@graph ($($acc)* $crate::LocalTerm::iri($crate::IriBuf::from($crate::iri!($iri))),) $($rest)*)
     };
@@ -480,7 +592,14 @@ macro_rules! quad {
     { @obj ($($acc:tt)*) $value:literal ^^ $ty:literal $($rest:tt)* } => {
         $crate::quad!(@graph ($($acc)* $crate::LocalTerm::literal($crate::Literal::typed(
             $value.to_owned(),
-            $crate::Datatype::new($crate::IriBuf::from($crate::iri!($ty))).expect("compile-time IRI is not rdf:langString")
+            $crate::Datatype::new($crate::IriBuf::from($crate::iri!($ty))).expect("compile-time IRI is not a reserved language-string datatype")
+        )),) $($rest)*)
+    };
+    { @obj ($($acc:tt)*) $value:literal @ $lang:literal / $dir:literal $($rest:tt)* } => {
+        $crate::quad!(@graph ($($acc)* $crate::LocalTerm::literal($crate::Literal::dir_lang_string(
+            $value.to_owned(),
+            <$crate::langtag::LangTagBuf as ::std::str::FromStr>::from_str($lang).expect("compile-time lang tag is well-formed BCP47"),
+            { const __DIR: $crate::Direction = match $crate::Direction::parse_const($dir) { Some(d) => d, None => panic!("invalid direction literal: must be \"ltr\" or \"rtl\"") }; __DIR }
         )),) $($rest)*)
     };
     { @obj ($($acc:tt)*) $value:literal @ $lang:literal $($rest:tt)* } => {
@@ -497,6 +616,9 @@ macro_rules! quad {
     };
 
     // --- graph (optional) ---
+    { @graph ($($acc:tt)*) << ( $($body:tt)* ) >> } => {
+        ::std::compile_error!("triple terms (RDF 1.2) are not allowed in graph-name position in strict RDF; use generalized_quad! for unrestricted positions")
+    };
     { @graph ($($acc:tt)*) < $iri:literal > } => {
         $crate::quad!(@end_some ($($acc)* $crate::Id::iri($crate::IriBuf::from($crate::iri!($iri))),))
     };
@@ -528,13 +650,23 @@ macro_rules! quad {
     };
 }
 
-/// Creates an array of strict RDF 1.1 triples.
+/// Creates an array of strict RDF 1.1 / 1.2 triples.
 #[macro_export]
 macro_rules! triples {
     {
         @tokenize [$($acc:tt)*] [$($current:tt)*] $i:ident $($rest:tt)*
     } => {
         $crate::triples!(@tokenize [$($acc)*] [$($current)* $i] $($rest)*)
+    };
+    {
+        @tokenize [$($acc:tt)*] [$($current:tt)*] << $($rest:tt)*
+    } => {
+        $crate::triples!(@tokenize [$($acc)*] [$($current)* <<] $($rest)*)
+    };
+    {
+        @tokenize [$($acc:tt)*] [$($current:tt)*] >> $($rest:tt)*
+    } => {
+        $crate::triples!(@tokenize [$($acc)*] [$($current)* >>] $($rest)*)
     };
     {
         @tokenize [$($acc:tt)*] [$($current:tt)*] < $($rest:tt)*
@@ -565,6 +697,16 @@ macro_rules! triples {
         @tokenize [$($acc:tt)*] [$($current:tt)*] @ $($rest:tt)*
     } => {
         $crate::triples!(@tokenize [$($acc)*] [$($current)* @] $($rest)*)
+    };
+    {
+        @tokenize [$($acc:tt)*] [$($current:tt)*] / $($rest:tt)*
+    } => {
+        $crate::triples!(@tokenize [$($acc)*] [$($current)* /] $($rest)*)
+    };
+    {
+        @tokenize [$($acc:tt)*] [$($current:tt)*] ( $($body:tt)* ) $($rest:tt)*
+    } => {
+        $crate::triples!(@tokenize [$($acc)*] [$($current)* ( $($body)* )] $($rest)*)
     };
     {
         @tokenize [$($acc:tt)*] [$($current:tt)*] $l:literal $($rest:tt)*
@@ -603,13 +745,23 @@ macro_rules! triples {
     };
 }
 
-/// Creates an array of strict RDF 1.1 quads.
+/// Creates an array of strict RDF 1.1 / 1.2 quads.
 #[macro_export]
 macro_rules! quads {
     {
         @tokenize [$($acc:tt)*] [$($current:tt)*] $i:ident $($rest:tt)*
     } => {
         $crate::quads!(@tokenize [$($acc)*] [$($current)* $i] $($rest)*)
+    };
+    {
+        @tokenize [$($acc:tt)*] [$($current:tt)*] << $($rest:tt)*
+    } => {
+        $crate::quads!(@tokenize [$($acc)*] [$($current)* <<] $($rest)*)
+    };
+    {
+        @tokenize [$($acc:tt)*] [$($current:tt)*] >> $($rest:tt)*
+    } => {
+        $crate::quads!(@tokenize [$($acc)*] [$($current)* >>] $($rest)*)
     };
     {
         @tokenize [$($acc:tt)*] [$($current:tt)*] < $($rest:tt)*
@@ -640,6 +792,16 @@ macro_rules! quads {
         @tokenize [$($acc:tt)*] [$($current:tt)*] @ $($rest:tt)*
     } => {
         $crate::quads!(@tokenize [$($acc)*] [$($current)* @] $($rest)*)
+    };
+    {
+        @tokenize [$($acc:tt)*] [$($current:tt)*] / $($rest:tt)*
+    } => {
+        $crate::quads!(@tokenize [$($acc)*] [$($current)* /] $($rest)*)
+    };
+    {
+        @tokenize [$($acc:tt)*] [$($current:tt)*] ( $($body:tt)* ) $($rest:tt)*
+    } => {
+        $crate::quads!(@tokenize [$($acc)*] [$($current)* ( $($body)* )] $($rest)*)
     };
     {
         @tokenize [$($acc:tt)*] [$($current:tt)*] $l:literal $($rest:tt)*
@@ -681,11 +843,15 @@ macro_rules! quads {
 /// Creates a strict triple pattern `Triple<ResourceOrVar<Id, _>, ResourceOrVar<IriBuf, _>, ResourceOrVar<LocalTerm, _>>`.
 ///
 /// Position-aware: subjects are IRI/blank wrapped as `Id`; predicates are IRIs
-/// wrapped as `IriBuf`; objects are arbitrary terms wrapped as `LocalTerm`.
+/// wrapped as `IriBuf`; objects are arbitrary terms wrapped as `LocalTerm` —
+/// including RDF 1.2 triple terms `<<( s p o )>>`.
 /// Variables are introduced with `?ident`.
 #[macro_export]
 macro_rules! triple_pattern {
     // subject
+    { @sub ($($acc:tt)*) << ( $($body:tt)* ) >> $($rest:tt)* } => {
+        ::std::compile_error!("triple terms (RDF 1.2) are only allowed in object position in strict RDF")
+    };
     { @sub ($($acc:tt)*) ? $id:ident $($rest:tt)* } => {
         $crate::triple_pattern!(@pred ($($acc)* $crate::pattern::ResourceOrVar::Var($id),) $($rest)*)
     };
@@ -703,6 +869,9 @@ macro_rules! triple_pattern {
     };
 
     // predicate
+    { @pred ($($acc:tt)*) << ( $($body:tt)* ) >> $($rest:tt)* } => {
+        ::std::compile_error!("triple terms (RDF 1.2) are only allowed in object position in strict RDF")
+    };
     { @pred ($($acc:tt)*) ? $id:ident $($rest:tt)* } => {
         $crate::triple_pattern!(@obj ($($acc)* $crate::pattern::ResourceOrVar::Var($id),) $($rest)*)
     };
@@ -720,6 +889,9 @@ macro_rules! triple_pattern {
     };
 
     // object
+    { @obj ($($acc:tt)*) << ( $($body:tt)* ) >> } => {
+        $crate::triple_pattern!(@end ($($acc)* $crate::pattern::ResourceOrVar::Resource($crate::LocalTerm::triple($crate::triple!($($body)*))),))
+    };
     { @obj ($($acc:tt)*) ? $id:ident } => {
         $crate::triple_pattern!(@end ($($acc)* $crate::pattern::ResourceOrVar::Var($id),))
     };
@@ -732,7 +904,14 @@ macro_rules! triple_pattern {
     { @obj ($($acc:tt)*) $value:literal ^^ $ty:literal } => {
         $crate::triple_pattern!(@end ($($acc)* $crate::pattern::ResourceOrVar::Resource($crate::LocalTerm::literal($crate::Literal::typed(
             $value.to_owned(),
-            $crate::Datatype::new($crate::IriBuf::from($crate::iri!($ty))).expect("compile-time IRI is not rdf:langString")
+            $crate::Datatype::new($crate::IriBuf::from($crate::iri!($ty))).expect("compile-time IRI is not a reserved language-string datatype")
+        ))),))
+    };
+    { @obj ($($acc:tt)*) $value:literal @ $lang:literal / $dir:literal } => {
+        $crate::triple_pattern!(@end ($($acc)* $crate::pattern::ResourceOrVar::Resource($crate::LocalTerm::literal($crate::Literal::dir_lang_string(
+            $value.to_owned(),
+            <$crate::langtag::LangTagBuf as ::std::str::FromStr>::from_str($lang).expect("compile-time lang tag is well-formed BCP47"),
+            { const __DIR: $crate::Direction = match $crate::Direction::parse_const($dir) { Some(d) => d, None => panic!("invalid direction literal: must be \"ltr\" or \"rtl\"") }; __DIR }
         ))),))
     };
     { @obj ($($acc:tt)*) $value:literal @ $lang:literal } => {
@@ -762,6 +941,9 @@ macro_rules! triple_pattern {
 #[macro_export]
 macro_rules! quad_pattern {
     // subject
+    { @sub ($($acc:tt)*) << ( $($body:tt)* ) >> $($rest:tt)* } => {
+        ::std::compile_error!("triple terms (RDF 1.2) are only allowed in object position in strict RDF")
+    };
     { @sub ($($acc:tt)*) ? $id:ident $($rest:tt)* } => {
         $crate::quad_pattern!(@pred ($($acc)* $crate::pattern::ResourceOrVar::Var($id),) $($rest)*)
     };
@@ -779,6 +961,9 @@ macro_rules! quad_pattern {
     };
 
     // predicate
+    { @pred ($($acc:tt)*) << ( $($body:tt)* ) >> $($rest:tt)* } => {
+        ::std::compile_error!("triple terms (RDF 1.2) are only allowed in object position in strict RDF")
+    };
     { @pred ($($acc:tt)*) ? $id:ident $($rest:tt)* } => {
         $crate::quad_pattern!(@obj ($($acc)* $crate::pattern::ResourceOrVar::Var($id),) $($rest)*)
     };
@@ -796,6 +981,9 @@ macro_rules! quad_pattern {
     };
 
     // object
+    { @obj ($($acc:tt)*) << ( $($body:tt)* ) >> $($rest:tt)* } => {
+        $crate::quad_pattern!(@graph ($($acc)* $crate::pattern::ResourceOrVar::Resource($crate::LocalTerm::triple($crate::triple!($($body)*))),) $($rest)*)
+    };
     { @obj ($($acc:tt)*) ? $id:ident $($rest:tt)* } => {
         $crate::quad_pattern!(@graph ($($acc)* $crate::pattern::ResourceOrVar::Var($id),) $($rest)*)
     };
@@ -808,7 +996,14 @@ macro_rules! quad_pattern {
     { @obj ($($acc:tt)*) $value:literal ^^ $ty:literal $($rest:tt)* } => {
         $crate::quad_pattern!(@graph ($($acc)* $crate::pattern::ResourceOrVar::Resource($crate::LocalTerm::literal($crate::Literal::typed(
             $value.to_owned(),
-            $crate::Datatype::new($crate::IriBuf::from($crate::iri!($ty))).expect("compile-time IRI is not rdf:langString")
+            $crate::Datatype::new($crate::IriBuf::from($crate::iri!($ty))).expect("compile-time IRI is not a reserved language-string datatype")
+        ))),) $($rest)*)
+    };
+    { @obj ($($acc:tt)*) $value:literal @ $lang:literal / $dir:literal $($rest:tt)* } => {
+        $crate::quad_pattern!(@graph ($($acc)* $crate::pattern::ResourceOrVar::Resource($crate::LocalTerm::literal($crate::Literal::dir_lang_string(
+            $value.to_owned(),
+            <$crate::langtag::LangTagBuf as ::std::str::FromStr>::from_str($lang).expect("compile-time lang tag is well-formed BCP47"),
+            { const __DIR: $crate::Direction = match $crate::Direction::parse_const($dir) { Some(d) => d, None => panic!("invalid direction literal: must be \"ltr\" or \"rtl\"") }; __DIR }
         ))),) $($rest)*)
     };
     { @obj ($($acc:tt)*) $value:literal @ $lang:literal $($rest:tt)* } => {
@@ -822,6 +1017,9 @@ macro_rules! quad_pattern {
     };
 
     // graph (optional)
+    { @graph ($($acc:tt)*) << ( $($body:tt)* ) >> } => {
+        ::std::compile_error!("triple terms (RDF 1.2) are not allowed in graph-name position in strict RDF")
+    };
     { @graph ($($acc:tt)*) ? $id:ident } => {
         $crate::quad_pattern!(@end_some ($($acc)* $crate::pattern::ResourceOrVar::Var($id),))
     };
@@ -928,6 +1126,59 @@ mod tests {
         let _ = quads! [
             _:"b0" <"https://example.org/p"> "v" .
             <"https://example.org/s"> <"https://example.org/p"> _:"b1" <"https://example.org/g"> .
+        ];
+    }
+
+    // ---- RDF 1.2 smoke tests ----
+
+    #[test]
+    fn strict_triple_with_triple_term_object() {
+        let t = triple! [
+            <"https://example.org/a"> <"https://example.org/says">
+                <<( <"https://example.org/s"> <"https://example.org/p"> <"https://example.org/o"> )>>
+        ];
+        assert!(t.object().is_triple());
+    }
+
+    #[test]
+    fn strict_triple_nested_triple_term_object() {
+        let t = triple! [
+            <"https://example.org/a"> <"https://example.org/says">
+                <<(
+                    <"https://example.org/b"> <"https://example.org/says">
+                    <<( <"https://example.org/s"> <"https://example.org/p"> <"https://example.org/o"> )>>
+                )>>
+        ];
+        assert!(t.object().is_triple());
+    }
+
+    #[test]
+    fn strict_triple_dir_lang_string_object() {
+        let t = triple! [
+            <"https://example.org/s"> <"https://example.org/p"> "hello" @ "en" / "ltr"
+        ];
+        let lit = t.object().as_literal().expect("dir-lang object");
+        assert!(lit.type_.is_dir_lang_string());
+        assert_eq!(lit.type_.direction(), Some(crate::Direction::Ltr));
+    }
+
+    #[test]
+    fn generalized_triple_literal_subject_inside_triple_term() {
+        // `generalized_triple!` accepts triple terms in any position; the
+        // *body* is built via strict `triple!`, so this exercises the strict
+        // body path, not a fully-generalized inner body.
+        let _ = generalized_triple! [
+            <"https://example.org/a"> <"https://example.org/p">
+                <<( <"https://example.org/s"> <"https://example.org/p"> "literal-object" )>>
+        ];
+    }
+
+    #[test]
+    fn triples_array_with_triple_term() {
+        let _ = triples! [
+            <"https://example.org/a"> <"https://example.org/says">
+                <<( <"https://example.org/s"> <"https://example.org/p"> <"https://example.org/o"> )>> .
+            <"https://example.org/b"> <"https://example.org/p"> "x" .
         ];
     }
 }
