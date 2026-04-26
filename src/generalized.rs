@@ -1,20 +1,30 @@
-//! Generalized RDF (RDF 1.1 §A) types — no position invariants.
+//! Generalized RDF (RDF 1.1 §A / RDF 1.2 §A.1) types — no position invariants.
 //!
-//! Per [RDF 1.1 Concepts §A][s], generalized RDF relaxes the abstract syntax:
+//! Per [RDF 1.1 Concepts §A][s] / [RDF 1.2 Concepts §A.1][s2], generalized RDF
+//! relaxes the abstract syntax:
 //! - subjects may be literals,
 //! - predicates may be blank nodes or literals,
-//! - graph names may be literals.
+//! - graph names may be literals,
+//! - triple terms may appear in any position (RDF 1.2 generalization).
 //!
 //! Use [`GeneralizedTriple`] / [`GeneralizedQuad`] when interoperating with
-//! generalized syntaxes; use [`Triple`] / [`Quad`] for strict RDF 1.1.
+//! generalized syntaxes; use [`Triple`] / [`Quad`] for strict RDF 1.1 / 1.2.
 //!
-//! [s]: https://www.w3.org/TR/rdf11-concepts/#section-generalized-rdf
+//! Two flavors of generalized "local term" exist:
+//! - [`LocalTerm`] (default) — strict-RDF triple-term bodies inside any
+//!   triple-term object. Sufficient for most generalized-Turtle inputs.
+//! - [`GeneralizedLocalTerm`] — fully generalized: triple-term bodies may
+//!   themselves carry literal subjects / blank predicates / nested triple
+//!   terms. Reachable via [`FullyGeneralizedTriple`] / [`FullyGeneralizedQuad`].
+//!
+//! [s]:  https://www.w3.org/TR/rdf11-concepts/#section-generalized-rdf
+//! [s2]: https://www.w3.org/TR/rdf12-concepts/#section-generalized-rdf
 
 use std::{cmp::Ordering, fmt};
 
-use iri_rs::IriBuf;
+use iri_rs::{Iri, IriBuf};
 
-use crate::{Id, IsGraph, IsObject, IsPredicate, IsSubject, LocalTerm, Quad, RdfDisplay, Term, Triple};
+use crate::{BlankId, BlankIdBuf, Id, IsGraph, IsObject, IsPredicate, IsSubject, Literal, LiteralRef, LocalTerm, Quad, RdfDisplay, Term, Triple, __seal};
 
 /// Reasons a [`GeneralizedTriple`] or [`GeneralizedQuad`] cannot be converted
 /// to a strict [`Triple`] / [`Quad`].
@@ -28,9 +38,19 @@ pub enum GeneralizationError {
     BlankPredicate,
     #[error("literal in graph position")]
     LiteralGraph,
+    /// A triple term sits in subject position. Strict RDF 1.2 only allows
+    /// triple terms in object position.
+    #[error("triple term in subject position")]
+    TripleTermSubject,
+    /// A triple term sits in predicate position.
+    #[error("triple term in predicate position")]
+    TripleTermPredicate,
+    /// A triple term sits in graph-name position.
+    #[error("triple term in graph position")]
+    TripleTermGraph,
 }
 
-/// Generalized RDF triple (RDF 1.1 §A) — no position bounds on its components.
+/// Generalized RDF triple — no position bounds on its components.
 #[derive(Clone, Copy, Eq, Ord, Hash, Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct GeneralizedTriple<S = LocalTerm, P = S, O = S>(pub S, pub P, pub O);
@@ -135,16 +155,13 @@ impl<T> GeneralizedTriple<T, T, T> {
 
 impl GeneralizedTriple<LocalTerm, LocalTerm, LocalTerm> {
     /// Tries to narrow this generalized triple into a strict [`Triple`].
-    /// Fails if a literal sits in subject position, or the predicate is a
-    /// blank node or literal.
+    /// Fails if a literal sits in subject position, the predicate is a
+    /// blank node, literal, or triple term, or a triple term sits in subject
+    /// position.
     pub fn try_into_triple(self) -> Result<Triple<Id, IriBuf, LocalTerm>, GeneralizationError> {
         let GeneralizedTriple(s, p, o) = self;
-        let s = local_term_to_id(s).map_err(|_| GeneralizationError::LiteralSubject)?;
-        let p = match p {
-            LocalTerm::BlankId(_) => return Err(GeneralizationError::BlankPredicate),
-            LocalTerm::Named(Term::Iri(iri)) => iri,
-            LocalTerm::Named(Term::Literal(_)) => return Err(GeneralizationError::LiteralPredicate),
-        };
+        let s = local_term_to_id(s)?;
+        let p = local_term_to_iri(p)?;
         Ok(Triple(s, p, o))
     }
 }
@@ -195,7 +212,7 @@ impl<S: RdfDisplay, P: RdfDisplay, O: RdfDisplay> RdfDisplay for GeneralizedTrip
     }
 }
 
-/// Generalized RDF quad (RDF 1.1 §A) — no position bounds on its components.
+/// Generalized RDF quad — no position bounds on its components.
 #[derive(Clone, Copy, Eq, Ord, Hash, Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct GeneralizedQuad<S = LocalTerm, P = S, O = S, G = S>(pub S, pub P, pub O, pub Option<G>);
@@ -332,25 +349,40 @@ impl GeneralizedQuad<LocalTerm, LocalTerm, LocalTerm, LocalTerm> {
     /// Tries to narrow this generalized quad into a strict [`Quad`].
     pub fn try_into_quad(self) -> Result<Quad<Id, IriBuf, LocalTerm, Id>, GeneralizationError> {
         let GeneralizedQuad(s, p, o, g) = self;
-        let s = local_term_to_id(s).map_err(|_| GeneralizationError::LiteralSubject)?;
-        let p = match p {
-            LocalTerm::BlankId(_) => return Err(GeneralizationError::BlankPredicate),
-            LocalTerm::Named(Term::Iri(iri)) => iri,
-            LocalTerm::Named(Term::Literal(_)) => return Err(GeneralizationError::LiteralPredicate),
-        };
+        let s = local_term_to_id(s)?;
+        let p = local_term_to_iri(p)?;
         let g = match g {
-            Some(t) => Some(local_term_to_id(t).map_err(|_| GeneralizationError::LiteralGraph)?),
+            Some(t) => Some(local_term_to_graph_id(t)?),
             None => None,
         };
         Ok(Quad(s, p, o, g))
     }
 }
 
-fn local_term_to_id(t: LocalTerm) -> Result<Id, ()> {
+fn local_term_to_id(t: LocalTerm) -> Result<Id, GeneralizationError> {
     match t {
         LocalTerm::BlankId(b) => Ok(Id::BlankId(b)),
         LocalTerm::Named(Term::Iri(iri)) => Ok(Id::Iri(iri)),
-        LocalTerm::Named(Term::Literal(_)) => Err(()),
+        LocalTerm::Named(Term::Literal(_)) => Err(GeneralizationError::LiteralSubject),
+        LocalTerm::Triple(_) => Err(GeneralizationError::TripleTermSubject),
+    }
+}
+
+fn local_term_to_iri(t: LocalTerm) -> Result<IriBuf, GeneralizationError> {
+    match t {
+        LocalTerm::BlankId(_) => Err(GeneralizationError::BlankPredicate),
+        LocalTerm::Named(Term::Iri(iri)) => Ok(iri),
+        LocalTerm::Named(Term::Literal(_)) => Err(GeneralizationError::LiteralPredicate),
+        LocalTerm::Triple(_) => Err(GeneralizationError::TripleTermPredicate),
+    }
+}
+
+fn local_term_to_graph_id(t: LocalTerm) -> Result<Id, GeneralizationError> {
+    match t {
+        LocalTerm::BlankId(b) => Ok(Id::BlankId(b)),
+        LocalTerm::Named(Term::Iri(iri)) => Ok(Id::Iri(iri)),
+        LocalTerm::Named(Term::Literal(_)) => Err(GeneralizationError::LiteralGraph),
+        LocalTerm::Triple(_) => Err(GeneralizationError::TripleTermGraph),
     }
 }
 
@@ -436,3 +468,221 @@ impl<S: RdfDisplay, P: RdfDisplay, O: RdfDisplay, G: RdfDisplay> RdfDisplay for 
         }
     }
 }
+
+// =========================================================================
+// Fully-generalized local term (RDF 1.2 §A.1)
+// =========================================================================
+
+/// Fully-generalized local term — like [`LocalTerm`] but its triple-term
+/// bodies may themselves carry literal subjects, blank predicates, and
+/// nested triple terms in any position.
+///
+/// Reachable as the component type of [`FullyGeneralizedTriple`] /
+/// [`FullyGeneralizedQuad`].
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum GeneralizedLocalTerm {
+    BlankId(BlankIdBuf),
+    Named(Term),
+    /// Fully-generalized triple term — body components are themselves
+    /// [`GeneralizedLocalTerm`].
+    Triple(Box<GeneralizedTriple<GeneralizedLocalTerm>>),
+}
+
+impl GeneralizedLocalTerm {
+    pub const fn iri(iri: IriBuf) -> Self {
+        Self::Named(Term::Iri(iri))
+    }
+
+    pub const fn literal(literal: Literal) -> Self {
+        Self::Named(Term::Literal(literal))
+    }
+
+    pub fn triple(t: GeneralizedTriple<GeneralizedLocalTerm>) -> Self {
+        Self::Triple(Box::new(t))
+    }
+
+    pub const fn is_blank_id(&self) -> bool {
+        matches!(self, Self::BlankId(_))
+    }
+
+    pub const fn is_triple(&self) -> bool {
+        matches!(self, Self::Triple(_))
+    }
+
+    pub fn as_blank_id(&self) -> Option<&BlankId> {
+        match self {
+            Self::BlankId(b) => Some(b),
+            _ => None,
+        }
+    }
+
+    pub fn as_iri(&self) -> Option<Iri<&str>> {
+        match self {
+            Self::Named(Term::Iri(iri)) => Some(iri.as_ref()),
+            _ => None,
+        }
+    }
+
+    pub fn as_literal(&self) -> Option<LiteralRef<'_>> {
+        match self {
+            Self::Named(Term::Literal(l)) => Some(l.as_ref()),
+            _ => None,
+        }
+    }
+
+    pub fn as_triple(&self) -> Option<&GeneralizedTriple<GeneralizedLocalTerm>> {
+        match self {
+            Self::Triple(t) => Some(t),
+            _ => None,
+        }
+    }
+
+    /// Narrows this fully-generalized term to a strict [`LocalTerm`].
+    pub fn try_into_local_term(self) -> Result<LocalTerm, GeneralizationError> {
+        match self {
+            Self::BlankId(b) => Ok(LocalTerm::BlankId(b)),
+            Self::Named(t) => Ok(LocalTerm::Named(t)),
+            Self::Triple(b) => {
+                let GeneralizedTriple(s, p, o) = *b;
+                let s = generalized_to_id(s, GeneralizationError::LiteralSubject)?;
+                let p = generalized_to_iri(p)?;
+                let o = o.try_into_local_term()?;
+                Ok(LocalTerm::triple(Triple(s, p, o)))
+            }
+        }
+    }
+}
+
+impl From<LocalTerm> for GeneralizedLocalTerm {
+    fn from(value: LocalTerm) -> Self {
+        match value {
+            LocalTerm::BlankId(b) => Self::BlankId(b),
+            LocalTerm::Named(t) => Self::Named(t),
+            LocalTerm::Triple(b) => {
+                let Triple(s, p, o) = *b;
+                let s = match s {
+                    Id::Iri(iri) => Self::Named(Term::Iri(iri)),
+                    Id::BlankId(b) => Self::BlankId(b),
+                };
+                let p = Self::Named(Term::Iri(p));
+                let o = Self::from(o);
+                Self::triple(GeneralizedTriple(s, p, o))
+            }
+        }
+    }
+}
+
+impl From<BlankIdBuf> for GeneralizedLocalTerm {
+    fn from(value: BlankIdBuf) -> Self {
+        Self::BlankId(value)
+    }
+}
+
+impl From<IriBuf> for GeneralizedLocalTerm {
+    fn from(value: IriBuf) -> Self {
+        Self::iri(value)
+    }
+}
+
+impl From<Literal> for GeneralizedLocalTerm {
+    fn from(value: Literal) -> Self {
+        Self::literal(value)
+    }
+}
+
+impl From<Term> for GeneralizedLocalTerm {
+    fn from(value: Term) -> Self {
+        Self::Named(value)
+    }
+}
+
+impl fmt::Display for GeneralizedLocalTerm {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::BlankId(b) => b.fmt(f),
+            Self::Named(t) => t.fmt(f),
+            Self::Triple(t) => {
+                f.write_str("<<( ")?;
+                t.rdf_fmt(f)?;
+                f.write_str(" )>>")
+            }
+        }
+    }
+}
+
+impl RdfDisplay for GeneralizedLocalTerm {
+    fn rdf_fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::BlankId(b) => b.rdf_fmt(f),
+            Self::Named(t) => t.rdf_fmt(f),
+            Self::Triple(t) => {
+                f.write_str("<<( ")?;
+                t.rdf_fmt(f)?;
+                f.write_str(" )>>")
+            }
+        }
+    }
+}
+
+// Bare position-trait impls — fully generalized terms are usable in every
+// position. No `Resource` impl (consistent with how `LocalTerm` is sealed:
+// only the positions strictly required by RDF, not as a free-form resource).
+impl __seal::Sealed for GeneralizedLocalTerm {}
+impl IsSubject for GeneralizedLocalTerm {}
+impl IsPredicate for GeneralizedLocalTerm {}
+impl IsObject for GeneralizedLocalTerm {}
+impl IsGraph for GeneralizedLocalTerm {}
+
+/// Fully-generalized triple — body components are [`GeneralizedLocalTerm`].
+pub type FullyGeneralizedTriple = GeneralizedTriple<GeneralizedLocalTerm>;
+
+/// Fully-generalized quad — body components are [`GeneralizedLocalTerm`].
+pub type FullyGeneralizedQuad = GeneralizedQuad<GeneralizedLocalTerm>;
+
+impl FullyGeneralizedTriple {
+    /// Tries to narrow this fully-generalized triple into a strict [`Triple`].
+    pub fn try_into_strict_triple(self) -> Result<Triple<Id, IriBuf, LocalTerm>, GeneralizationError> {
+        let GeneralizedTriple(s, p, o) = self;
+        let s = generalized_to_id(s, GeneralizationError::LiteralSubject)?;
+        let p = generalized_to_iri(p)?;
+        let o = o.try_into_local_term()?;
+        Ok(Triple(s, p, o))
+    }
+}
+
+impl FullyGeneralizedQuad {
+    /// Tries to narrow this fully-generalized quad into a strict [`Quad`].
+    pub fn try_into_strict_quad(self) -> Result<Quad<Id, IriBuf, LocalTerm, Id>, GeneralizationError> {
+        let GeneralizedQuad(s, p, o, g) = self;
+        let s = generalized_to_id(s, GeneralizationError::LiteralSubject)?;
+        let p = generalized_to_iri(p)?;
+        let o = o.try_into_local_term()?;
+        let g = match g {
+            Some(t) => Some(generalized_to_id(t, GeneralizationError::LiteralGraph)?),
+            None => None,
+        };
+        Ok(Quad(s, p, o, g))
+    }
+}
+
+fn generalized_to_id(t: GeneralizedLocalTerm, on_literal: GeneralizationError) -> Result<Id, GeneralizationError> {
+    match t {
+        GeneralizedLocalTerm::BlankId(b) => Ok(Id::BlankId(b)),
+        GeneralizedLocalTerm::Named(Term::Iri(iri)) => Ok(Id::Iri(iri)),
+        GeneralizedLocalTerm::Named(Term::Literal(_)) => Err(on_literal),
+        GeneralizedLocalTerm::Triple(_) => Err(match on_literal {
+            GeneralizationError::LiteralGraph => GeneralizationError::TripleTermGraph,
+            _ => GeneralizationError::TripleTermSubject,
+        }),
+    }
+}
+
+fn generalized_to_iri(t: GeneralizedLocalTerm) -> Result<IriBuf, GeneralizationError> {
+    match t {
+        GeneralizedLocalTerm::BlankId(_) => Err(GeneralizationError::BlankPredicate),
+        GeneralizedLocalTerm::Named(Term::Iri(iri)) => Ok(iri),
+        GeneralizedLocalTerm::Named(Term::Literal(_)) => Err(GeneralizationError::LiteralPredicate),
+        GeneralizedLocalTerm::Triple(_) => Err(GeneralizationError::TripleTermPredicate),
+    }
+}
+

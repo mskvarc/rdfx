@@ -1,22 +1,26 @@
 //! Sealed position-marker traits enforcing the [RDF 1.1 Concepts §3 Triples][s3]
-//! and [§4 Datasets][s4] abstract syntax.
+//! / [RDF 1.2 Concepts §4 Triples][s32] and [§4 Datasets][s4] /
+//! [RDF 1.2 §5 Datasets][s42] abstract syntax.
 //!
-//! | term kind  | subject | predicate | object | graph |
-//! | ---------- | :-----: | :-------: | :----: | :---: |
-//! | IRI        |    ✓    |     ✓     |   ✓    |   ✓   |
-//! | blank node |    ✓    |     —     |   ✓    |   ✓   |
-//! | literal    |    —    |     —     |   ✓    |   —   |
+//! | term kind         | subject | predicate | object | graph |
+//! | ----------------- | :-----: | :-------: | :----: | :---: |
+//! | IRI               |    ✓    |     ✓     |   ✓    |   ✓   |
+//! | blank node        |    ✓    |     —     |   ✓    |   ✓   |
+//! | literal           |    —    |     —     |   ✓    |   —   |
+//! | triple term (1.2) |    —    |     —     |   ✓    |   —   |
 //!
 //! [`IsSubject`], [`IsPredicate`], [`IsObject`], [`IsGraph`] are sealed:
 //! only this crate (for lexical RDF types) and types declared via
 //! [`impl_resource!`](crate::impl_resource!) (the unsealed [`Resource`] marker) may satisfy them.
 //!
-//! Generalized RDF (RDF 1.1 §A) — literals as subjects, blank nodes as
-//! predicates — is opt-in via the parallel `Generalized*` types, which place
-//! no position bounds.
+//! Generalized RDF (RDF 1.1 §A / RDF 1.2 §A.1) — literals as subjects, blank
+//! nodes as predicates, triple terms anywhere — is opt-in via the parallel
+//! `Generalized*` types, which place no position bounds.
 //!
-//! [s3]: https://www.w3.org/TR/rdf11-concepts/#section-triples
-//! [s4]: https://www.w3.org/TR/rdf11-concepts/#section-dataset
+//! [s3]:  https://www.w3.org/TR/rdf11-concepts/#section-triples
+//! [s32]: https://www.w3.org/TR/rdf12-concepts/#section-triples
+//! [s4]:  https://www.w3.org/TR/rdf11-concepts/#section-dataset
+//! [s42]: https://www.w3.org/TR/rdf12-concepts/#section-rdf-dataset
 
 use std::borrow::Cow;
 

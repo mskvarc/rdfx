@@ -1,6 +1,6 @@
-use std::cmp::Ordering;
+use std::{cmp::Ordering, fmt};
 
-use crate::LiteralRef;
+use crate::{LiteralRef, RdfDisplay};
 use iri_rs::Iri;
 
 use super::Term;
@@ -28,6 +28,24 @@ impl PartialEq<Term> for TermRef<'_> {
             (Self::Iri(a), Term::Iri(b)) => a.as_str() == b.as_str(),
             (Self::Literal(a), Term::Literal(b)) => a == b,
             _ => false,
+        }
+    }
+}
+
+impl fmt::Display for TermRef<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::Iri(iri) => iri.fmt(f),
+            Self::Literal(l) => l.fmt(f),
+        }
+    }
+}
+
+impl RdfDisplay for TermRef<'_> {
+    fn rdf_fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::Iri(iri) => iri.rdf_fmt(f),
+            Self::Literal(l) => l.rdf_fmt(f),
         }
     }
 }

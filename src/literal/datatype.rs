@@ -2,40 +2,71 @@ use std::{borrow::Cow, fmt, ops::Deref};
 
 use iri_rs::{Iri, IriBuf};
 
-use crate::{RDF_LANG_STRING, RdfDisplay, XSD_STRING};
+use crate::{RDF_DIR_LANG_STRING, RDF_LANG_STRING, RdfDisplay, XSD_STRING};
 
-/// Error returned when attempting to construct a [`Datatype`] from
-/// `rdf:langString`.
+/// Error returned when attempting to construct a [`Datatype`] from one of the
+/// RDF-reserved language-string datatype IRIs.
 ///
-/// Per [RDF 1.1 Concepts §3.3][s], `rdf:langString` is reserved for
-/// language-tagged literals and cannot appear as a plain typed-literal
-/// datatype. Use [`LiteralType::lang_string`](crate::LiteralType::lang_string)
-/// for language-tagged literals instead.
+/// Per [RDF 1.2 Concepts §3.4][s], `rdf:langString` and `rdf:dirLangString`
+/// are reserved for language-tagged literals (with and without an explicit
+/// base direction) and cannot appear as a plain typed-literal datatype. Use
+/// [`LiteralType::lang_string`](crate::LiteralType::lang_string) or
+/// [`LiteralType::dir_lang_string`](crate::LiteralType::dir_lang_string)
+/// instead.
 ///
-/// [s]: https://www.w3.org/TR/rdf11-concepts/#dfn-language-tagged-string
+/// [s]: https://www.w3.org/TR/rdf12-concepts/#section-Graph-Literal
 #[derive(Debug, thiserror::Error)]
-#[error("rdf:langString cannot be a typed-literal datatype; use LiteralType::lang_string")]
-pub struct RdfLangStringDatatypeError(pub IriBuf);
+pub enum ReservedDatatypeError {
+    /// `rdf:langString` was used as a typed-literal datatype.
+    #[error("rdf:langString cannot be a typed-literal datatype; use LiteralType::lang_string")]
+    LangString(IriBuf),
+    /// `rdf:dirLangString` was used as a typed-literal datatype.
+    #[error("rdf:dirLangString cannot be a typed-literal datatype; use LiteralType::dir_lang_string")]
+    DirLangString(IriBuf),
+}
+
+impl ReservedDatatypeError {
+    /// Returns the IRI that triggered the error.
+    pub fn iri(&self) -> &IriBuf {
+        match self {
+            Self::LangString(i) | Self::DirLangString(i) => i,
+        }
+    }
+
+    /// Consumes the error, returning the offending IRI.
+    pub fn into_iri(self) -> IriBuf {
+        match self {
+            Self::LangString(i) | Self::DirLangString(i) => i,
+        }
+    }
+}
+
+fn classify_reserved(iri: IriBuf) -> Result<IriBuf, ReservedDatatypeError> {
+    if iri.as_str() == RDF_LANG_STRING.as_str() {
+        Err(ReservedDatatypeError::LangString(iri))
+    } else if iri.as_str() == RDF_DIR_LANG_STRING.as_str() {
+        Err(ReservedDatatypeError::DirLangString(iri))
+    } else {
+        Ok(iri)
+    }
+}
 
 /// Validated typed-literal datatype IRI.
 ///
-/// Per [RDF 1.1 Concepts §3.3][s], the wrapped IRI is guaranteed to differ
-/// from `rdf:langString`. Construct via [`Datatype::new`].
+/// Per [RDF 1.2 Concepts §3.4][s], the wrapped IRI is guaranteed to differ
+/// from `rdf:langString` and `rdf:dirLangString`. Construct via
+/// [`Datatype::new`].
 ///
-/// [s]: https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal
+/// [s]: https://www.w3.org/TR/rdf12-concepts/#section-Graph-Literal
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(transparent))]
 pub struct Datatype(IriBuf);
 
 impl Datatype {
-    /// Creates a `Datatype` from `iri`, returning [`RdfLangStringDatatypeError`]
-    /// if `iri == rdf:langString`.
-    pub fn new(iri: IriBuf) -> Result<Self, RdfLangStringDatatypeError> {
-        if iri.as_str() == RDF_LANG_STRING.as_str() {
-            Err(RdfLangStringDatatypeError(iri))
-        } else {
-            Ok(Self(iri))
-        }
+    /// Creates a `Datatype` from `iri`, returning [`ReservedDatatypeError`]
+    /// if `iri` is `rdf:langString` or `rdf:dirLangString`.
+    pub fn new(iri: IriBuf) -> Result<Self, ReservedDatatypeError> {
+        classify_reserved(iri).map(Self)
     }
 
     /// Returns the `xsd:string` datatype.
@@ -58,13 +89,15 @@ impl Datatype {
         DatatypeRef(self.0.as_ref())
     }
 
-    /// Constructs a `Datatype` without validating that `iri != rdf:langString`.
+    /// Constructs a `Datatype` without validating that the IRI is not
+    /// `rdf:langString` or `rdf:dirLangString`.
     ///
     /// # Safety
     ///
-    /// The caller must guarantee that `iri.as_str() != RDF_LANG_STRING.as_str()`.
-    /// Violating this lets `LiteralType::Any(rdf:langString)` exist via safe
-    /// API and breaks the RDF 1.1 typed-literal / lang-tagged distinction.
+    /// The caller must guarantee that the IRI differs from both reserved
+    /// language-string datatype IRIs. Violating this lets
+    /// `LiteralType::Any(rdf:langString)` (or `Any(rdf:dirLangString)`) exist
+    /// via safe API and breaks the typed-literal / lang-tagged distinction.
     pub const unsafe fn new_unchecked(iri: IriBuf) -> Self {
         Self(iri)
     }
@@ -96,7 +129,7 @@ impl RdfDisplay for Datatype {
 }
 
 impl TryFrom<IriBuf> for Datatype {
-    type Error = RdfLangStringDatatypeError;
+    type Error = ReservedDatatypeError;
     fn try_from(value: IriBuf) -> Result<Self, Self::Error> {
         Self::new(value)
     }
@@ -108,11 +141,13 @@ impl TryFrom<IriBuf> for Datatype {
 pub struct DatatypeRef<'a>(Iri<&'a str>);
 
 impl<'a> DatatypeRef<'a> {
-    /// Creates a `DatatypeRef` from `iri`, returning [`RdfLangStringDatatypeError`]
-    /// if `iri == rdf:langString`.
-    pub fn new(iri: Iri<&'a str>) -> Result<Self, RdfLangStringDatatypeError> {
+    /// Creates a `DatatypeRef` from `iri`, returning [`ReservedDatatypeError`]
+    /// if `iri` is `rdf:langString` or `rdf:dirLangString`.
+    pub fn new(iri: Iri<&'a str>) -> Result<Self, ReservedDatatypeError> {
         if iri.as_str() == RDF_LANG_STRING.as_str() {
-            Err(RdfLangStringDatatypeError(iri.into()))
+            Err(ReservedDatatypeError::LangString(iri.into()))
+        } else if iri.as_str() == RDF_DIR_LANG_STRING.as_str() {
+            Err(ReservedDatatypeError::DirLangString(iri.into()))
         } else {
             Ok(Self(iri))
         }
@@ -129,7 +164,8 @@ impl<'a> DatatypeRef<'a> {
         unsafe { Datatype::new_unchecked(self.0.into()) }
     }
 
-    /// Constructs a `DatatypeRef` without validating that `iri != rdf:langString`.
+    /// Constructs a `DatatypeRef` without validating that the IRI is not
+    /// `rdf:langString` or `rdf:dirLangString`.
     ///
     /// # Safety
     ///
@@ -161,8 +197,11 @@ impl<'de> serde::Deserialize<'de> for Datatype {
         D: serde::Deserializer<'de>,
     {
         let iri = IriBuf::deserialize(deserializer)?;
-        Datatype::new(iri).map_err(|RdfLangStringDatatypeError(bad)| {
-            <D::Error as serde::de::Error>::invalid_value(serde::de::Unexpected::Str(bad.as_str()), &"a non-rdf:langString datatype IRI")
+        Datatype::new(iri).map_err(|e| {
+            <D::Error as serde::de::Error>::invalid_value(
+                serde::de::Unexpected::Str(e.iri().as_str()),
+                &"a non-rdf:langString, non-rdf:dirLangString datatype IRI",
+            )
         })
     }
 }

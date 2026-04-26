@@ -1,7 +1,7 @@
 //! Resource interpretations.
 use std::borrow::Cow;
 
-use crate::{BlankId, CowId, CowLiteral, CowLocalTerm, CowTerm, IdRef, LiteralRef, LocalTermRef, TermRef};
+use crate::{BlankId, CowId, CowLiteral, CowLocalTerm, CowTerm, IdRef, LiteralRef, LocalTermRef, TermRef, TripleTerm};
 
 mod r#impl;
 pub use r#impl::*;
@@ -113,7 +113,15 @@ pub trait LocalInterpretation: Interpretation {
         match term.into() {
             LocalTermRef::BlankId(blank_id) => self.blank_id(blank_id),
             LocalTermRef::Named(term) => self.term(term),
+            LocalTermRef::Triple(t) => self.triple_term(t.clone()),
         }
+    }
+
+    /// Looks up a triple-term resource (RDF 1.2). Default implementation
+    /// returns `None` — interpretations that store triple terms should
+    /// override.
+    fn triple_term(&self, _t: TripleTerm) -> Option<Self::Resource> {
+        None
     }
 
     fn id<'a>(&self, id: impl Into<IdRef<'a>>) -> Option<Self::Resource> {
@@ -131,7 +139,15 @@ pub trait LocalInterpretationMut: InterpretationMut {
         match term.into() {
             CowLocalTerm::BlankId(blank_id) => self.insert_blank_id(blank_id),
             CowLocalTerm::Named(term) => self.insert_term(term),
+            CowLocalTerm::Triple(t) => self.insert_triple_term(t.into_owned()),
         }
+    }
+
+    /// Inserts a triple-term resource (RDF 1.2). Default implementation
+    /// panics — interpretations that need to ingest triple-term-bearing
+    /// graphs must override this method.
+    fn insert_triple_term(&mut self, _t: TripleTerm) -> Self::Resource {
+        unimplemented!("triple-term insertion not implemented by this LocalInterpretationMut")
     }
 
     fn insert_id<'a>(&mut self, term: impl Into<CowId<'a>>) -> Self::Resource {

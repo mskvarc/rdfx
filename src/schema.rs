@@ -18,6 +18,13 @@ pub const RDFS_SEE_ALSO: Iri<&'static str> = iri!("http://www.w3.org/2000/01/rdf
 pub const RDFS_IS_DEFINED_BY: Iri<&'static str> = iri!("http://www.w3.org/2000/01/rdf-schema#isDefinedBy");
 
 pub const RDF_LANG_STRING: Iri<&'static str> = iri!("http://www.w3.org/1999/02/22-rdf-syntax-ns#langString");
+/// `rdf:dirLangString` — RDF 1.2 directional language-tagged literal datatype.
+pub const RDF_DIR_LANG_STRING: Iri<&'static str> = iri!("http://www.w3.org/1999/02/22-rdf-syntax-ns#dirLangString");
+/// `rdf:reifies` — RDF 1.2 annotation predicate linking a reifier to its
+/// reified triple term.
+pub const RDF_REIFIES: Iri<&'static str> = iri!("http://www.w3.org/1999/02/22-rdf-syntax-ns#reifies");
+/// `rdf:TripleTerm` — RDF 1.2 class of reified triple terms.
+pub const RDF_TRIPLE_TERM: Iri<&'static str> = iri!("http://www.w3.org/1999/02/22-rdf-syntax-ns#TripleTerm");
 pub const RDF_HTML: Iri<&'static str> = iri!("http://www.w3.org/1999/02/22-rdf-syntax-ns#HTML");
 pub const RDF_XML_LITERAL: Iri<&'static str> = iri!("http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral");
 pub const RDF_JSON: Iri<&'static str> = iri!("http://www.w3.org/1999/02/22-rdf-syntax-ns#JSON");

@@ -5,6 +5,9 @@ use std::{borrow::Borrow, fmt};
 mod datatype;
 pub use datatype::*;
 
+mod direction;
+pub use direction::*;
+
 mod r#ref;
 pub use r#ref::*;
 
@@ -62,6 +65,14 @@ impl Literal {
         }
     }
 
+    /// Constructs a directional language-tagged literal (RDF 1.2).
+    pub fn dir_lang_string(value: impl Into<String>, tag: LangTagBuf, direction: Direction) -> Self {
+        Self {
+            value: value.into(),
+            type_: LiteralType::DirLangString { tag, direction },
+        }
+    }
+
     pub const fn as_type(&self) -> &LiteralType {
         &self.type_
     }
@@ -90,12 +101,29 @@ impl Literal {
         self.value.as_ref()
     }
 
+    /// Returns `true` for both [`LiteralType::LangString`] and
+    /// [`LiteralType::DirLangString`] — i.e. any language-tagged string.
     pub const fn is_lang_string(&self) -> bool {
         self.type_.is_lang_string()
     }
 
+    /// Returns `true` only for [`LiteralType::LangString`] (no direction).
+    pub const fn is_undirected_lang_string(&self) -> bool {
+        self.type_.is_undirected_lang_string()
+    }
+
+    /// Returns `true` for [`LiteralType::DirLangString`] (RDF 1.2).
+    pub const fn is_dir_lang_string(&self) -> bool {
+        self.type_.is_dir_lang_string()
+    }
+
     pub fn lang_tag(&self) -> Option<&LangTag> {
         self.type_.lang_tag()
+    }
+
+    /// Returns the base direction for [`LiteralType::DirLangString`] literals.
+    pub const fn direction(&self) -> Option<Direction> {
+        self.type_.direction()
     }
 
     pub fn as_ref(&self) -> LiteralRef<'_> {

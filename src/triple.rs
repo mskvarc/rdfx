@@ -8,11 +8,22 @@ pub type LexicalTriple = Triple<Id, IriBuf, LocalTerm>;
 /// Lexical RDF triple reference.
 pub type LexicalTripleRef<'a> = Triple<IdRef<'a>, Iri<&'a str>, LocalTermRef<'a>>;
 
+/// RDF 1.2 triple term — a triple appearing as a term inside object position.
+///
+/// Alias of [`LexicalTriple`]: same shape, different role. Strict-RDF body
+/// (subject = [`Id`], predicate = [`IriBuf`], object = [`LocalTerm`]).
+pub type TripleTerm = Triple<Id, IriBuf, LocalTerm>;
+
+/// Reference counterpart of [`TripleTerm`].
+pub type TripleTermRef<'a> = Triple<IdRef<'a>, Iri<&'a str>, LocalTermRef<'a>>;
+
 /// RDF triple.
 ///
-/// Position bounds enforce the RDF 1.1 abstract syntax: subjects must be IRIs
-/// or blank nodes (no literals), predicates must be IRIs (no blank nodes or
-/// literals), objects may be any term. For generalized RDF (RDF 1.1 §A) use
+/// Position bounds enforce the RDF 1.1 / 1.2 abstract syntax: subjects must
+/// be IRIs or blank nodes (no literals), predicates must be IRIs (no blank
+/// nodes or literals), objects may be any term — including, in RDF 1.2, a
+/// [`TripleTerm`] (carried by [`LocalTerm::Triple`](crate::LocalTerm::Triple)).
+/// For generalized RDF (RDF 1.1 §A / RDF 1.2 §A.1) use
 /// [`GeneralizedTriple`](crate::GeneralizedTriple).
 #[derive(Clone, Copy, Eq, Ord, Hash, Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]

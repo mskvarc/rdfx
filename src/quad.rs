@@ -12,9 +12,11 @@ pub type LexicalQuadRef<'a> = Quad<IdRef<'a>, Iri<&'a str>, LocalTermRef<'a>, Id
 
 /// RDF quad.
 ///
-/// Position bounds enforce the RDF 1.1 abstract syntax: subjects must be IRIs
-/// or blank nodes, predicates must be IRIs, objects may be any term, graph
-/// names must be IRIs or blank nodes. For generalized RDF (RDF 1.1 §A) use
+/// Position bounds enforce the RDF 1.1 / 1.2 abstract syntax: subjects must
+/// be IRIs or blank nodes, predicates must be IRIs, objects may be any term
+/// (including, in RDF 1.2, a triple term via
+/// [`LocalTerm::Triple`](crate::LocalTerm::Triple)), graph names must be IRIs
+/// or blank nodes. For generalized RDF (RDF 1.1 §A / RDF 1.2 §A.1) use
 /// [`GeneralizedQuad`](crate::GeneralizedQuad).
 #[derive(Clone, Copy, Eq, Ord, Hash, Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
