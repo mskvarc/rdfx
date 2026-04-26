@@ -14,10 +14,83 @@
 //! "blank-like" handle, yielding *structural* equivalence (any equipotent
 //! injection works). For RDF-semantic equivalence (where common IRIs must
 //! match exactly), pass a real [`ReverseInterpretation`] via the `_with`
-//! variants. For RDF 1.2 *triple-term-aware* equivalence, pass `&()` (the
-//! lexical interpretation) — its
+//! variants. For RDF 1.2 *triple-term-aware* equivalence on `LocalTerm`-typed
+//! graphs, pass `&()` (the lexical interpretation) — its
 //! [`triple_term_components`](crate::interpretation::ReverseInterpretation::triple_term_components)
-//! override drives componentwise descent through triple-term resources.
+//! override drives componentwise descent through triple-term resources and
+//! tracks triple-term-internal blank nodes in the bijection candidate set.
+//!
+//! ## Triple-term descent (RDF 1.2)
+//!
+//! When the interpretation reports `triple_term_components` for a resource,
+//! `collect_signatures` / `blank_count` recurse into the body and treat
+//! every blank node found inside (subject blanks, nested triple-term blanks)
+//! as touching the enclosing quad. This guarantees that interior-only blanks
+//! get their own bijection slot — they are not over-permissively matched.
+//! The `Bijection` map keys are owned `R` (cloned from the source) so that
+//! synthetic interior blanks may sit alongside source-borrowed blanks in the
+//! same map.
+//!
+//! ## Lexical interpretation recipe
+//!
+//! `LocalTerm` is sealed to the [`IsObject`](crate::IsObject) position only
+//! and so is not a [`Resource`] — it cannot back a uniform-graph storage
+//! type directly. To run triple-term-aware iso over `LocalTerm`-shaped data,
+//! wrap it in a newtype that opts into [`Resource`] via
+//! [`impl_resource!`](crate::impl_resource!), and provide a custom
+//! interpretation whose `triple_term_components` peels the wrapper:
+//!
+//! ```ignore
+//! use std::borrow::Cow;
+//! use iri_rs::IriBuf;
+//! use rdf_rs::{
+//!     CowLiteral, Id, LiteralRef, LocalTerm, Term,
+//!     dataset::{BTreeGraph, isomorphism::graph_equivalent_with},
+//!     impl_resource,
+//!     interpretation::{Interpretation, ReverseInterpretation},
+//! };
+//!
+//! #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+//! struct Lex(LocalTerm);
+//! impl_resource!(Lex);
+//!
+//! struct LexInterp;
+//! impl Interpretation for LexInterp { /* delegate to LocalTerm */
+//! #     type Resource = Lex;
+//! #     fn iri(&self, iri: iri_rs::Iri<&str>) -> Option<Lex> { Some(Lex(LocalTerm::iri(iri.into()))) }
+//! #     fn literal<'a>(&self, l: impl Into<LiteralRef<'a>>) -> Option<Lex> { Some(Lex(LocalTerm::literal(l.into().to_owned()))) }
+//! }
+//! impl ReverseInterpretation for LexInterp {
+//!     type Iris<'a> = std::option::IntoIter<Cow<'a, IriBuf>>;
+//!     type Literals<'a> = std::option::IntoIter<CowLiteral<'a>>;
+//!     // ... iris_of / literals_of unwrap Lex.0 ...
+//! #   fn iris_of<'a>(&'a self, r: &'a Lex) -> Self::Iris<'a> {
+//! #       match &r.0 { LocalTerm::Named(Term::Iri(iri)) => Some(Cow::Borrowed(iri)).into_iter(), _ => None.into_iter() }
+//! #   }
+//! #   fn literals_of<'a>(&'a self, r: &'a Lex) -> Self::Literals<'a> {
+//! #       match &r.0 { LocalTerm::Named(Term::Literal(l)) => Some(l.as_cow()).into_iter(), _ => None.into_iter() }
+//! #   }
+//!     fn triple_term_components(&self, r: &Lex) -> Option<(Lex, Lex, Lex)> {
+//!         match &r.0 {
+//!             LocalTerm::Triple(t) => {
+//!                 let s = match &t.0 {
+//!                     Id::Iri(i) => Lex(LocalTerm::iri(i.clone())),
+//!                     Id::BlankId(b) => Lex(LocalTerm::BlankId(b.clone())),
+//!                 };
+//!                 Some((s, Lex(LocalTerm::iri(t.1.clone())), Lex(t.2.clone())))
+//!             }
+//!             _ => None,
+//!         }
+//!     }
+//! }
+//!
+//! let a: BTreeGraph<Lex> = BTreeGraph::new();
+//! let b: BTreeGraph<Lex> = BTreeGraph::new();
+//! assert!(graph_equivalent_with(&LexInterp, &a, &b));
+//! ```
+//!
+//! See `tests/iso_triple_terms.rs` for a complete working `Lex` /
+//! `LexInterp` pair.
 //!
 //! Implementation: signature-bucket pre-filter (split by neighbourhood
 //! signature size, then by per-quad match-set) followed by augmenting-path
@@ -52,7 +125,10 @@ use crate::{
 /// Reports no IRIs and no literals for any resource, so
 /// [`ReverseInterpretation::is_blank_id`] returns `true` for every resource —
 /// the bijection algorithm therefore tries to rename every resource freely
-/// (no exact-match constraints).
+/// (no exact-match constraints). It does **not** override
+/// [`triple_term_components`](ReverseInterpretation::triple_term_components):
+/// triple-term resources are treated as opaque blank-likes. For RDF 1.2
+/// triple-term-aware iso, use the `_with` variants with `&()`.
 pub struct BlindInterpretation<R>(PhantomData<R>);
 
 impl<R> Default for BlindInterpretation<R> {
@@ -94,7 +170,7 @@ impl<R: Resource> ReverseInterpretation for BlindInterpretation<R> {
 /// [`graph_equivalent_with`] with a real interpretation.
 pub fn graph_equivalent<G1, G2, R>(a: &G1, b: &G2) -> bool
 where
-    R: Resource + Ord,
+    R: Resource + Clone + Ord,
     G1: TraversableGraph<Subject = R, Predicate = R, Object = R>,
     G2: TraversableGraph<Subject = R, Predicate = R, Object = R>,
 {
@@ -107,7 +183,7 @@ where
 /// equivalence with a real interpretation.
 pub fn dataset_equivalent<D1, D2, R>(a: &D1, b: &D2) -> bool
 where
-    R: Resource + Ord,
+    R: Resource + Clone + Ord,
     D1: TraversableDataset<Subject = R, Predicate = R, Object = R> + Graph<Subject = R, Predicate = R, Object = R>,
     D2: TraversableDataset<Subject = R, Predicate = R, Object = R> + Graph<Subject = R, Predicate = R, Object = R>,
     D1: TraversableDataset<Graph = R>,
@@ -116,27 +192,22 @@ where
     are_isomorphic_with(&BlindInterpretation::<R>::default(), a, b)
 }
 
-/// RDF 1.1 §3.6 graph equivalence under a provided interpretation: graphs
-/// are equivalent iff there is a blank-node bijection between them that
-/// preserves all triples (with IRIs/literals matched exactly via the
-/// interpretation). Wraps [`find_bijection_graph_with`].
+/// RDF 1.1 §3.6 graph equivalence under a provided interpretation.
 pub fn graph_equivalent_with<I, A, B>(interpretation: &I, a: &A, b: &B) -> bool
 where
     I: ReverseInterpretation,
-    I::Resource: Resource + Ord,
+    I::Resource: Resource + Clone + Ord,
     A: TraversableGraph<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource>,
     B: TraversableGraph<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource>,
 {
     are_isomorphic_graph_with(interpretation, a, b)
 }
 
-/// RDF 1.1 §4.4 dataset equivalence under a provided interpretation: datasets
-/// are equivalent iff there is a blank-node bijection between them that
-/// preserves all quads. Wraps [`find_bijection_with`].
+/// RDF 1.1 §4.4 dataset equivalence under a provided interpretation.
 pub fn dataset_equivalent_with<I, A, B>(interpretation: &I, a: &A, b: &B) -> bool
 where
     I: ReverseInterpretation,
-    I::Resource: Resource + Ord,
+    I::Resource: Resource + Clone + Ord,
     A: TraversableDataset<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource, Graph = I::Resource>,
     B: TraversableDataset<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource, Graph = I::Resource>,
 {
@@ -147,7 +218,7 @@ where
 pub fn are_isomorphic_with<I, A, B>(interpretation: &I, a: &A, b: &B) -> bool
 where
     I: ReverseInterpretation,
-    I::Resource: Resource + Ord,
+    I::Resource: Resource + Clone + Ord,
     A: TraversableDataset<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource, Graph = I::Resource>,
     B: TraversableDataset<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource, Graph = I::Resource>,
 {
@@ -158,7 +229,7 @@ where
 pub fn are_isomorphic_graph_with<I, A, B>(interpretation: &I, a: &A, b: &B) -> bool
 where
     I: ReverseInterpretation,
-    I::Resource: Resource + Ord,
+    I::Resource: Resource + Clone + Ord,
     A: TraversableGraph<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource>,
     B: TraversableGraph<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource>,
 {
@@ -167,10 +238,10 @@ where
 
 /// Finds a blank node identifier bijection from `a` to `b`.
 /// If such bijection exists, there is an isomorphism between `a` and `b`.
-pub fn find_bijection_with<'a, 'b, I, A, B>(interpretation: &I, a: &'a A, b: &'b B) -> Option<Bijection<'a, 'b, I::Resource>>
+pub fn find_bijection_with<I, A, B>(interpretation: &I, a: &A, b: &B) -> Option<Bijection<I::Resource>>
 where
     I: ReverseInterpretation,
-    I::Resource: Resource + Ord,
+    I::Resource: Resource + Clone + Ord,
     A: TraversableDataset<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource, Graph = I::Resource>,
     B: TraversableDataset<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource, Graph = I::Resource>,
 {
@@ -198,7 +269,6 @@ where
         return None;
     }
 
-    // Step 1: collect signatures.
     let mut a_blanks_map = BTreeMap::new();
     let mut b_blanks_map = BTreeMap::new();
     collect_signatures(interpretation, &mut a_blanks_map, a);
@@ -208,7 +278,6 @@ where
         return None;
     }
 
-    // Step 2: split by sizes.
     let a_groups = split_by_size(&a_blanks_map);
     let b_groups = split_by_size(&b_blanks_map);
 
@@ -220,8 +289,7 @@ where
         return None;
     }
 
-    // Step 3: find candidates for each blank id.
-    let mut candidates: Vec<(&'a I::Resource, BTreeSet<&'b I::Resource>)> = Vec::new();
+    let mut candidates: Vec<(I::Resource, BTreeSet<I::Resource>)> = Vec::new();
     for (len, a_group) in a_groups {
         let b_group = &b_groups[&len];
 
@@ -229,7 +297,7 @@ where
             let mut a_blank_id_candidates = BTreeSet::new();
             for (b_blank_id, b_sig) in b_group {
                 if a_sig.matches(interpretation, b_sig) {
-                    a_blank_id_candidates.insert(*b_blank_id);
+                    a_blank_id_candidates.insert((*b_blank_id).clone());
                 }
             }
 
@@ -237,11 +305,10 @@ where
                 return None;
             }
 
-            candidates.push((a_blank_id, a_blank_id_candidates));
+            candidates.push(((*a_blank_id).clone(), a_blank_id_candidates));
         }
     }
 
-    // Order by candidate-set size ascending: smallest sets first prunes the search tree fastest.
     candidates.sort_by_key(|(_, set)| set.len());
 
     let mut bijection = Bijection::new();
@@ -254,14 +321,13 @@ where
 
 /// Graph-flavoured variant of [`find_bijection_with`]. Wraps each triple as a
 /// quad with default graph (`None`) and reuses the dataset bijection logic.
-pub fn find_bijection_graph_with<'a, 'b, I, A, B>(interpretation: &I, a: &'a A, b: &'b B) -> Option<Bijection<'a, 'b, I::Resource>>
+pub fn find_bijection_graph_with<I, A, B>(interpretation: &I, a: &A, b: &B) -> Option<Bijection<I::Resource>>
 where
     I: ReverseInterpretation,
-    I::Resource: Resource + Ord,
+    I::Resource: Resource + Clone + Ord,
     A: TraversableGraph<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource>,
     B: TraversableGraph<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource>,
 {
-    // Project triples as quads with default graph (None).
     type RefQuad<'a, R> = Quad<&'a R, &'a R, &'a R, &'a R>;
     let a_quads: Vec<RefQuad<I::Resource>> = a.triples().map(|t| Quad(t.0, t.1, t.2, None)).collect();
     let b_quads: Vec<RefQuad<I::Resource>> = b.triples().map(|t| Quad(t.0, t.1, t.2, None)).collect();
@@ -277,9 +343,6 @@ where
         return None;
     }
 
-    // Blankless triples (projected as default-graph quads) must form a
-    // matching multiset under the interpretation; the bijection search below
-    // only walks blank-touching triples.
     let a_blankless: Vec<_> = a_quads.iter().copied().filter(|q| blank_count(interpretation, *q) == 0).collect();
     let b_blankless: Vec<_> = b_quads.iter().copied().filter(|q| blank_count(interpretation, *q) == 0).collect();
     if a_blankless.len() != b_blankless.len() {
@@ -289,31 +352,13 @@ where
         return None;
     }
 
-    let mut a_blanks_map: BTreeMap<&I::Resource, BlankSignature<I::Resource>> = BTreeMap::new();
-    let mut b_blanks_map: BTreeMap<&I::Resource, BlankSignature<I::Resource>> = BTreeMap::new();
+    let mut a_blanks_map: BTreeMap<I::Resource, BlankSignature<I::Resource>> = BTreeMap::new();
+    let mut b_blanks_map: BTreeMap<I::Resource, BlankSignature<I::Resource>> = BTreeMap::new();
     for q in &a_quads {
-        let q = *q;
-        if interpretation.is_blank_id(q.0) {
-            a_blanks_map.entry(q.0).or_default().insert(q);
-        }
-        if interpretation.is_blank_id(q.1) {
-            a_blanks_map.entry(q.1).or_default().insert(q);
-        }
-        if interpretation.is_blank_id(q.2) {
-            a_blanks_map.entry(q.2).or_default().insert(q);
-        }
+        for_each_quad_blank(interpretation, *q, &mut |b| a_blanks_map.entry(b).or_default().insert(*q));
     }
     for q in &b_quads {
-        let q = *q;
-        if interpretation.is_blank_id(q.0) {
-            b_blanks_map.entry(q.0).or_default().insert(q);
-        }
-        if interpretation.is_blank_id(q.1) {
-            b_blanks_map.entry(q.1).or_default().insert(q);
-        }
-        if interpretation.is_blank_id(q.2) {
-            b_blanks_map.entry(q.2).or_default().insert(q);
-        }
+        for_each_quad_blank(interpretation, *q, &mut |b| b_blanks_map.entry(b).or_default().insert(*q));
     }
 
     if a_blanks_map.len() != b_blanks_map.len() {
@@ -331,7 +376,7 @@ where
         return None;
     }
 
-    let mut candidates: Vec<(&'a I::Resource, BTreeSet<&'b I::Resource>)> = Vec::new();
+    let mut candidates: Vec<(I::Resource, BTreeSet<I::Resource>)> = Vec::new();
     for (len, a_group) in a_groups {
         let b_group = &b_groups[&len];
 
@@ -339,7 +384,7 @@ where
             let mut a_blank_id_candidates = BTreeSet::new();
             for (b_blank_id, b_sig) in b_group {
                 if a_sig.matches(interpretation, b_sig) {
-                    a_blank_id_candidates.insert(*b_blank_id);
+                    a_blank_id_candidates.insert((*b_blank_id).clone());
                 }
             }
 
@@ -347,7 +392,7 @@ where
                 return None;
             }
 
-            candidates.push((a_blank_id, a_blank_id_candidates));
+            candidates.push(((*a_blank_id).clone(), a_blank_id_candidates));
         }
     }
 
@@ -358,6 +403,39 @@ where
         Some(bijection)
     } else {
         None
+    }
+}
+
+/// Walks each component of a quad, descending through any triple-term
+/// resources, and invokes `f` with each blank node found (cloned).
+fn for_each_quad_blank<I, F>(interpretation: &I, q: Quad<&I::Resource, &I::Resource, &I::Resource, &I::Resource>, f: &mut F)
+where
+    I: ReverseInterpretation,
+    I::Resource: Resource + Clone,
+    F: FnMut(I::Resource),
+{
+    for_each_blank_in(interpretation, q.0.clone(), f);
+    for_each_blank_in(interpretation, q.1.clone(), f);
+    for_each_blank_in(interpretation, q.2.clone(), f);
+    if let Some(g) = q.3 {
+        for_each_blank_in(interpretation, g.clone(), f);
+    }
+}
+
+fn for_each_blank_in<I, F>(interpretation: &I, r: I::Resource, f: &mut F)
+where
+    I: ReverseInterpretation,
+    I::Resource: Clone,
+    F: FnMut(I::Resource),
+{
+    if interpretation.is_blank_id(&r) {
+        f(r);
+        return;
+    }
+    if let Some((s, p, o)) = interpretation.triple_term_components(&r) {
+        for_each_blank_in(interpretation, s, f);
+        for_each_blank_in(interpretation, p, f);
+        for_each_blank_in(interpretation, o, f);
     }
 }
 
@@ -381,14 +459,8 @@ where
         }
     }
 
-    // RDF 1.2: descend through triple-term components.
-    if let (Some((sa, pa, oa)), Some((sb, pb, ob))) = (
-        interpretation.triple_term_components(a),
-        interpretation.triple_term_components(b),
-    ) {
-        return resource_matches(interpretation, &sa, &sb)
-            && resource_matches(interpretation, &pa, &pb)
-            && resource_matches(interpretation, &oa, &ob);
+    if let (Some((sa, pa, oa)), Some((sb, pb, ob))) = (interpretation.triple_term_components(a), interpretation.triple_term_components(b)) {
+        return resource_matches(interpretation, &sa, &sb) && resource_matches(interpretation, &pa, &pb) && resource_matches(interpretation, &oa, &ob);
     }
 
     interpretation.is_blank_id(a) && interpretation.is_blank_id(b)
@@ -413,68 +485,38 @@ where
         }
 }
 
-fn blank_count<I>(interpretation: &I, Quad(s, p, o, g): Quad<&I::Resource, &I::Resource, &I::Resource, &I::Resource>) -> usize
+/// Counts blank nodes touching the quad — including blanks reachable through
+/// triple-term descent on any component.
+fn blank_count<I>(interpretation: &I, q: Quad<&I::Resource, &I::Resource, &I::Resource, &I::Resource>) -> usize
 where
     I: ReverseInterpretation,
-    I::Resource: Resource,
+    I::Resource: Resource + Clone,
 {
-    let mut r = 0;
-
-    if interpretation.is_blank_id(s) {
-        r += 1
-    }
-
-    if interpretation.is_blank_id(p) {
-        r += 1
-    }
-
-    if interpretation.is_blank_id(o) {
-        r += 1
-    }
-
-    if let Some(g) = g {
-        if interpretation.is_blank_id(g) {
-            r += 1
-        }
-    }
-
-    r
+    let mut n = 0;
+    for_each_quad_blank(interpretation, q, &mut |_| n += 1);
+    n
 }
 
-fn collect_signatures<'d, I, D>(interpretation: &I, map: &mut BTreeMap<&'d I::Resource, BlankSignature<'d, I::Resource>>, ds: &'d D)
+fn collect_signatures<'d, I, D>(interpretation: &I, map: &mut BTreeMap<I::Resource, BlankSignature<'d, I::Resource>>, ds: &'d D)
 where
     I: ReverseInterpretation,
-    I::Resource: Resource + Ord,
+    I::Resource: Resource + Clone + Ord,
     D: TraversableDataset<Subject = I::Resource, Predicate = I::Resource, Object = I::Resource, Graph = I::Resource>,
 {
     for quad in ds.quads() {
-        if interpretation.is_blank_id(quad.0) {
-            map.entry(quad.0).or_default().insert(quad);
-        }
-
-        if interpretation.is_blank_id(quad.1) {
-            map.entry(quad.1).or_default().insert(quad);
-        }
-
-        if interpretation.is_blank_id(quad.2) {
-            map.entry(quad.2).or_default().insert(quad);
-        }
-
-        if let Some(g) = quad.3 {
-            if interpretation.is_blank_id(g) {
-                map.entry(g).or_default().insert(quad);
-            }
-        }
+        for_each_quad_blank(interpretation, quad, &mut |b| {
+            map.entry(b).or_default().insert(quad);
+        });
     }
 }
 
-fn split_by_size<'s, 'd, R>(blanks: &'s BTreeMap<&'d R, BlankSignature<'d, R>>) -> BTreeMap<usize, BTreeMap<&'d R, &'s BlankSignature<'d, R>>>
+fn split_by_size<'s, 'd, R>(blanks: &'s BTreeMap<R, BlankSignature<'d, R>>) -> BTreeMap<usize, BTreeMap<&'s R, &'s BlankSignature<'d, R>>>
 where
     R: Resource + Ord,
 {
     let mut result = BTreeMap::new();
 
-    for (&blank_id, sig) in blanks {
+    for (blank_id, sig) in blanks {
         match result.entry(sig.len()) {
             Entry::Vacant(entry) => {
                 let mut map = BTreeMap::new();
@@ -490,14 +532,17 @@ where
     result
 }
 
-/// Blank node identifier bijection
-/// between two (isomorphic) datasets.
-pub struct Bijection<'a, 'b, R> {
-    pub forward: BTreeMap<&'a R, &'b R>,
-    pub backward: BTreeMap<&'b R, &'a R>,
+/// Blank node identifier bijection between two (isomorphic) datasets.
+///
+/// Owned-key maps (rather than source-borrowed refs) so that synthetic
+/// triple-term-internal blank ids — discovered during signature collection
+/// — can sit alongside source blank ids in the same map.
+pub struct Bijection<R> {
+    pub forward: BTreeMap<R, R>,
+    pub backward: BTreeMap<R, R>,
 }
 
-impl<R> Bijection<'_, '_, R> {
+impl<R> Bijection<R> {
     const fn new() -> Self {
         Self {
             forward: BTreeMap::new(),
@@ -506,52 +551,8 @@ impl<R> Bijection<'_, '_, R> {
     }
 }
 
-impl<'a, 'b, R: Resource + Ord> Bijection<'a, 'b, R> {
-    fn resource_matches_with<I>(&self, interpretation: &I, a: &'a R, b: &'b R) -> bool
-    where
-        I: ReverseInterpretation<Resource = R>,
-    {
-        for a in interpretation.iris_of(a) {
-            for b in interpretation.iris_of(b) {
-                if a == b {
-                    return true;
-                }
-            }
-        }
-
-        for a in interpretation.literals_of(a) {
-            for b in interpretation.literals_of(b) {
-                if a == b {
-                    return true;
-                }
-            }
-        }
-
-        // RDF 1.2: descend through triple-term components. Components are
-        // owned (cloned) — bijection lookup falls back to value-based
-        // comparison via `Borrow<R>` on the map keys.
-        if let (Some((sa, pa, oa)), Some((sb, pb, ob))) = (
-            interpretation.triple_term_components(a),
-            interpretation.triple_term_components(b),
-        ) {
-            return self.resource_matches_value(interpretation, &sa, &sb)
-                && self.resource_matches_value(interpretation, &pa, &pb)
-                && self.resource_matches_value(interpretation, &oa, &ob);
-        }
-
-        match self.forward.get(a) {
-            Some(&c) => c == b,
-            None => match self.backward.get(b) {
-                Some(&c) => a == c,
-                None => true,
-            },
-        }
-    }
-
-    /// Value-based variant of [`Self::resource_matches_with`] used when
-    /// recursing into triple-term components, where the cloned components
-    /// have a shorter lifetime than `'a` / `'b`.
-    fn resource_matches_value<I>(&self, interpretation: &I, a: &R, b: &R) -> bool
+impl<R: Resource + Clone + Ord> Bijection<R> {
+    fn resource_matches_with<I>(&self, interpretation: &I, a: &R, b: &R) -> bool
     where
         I: ReverseInterpretation<Resource = R>,
     {
@@ -571,26 +572,23 @@ impl<'a, 'b, R: Resource + Ord> Bijection<'a, 'b, R> {
             }
         }
 
-        if let (Some((sa, pa, oa)), Some((sb, pb, ob))) = (
-            interpretation.triple_term_components(a),
-            interpretation.triple_term_components(b),
-        ) {
-            return self.resource_matches_value(interpretation, &sa, &sb)
-                && self.resource_matches_value(interpretation, &pa, &pb)
-                && self.resource_matches_value(interpretation, &oa, &ob);
+        // RDF 1.2: descend through triple-term components, recursing under
+        // the same bijection so that interior blanks consult forward/backward
+        // maps just like outer blanks.
+        if let (Some((sa, pa, oa)), Some((sb, pb, ob))) = (interpretation.triple_term_components(a), interpretation.triple_term_components(b)) {
+            return self.resource_matches_with(interpretation, &sa, &sb) && self.resource_matches_with(interpretation, &pa, &pb) && self.resource_matches_with(interpretation, &oa, &ob);
         }
 
-        // Bijection lookup with value-based key (BTreeMap uses Ord on R).
         match self.forward.get(a) {
-            Some(&c) => c == b,
+            Some(c) => c == b,
             None => match self.backward.get(b) {
-                Some(&c) => a == c,
-                None => interpretation.is_blank_id(a) && interpretation.is_blank_id(b),
+                Some(c) => a == c,
+                None => true,
             },
         }
     }
 
-    fn quad_matches_with<I>(&self, interpretation: &I, a: Quad<&'a R, &'a R, &'a R, &'a R>, b: Quad<&'b R, &'b R, &'b R, &'b R>) -> bool
+    fn quad_matches_with<I>(&self, interpretation: &I, a: Quad<&R, &R, &R, &R>, b: Quad<&R, &R, &R, &R>) -> bool
     where
         I: ReverseInterpretation<Resource = R>,
     {
@@ -604,20 +602,20 @@ impl<'a, 'b, R: Resource + Ord> Bijection<'a, 'b, R> {
             }
     }
 
-    fn signature_matches_with<I>(&self, interpretation: &I, a: &BlankSignature<'a, R>, b: &BlankSignature<'b, R>) -> bool
+    fn signature_matches_with<'sig, I>(&self, interpretation: &I, a: &BlankSignature<'sig, R>, b: &BlankSignature<'sig, R>) -> bool
     where
         I: ReverseInterpretation<Resource = R>,
     {
         match_quad_lists(&a.0, &b.0, |qa, qb| self.quad_matches_with(interpretation, qa, qb))
     }
 
-    fn find_from_candidates<I>(
+    fn find_from_candidates<'sig, I>(
         &mut self,
         interpretation: &I,
-        candidates: &[(&'a R, BTreeSet<&'b R>)],
+        candidates: &[(R, BTreeSet<R>)],
         depth: usize,
-        a: &BTreeMap<&'a R, BlankSignature<'a, R>>,
-        b: &BTreeMap<&'b R, BlankSignature<'b, R>>,
+        a: &BTreeMap<R, BlankSignature<'sig, R>>,
+        b: &BTreeMap<R, BlankSignature<'sig, R>>,
     ) -> bool
     where
         I: ReverseInterpretation<Resource = R>,
@@ -631,8 +629,8 @@ impl<'a, 'b, R: Resource + Ord> Bijection<'a, 'b, R> {
                 continue;
             }
 
-            self.forward.insert(a_blank_id, b_candidate);
-            self.backward.insert(b_candidate, a_blank_id);
+            self.forward.insert(a_blank_id.clone(), b_candidate.clone());
+            self.backward.insert(b_candidate.clone(), a_blank_id.clone());
 
             let sig_ok = if depth == 0 {
                 true
@@ -654,7 +652,8 @@ impl<'a, 'b, R: Resource + Ord> Bijection<'a, 'b, R> {
     }
 }
 
-/// Signature of a blank node identifier.
+/// Signature of a blank node identifier — the multiset of source quads it
+/// touches (directly or via triple-term descent).
 struct BlankSignature<'a, R: Resource>(Vec<Quad<&'a R, &'a R, &'a R, &'a R>>);
 
 impl<R: Resource> Default for BlankSignature<'_, R> {
@@ -736,9 +735,6 @@ mod tests {
 
     #[test]
     fn bipartite_matching_adversarial() {
-        // a = [x, y], b = [X, Y]. x can match {X, Y}; y can match {X} only.
-        // Greedy first-fit picks x->X, then y has no candidate. Augmenting-path
-        // recovers the true matching x->Y, y->X.
         let x = "x";
         let y = "y";
         let cap_x = "X";
@@ -750,7 +746,6 @@ mod tests {
         let b: Vec<Quad<&&str, &&str, &&str, &&str>> = vec![Quad(&cap_x, &r, &z, None), Quad(&cap_y, &r, &z, None)];
 
         let result = match_quad_lists(&a, &b, |qa, qb| {
-            // x matches both X and Y; y matches only X.
             if *qa.0 == "x" {
                 return *qb.0 == "X" || *qb.0 == "Y";
             }
@@ -765,8 +760,6 @@ mod tests {
 
     #[test]
     fn bipartite_matching_no_solution() {
-        // a = [x, y], b = [X, Y]. Both x and y can only match X (not Y).
-        // No perfect matching exists.
         let x = "x";
         let y = "y";
         let cap_x = "X";

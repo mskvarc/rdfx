@@ -96,7 +96,13 @@ pub trait ReverseInterpretation: Interpretation {
     /// Components are returned by value because the underlying triple-term
     /// body may use a different concrete type from `Self::Resource`
     /// (e.g. lexical bodies use `Id` for the subject, `IriBuf` for the
-    /// predicate).
+    /// predicate, both wrapped into `Self::Resource` for uniformity).
+    ///
+    /// **Performance**: implementations clone owned components per call;
+    /// isomorphism descent calls this on every triple-term resource visited.
+    /// For triple-term-heavy graphs this dominates iso runtime — see the
+    /// `triple_terms` benchmark. A future zero-clone view-trait API is
+    /// planned for 0.25.
     fn triple_term_components(&self, _resource: &Self::Resource) -> Option<(Self::Resource, Self::Resource, Self::Resource)> {
         None
     }

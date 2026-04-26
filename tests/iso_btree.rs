@@ -77,7 +77,7 @@ impl ReverseLocalInterpretation for TestInterp {
 
 fn test(a: BTreeDataset<TestId>, b: BTreeDataset<TestId>) {
     let substitution: BTreeMap<_, _> = match find_bijection_with(&TestInterp, &a, &b) {
-        Some(Bijection { forward, .. }) => forward.into_iter().map(|(a, b)| (a.clone(), b.clone())).collect(),
+        Some(Bijection { forward, .. }) => forward.into_iter().collect(),
         None => panic!("no substitution found"),
     };
     let c: BTreeDataset<TestId> = a

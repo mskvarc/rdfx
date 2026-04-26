@@ -288,3 +288,153 @@ fn unused_term_namespace_stays_silent() {
     // Sanity: `Term` re-exported and importable.
     let _ = Term::Iri(ex("x"));
 }
+
+// ----- RDF 1.2 §6 rdf:reifies-aware unstar -----
+
+#[test]
+fn unstar_preserves_explicit_blank_reifier_from_rdf_reifies_annotation() {
+    // Input:
+    //   _:r rdf:reifies <<( s p o )>> .
+    //   _:r ex:said-by <ex:alice> .
+    let body: TripleTerm = Triple(s_iri("s"), ex("p"), o_iri("o"));
+    let r_blank = BlankIdBuf::new("_:r".to_owned()).unwrap();
+    let r_id = Id::BlankId(r_blank);
+
+    let src = TestGraph(vec![
+        Triple(r_id.clone(), IriBuf::from(RDF_REIFIES), LocalTerm::triple(body)),
+        Triple(r_id, ex("said-by"), o_iri("alice")),
+    ]);
+
+    let mut dest = TestGraph::default();
+    let mut g = Blank::new();
+    unstar_graph(&src, &mut dest, &mut g, UnstarOptions::default());
+
+    // Expect: 4 reification triples (subject = _:r) + 1 annotation = 5; no
+    // rdf:reifies triple in output.
+    assert_eq!(dest.0.len(), 5);
+    assert_eq!(count_with_predicate(&dest, RDF_REIFIES.as_str()), 0);
+    let reification_subjects: Vec<&Id> = dest
+        .0
+        .iter()
+        .filter(|t| {
+            let p = t.1.as_str();
+            p == RDF_TYPE.as_str() || p == RDF_SUBJECT.as_str() || p == RDF_PREDICATE.as_str() || p == RDF_OBJECT.as_str()
+        })
+        .map(|t| &t.0)
+        .collect();
+    assert_eq!(reification_subjects.len(), 4);
+    for s in &reification_subjects {
+        assert!(matches!(s, Id::BlankId(b) if b.as_str() == "_:r"));
+    }
+    // The annotation triple is preserved with the same _:r subject.
+    let annotation = dest.0.iter().find(|t| t.1.as_str() == "http://example.org/said-by").unwrap();
+    assert!(matches!(annotation.0, Id::BlankId(ref b) if b.as_str() == "_:r"));
+}
+
+#[test]
+fn unstar_preserves_iri_reifier_from_rdf_reifies_annotation() {
+    // Per RDF 1.2 §6 reifiers may be IRIs.
+    let body: TripleTerm = Triple(s_iri("s"), ex("p"), o_iri("o"));
+    let r_iri = ex("named-reifier");
+
+    let src = TestGraph(vec![
+        Triple(Id::Iri(r_iri.clone()), IriBuf::from(RDF_REIFIES), LocalTerm::triple(body)),
+        Triple(Id::Iri(r_iri.clone()), ex("said-by"), o_iri("alice")),
+    ]);
+
+    let mut dest = TestGraph::default();
+    let mut g = Blank::new();
+    unstar_graph(&src, &mut dest, &mut g, UnstarOptions::default());
+
+    // All four reification triples must use the same IRI as subject.
+    let four = dest
+        .0
+        .iter()
+        .filter(|t| {
+            let p = t.1.as_str();
+            p == RDF_TYPE.as_str() || p == RDF_SUBJECT.as_str() || p == RDF_PREDICATE.as_str() || p == RDF_OBJECT.as_str()
+        })
+        .count();
+    assert_eq!(four, 4);
+    for t in dest.0.iter().filter(|t| {
+        let p = t.1.as_str();
+        p == RDF_TYPE.as_str() || p == RDF_SUBJECT.as_str() || p == RDF_PREDICATE.as_str() || p == RDF_OBJECT.as_str()
+    }) {
+        assert!(matches!(&t.0, Id::Iri(i) if i.as_str() == r_iri.as_str()));
+    }
+}
+
+#[test]
+fn unstar_shares_reifier_between_rdf_reifies_and_object_occurrence() {
+    // Body appears in two roles:
+    //   _:r rdf:reifies <<( s p o )>>          (annotation)
+    //   <ex:a> <ex:says> <<( s p o )>>          (regular triple-term object)
+    // Both should map to the same reifier (_:r).
+    let body: TripleTerm = Triple(s_iri("s"), ex("p"), o_iri("o"));
+    let r_blank = BlankIdBuf::new("_:r".to_owned()).unwrap();
+    let r_id = Id::BlankId(r_blank);
+
+    let src = TestGraph(vec![
+        Triple(r_id, IriBuf::from(RDF_REIFIES), LocalTerm::triple(body.clone())),
+        Triple(s_iri("a"), ex("says"), LocalTerm::triple(body)),
+    ]);
+
+    let mut dest = TestGraph::default();
+    let mut g = Blank::new();
+    unstar_graph(&src, &mut dest, &mut g, UnstarOptions::default());
+
+    // 4 reification (shared via _:r) + 1 rewritten regular triple = 5.
+    assert_eq!(dest.0.len(), 5);
+    assert_eq!(count_with_predicate(&dest, RDF_TYPE.as_str()), 1);
+    // The regular triple's object is _:r.
+    let says = dest.0.iter().find(|t| t.1.as_str() == "http://example.org/says").unwrap();
+    assert!(matches!(&says.2, LocalTerm::BlankId(b) if b.as_str() == "_:r"));
+}
+
+#[test]
+fn unstar_shares_explicit_reifier_even_with_reuse_disabled() {
+    // `reuse_reifier=false` does NOT override explicit `rdf:reifies` reifiers:
+    // the user-named reifier identity is always honored.
+    let body: TripleTerm = Triple(s_iri("s"), ex("p"), o_iri("o"));
+    let r_blank = BlankIdBuf::new("_:r".to_owned()).unwrap();
+    let r_id = Id::BlankId(r_blank);
+
+    let src = TestGraph(vec![
+        Triple(r_id, IriBuf::from(RDF_REIFIES), LocalTerm::triple(body.clone())),
+        Triple(s_iri("a"), ex("says"), LocalTerm::triple(body)),
+    ]);
+
+    let mut dest = TestGraph::default();
+    let mut g = Blank::new();
+    unstar_graph(&src, &mut dest, &mut g, UnstarOptions { reuse_reifier: false });
+
+    // Cache from rdf:reifies pre-pass forces shared reifier _:r — only 4
+    // reification triples + 1 rewritten = 5.
+    assert_eq!(dest.0.len(), 5);
+    assert_eq!(count_with_predicate(&dest, RDF_TYPE.as_str()), 1);
+    let says = dest.0.iter().find(|t| t.1.as_str() == "http://example.org/says").unwrap();
+    assert!(matches!(&says.2, LocalTerm::BlankId(b) if b.as_str() == "_:r"));
+    let _ = r_id;
+}
+
+#[test]
+fn unstar_reifies_only_input_emits_four_tuple() {
+    // Input has only `_:r rdf:reifies <<( s p o )>>` — no other triples.
+    // Output must still contain the four-tuple (data not lost).
+    let body: TripleTerm = Triple(s_iri("s"), ex("p"), o_iri("o"));
+    let r_blank = BlankIdBuf::new("_:r".to_owned()).unwrap();
+    let r_id = Id::BlankId(r_blank);
+
+    let src = TestGraph(vec![Triple(r_id, IriBuf::from(RDF_REIFIES), LocalTerm::triple(body))]);
+
+    let mut dest = TestGraph::default();
+    let mut g = Blank::new();
+    unstar_graph(&src, &mut dest, &mut g, UnstarOptions::default());
+
+    assert_eq!(dest.0.len(), 4);
+    assert_eq!(count_with_predicate(&dest, RDF_TYPE.as_str()), 1);
+    assert_eq!(count_with_predicate(&dest, RDF_SUBJECT.as_str()), 1);
+    assert_eq!(count_with_predicate(&dest, RDF_PREDICATE.as_str()), 1);
+    assert_eq!(count_with_predicate(&dest, RDF_OBJECT.as_str()), 1);
+    assert_eq!(count_with_predicate(&dest, RDF_REIFIES.as_str()), 0);
+}

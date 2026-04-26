@@ -188,3 +188,71 @@ fn unused_blank_helper_compiles() {
     // smoke: blank_lex helper is reachable
     let _ = blank_lex("foo");
 }
+
+// ----- triple-term-only blanks -----
+
+#[test]
+fn blanks_only_inside_triple_terms_are_tracked() {
+    // No outer blanks; the only blanks live inside the triple-term bodies.
+    // Each side has one such blank; the bijection must allocate a slot for it.
+    let body_a: TripleTerm = Triple(Id::BlankId(BlankIdBuf::new("_:x".to_owned()).unwrap()), iri_lex_iri("p"), iri_lex_lt("o"));
+    let body_b: TripleTerm = Triple(Id::BlankId(BlankIdBuf::new("_:y".to_owned()).unwrap()), iri_lex_iri("p"), iri_lex_lt("o"));
+
+    let a = graph_with(&[(iri_lex("a"), iri_lex("says"), tt_lex(body_a))]);
+    let b = graph_with(&[(iri_lex("a"), iri_lex("says"), tt_lex(body_b))]);
+    assert!(graph_equivalent_with(&LexInterp, &a, &b));
+}
+
+#[test]
+fn triple_term_internal_blank_count_mismatch_rejected() {
+    // a's inner triple-term has 2 distinct blanks; b's inner has 1 (reused).
+    // Interior blank counting catches this before the bijection runs.
+    let body_a: TripleTerm = Triple(
+        Id::BlankId(BlankIdBuf::new("_:x".to_owned()).unwrap()),
+        iri_lex_iri("p"),
+        LocalTerm::BlankId(BlankIdBuf::new("_:y".to_owned()).unwrap()),
+    );
+    let body_b: TripleTerm = Triple(
+        Id::BlankId(BlankIdBuf::new("_:z".to_owned()).unwrap()),
+        iri_lex_iri("p"),
+        LocalTerm::BlankId(BlankIdBuf::new("_:z".to_owned()).unwrap()),
+    );
+
+    let a = graph_with(&[(iri_lex("a"), iri_lex("says"), tt_lex(body_a))]);
+    let b = graph_with(&[(iri_lex("a"), iri_lex("says"), tt_lex(body_b))]);
+
+    // Note: blank_count in `a` = 2 (distinct _:x, _:y); in `b` it's also 2
+    // because we count occurrences, not distinct ids. So count matches but
+    // structural shape differs — bijection should reject.
+    assert!(!graph_equivalent_with(&LexInterp, &a, &b));
+}
+
+#[test]
+fn nested_triple_term_interior_blank_must_align() {
+    // Interior blank in inner-most triple-term body. Needs descent past 2 levels.
+    let inner_a: TripleTerm = Triple(
+        Id::BlankId(BlankIdBuf::new("_:x".to_owned()).unwrap()),
+        iri_lex_iri("p"),
+        iri_lex_lt("o"),
+    );
+    let inner_b: TripleTerm = Triple(
+        Id::BlankId(BlankIdBuf::new("_:y".to_owned()).unwrap()),
+        iri_lex_iri("p"),
+        iri_lex_lt("o"),
+    );
+    let outer_a: TripleTerm = Triple(Id::iri(ex("o1")), iri_lex_iri("witnesses"), LocalTerm::triple(inner_a));
+    let outer_b: TripleTerm = Triple(Id::iri(ex("o1")), iri_lex_iri("witnesses"), LocalTerm::triple(inner_b));
+
+    let a = graph_with(&[(iri_lex("z"), iri_lex("says"), tt_lex(outer_a))]);
+    let b = graph_with(&[(iri_lex("z"), iri_lex("says"), tt_lex(outer_b))]);
+    assert!(graph_equivalent_with(&LexInterp, &a, &b));
+}
+
+// helpers used above
+fn iri_lex_iri(s: &str) -> IriBuf {
+    ex(s)
+}
+
+fn iri_lex_lt(s: &str) -> LocalTerm {
+    LocalTerm::iri(ex(s))
+}

@@ -77,7 +77,7 @@ impl ReverseLocalInterpretation for TestInterp {
 
 fn test(a: HashDataset<TestId>, b: HashDataset<TestId>) {
     let substitution: HashMap<_, _> = match find_bijection_with(&TestInterp, &a, &b) {
-        Some(Bijection { forward, .. }) => forward.into_iter().map(|(a, b)| (a.clone(), b.clone())).collect(),
+        Some(Bijection { forward, .. }) => forward.into_iter().collect(),
         None => panic!("no substitution found"),
     };
     let c: HashDataset<TestId> = a
