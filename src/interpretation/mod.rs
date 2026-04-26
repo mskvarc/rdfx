@@ -3,6 +3,10 @@ use std::borrow::Cow;
 
 use crate::{BlankId, CowId, CowLiteral, CowLocalTerm, CowTerm, IdRef, LiteralRef, LocalTermRef, TermRef, TripleTerm};
 
+/// Borrow-or-own view of a triple term's three components, used by
+/// [`ReverseInterpretation::triple_term_components_view`].
+pub type TripleTermView<'a, R> = (Cow<'a, R>, Cow<'a, R>, Cow<'a, R>);
+
 mod r#impl;
 pub use r#impl::*;
 
@@ -98,13 +102,30 @@ pub trait ReverseInterpretation: Interpretation {
     /// (e.g. lexical bodies use `Id` for the subject, `IriBuf` for the
     /// predicate, both wrapped into `Self::Resource` for uniformity).
     ///
-    /// **Performance**: implementations clone owned components per call;
-    /// isomorphism descent calls this on every triple-term resource visited.
-    /// For triple-term-heavy graphs this dominates iso runtime — see the
-    /// `triple_terms` benchmark. A future zero-clone view-trait API is
-    /// planned for 0.25.
+    /// For zero-clone descent during isomorphism — the dominant hot path —
+    /// override [`Self::triple_term_components_view`] instead (or in addition).
     fn triple_term_components(&self, _resource: &Self::Resource) -> Option<(Self::Resource, Self::Resource, Self::Resource)> {
         None
+    }
+
+    /// Borrow-or-own view of triple-term components — the zero-clone
+    /// counterpart of [`Self::triple_term_components`].
+    ///
+    /// Implementations whose component types are storage-natural to
+    /// `Self::Resource` (e.g. an interpretation that stores triple terms
+    /// using `LocalTerm`-typed components) should override and return
+    /// [`Cow::Borrowed`] for those components. The default delegates to
+    /// [`Self::triple_term_components`] and wraps each component in [`Cow::Owned`].
+    ///
+    /// Used internally by [`graph_equivalent_with`](crate::dataset::isomorphism::graph_equivalent_with)
+    /// / [`dataset_equivalent_with`](crate::dataset::isomorphism::dataset_equivalent_with)
+    /// during triple-term descent — overriding here removes per-descent
+    /// clones for triple-term-heavy graphs.
+    fn triple_term_components_view<'a>(&'a self, resource: &'a Self::Resource) -> Option<TripleTermView<'a, Self::Resource>>
+    where
+        Self::Resource: Clone,
+    {
+        self.triple_term_components(resource).map(|(s, p, o)| (Cow::Owned(s), Cow::Owned(p), Cow::Owned(o)))
     }
 
     fn is_blank_id(&self, resource: &Self::Resource) -> bool {

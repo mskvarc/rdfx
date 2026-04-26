@@ -30,7 +30,16 @@ use rdf_rs::{
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(transparent)]
 struct Lex(LocalTerm);
+
+impl Lex {
+    fn from_local_term_ref(t: &LocalTerm) -> &Self {
+        // Safety: `Lex` is `#[repr(transparent)]` over `LocalTerm`, so the
+        // pointer cast preserves layout and validity.
+        unsafe { &*((t as *const LocalTerm).cast::<Self>()) }
+    }
+}
 
 impl_resource!(Lex);
 
@@ -80,6 +89,19 @@ impl ReverseInterpretation for LexInterp {
                 let p = Lex(LocalTerm::iri(t.1.clone()));
                 let o = Lex(t.2.clone());
                 Some((s, p, o))
+            }
+            _ => None,
+        }
+    }
+
+    fn triple_term_components_view<'a>(&'a self, resource: &'a Lex) -> Option<(Cow<'a, Lex>, Cow<'a, Lex>, Cow<'a, Lex>)> {
+        match &resource.0 {
+            LocalTerm::Triple(t) => {
+                let s = match &t.0 {
+                    Id::Iri(iri) => Lex(LocalTerm::iri(iri.clone())),
+                    Id::BlankId(b) => Lex(LocalTerm::BlankId(b.clone())),
+                };
+                Some((Cow::Owned(s), Cow::Owned(Lex(LocalTerm::iri(t.1.clone()))), Cow::Borrowed(Lex::from_local_term_ref(&t.2))))
             }
             _ => None,
         }

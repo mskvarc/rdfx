@@ -1,5 +1,5 @@
 use crate::{BlankId, RdfDisplay, TermRef, TripleTerm};
-use std::{cmp::Ordering, fmt};
+use std::{cmp::Ordering, fmt, sync::Arc};
 
 use super::LocalTerm;
 
@@ -24,7 +24,7 @@ impl<'a> LocalTermRef<'a> {
         match self {
             Self::BlankId(blank_id) => LocalTerm::BlankId(blank_id.to_owned()),
             Self::Named(named) => LocalTerm::Named(named.to_owned()),
-            Self::Triple(t) => LocalTerm::Triple(Box::new(t.clone())),
+            Self::Triple(t) => LocalTerm::Triple(Arc::new(t.clone())),
         }
     }
 

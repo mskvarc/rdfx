@@ -498,7 +498,7 @@ impl GeneralizedLocalTerm {
     }
 
     pub fn triple(t: GeneralizedTriple<GeneralizedLocalTerm>) -> Self {
-        Self::Triple(Box::new(t))
+        Self::Triple(Box::new(t))  // GeneralizedLocalTerm keeps Box (no shared-clone story; users construct in tree-shape)
     }
 
     pub const fn is_blank_id(&self) -> bool {
@@ -559,7 +559,7 @@ impl From<LocalTerm> for GeneralizedLocalTerm {
             LocalTerm::BlankId(b) => Self::BlankId(b),
             LocalTerm::Named(t) => Self::Named(t),
             LocalTerm::Triple(b) => {
-                let Triple(s, p, o) = *b;
+                let Triple(s, p, o) = std::sync::Arc::try_unwrap(b).unwrap_or_else(|arc| (*arc).clone());
                 let s = match s {
                     Id::Iri(iri) => Self::Named(Term::Iri(iri)),
                     Id::BlankId(b) => Self::BlankId(b),

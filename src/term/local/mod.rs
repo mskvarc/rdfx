@@ -1,5 +1,5 @@
 use crate::{BlankId, BlankIdBuf, Literal, LiteralRef, RdfDisplay, TripleTerm};
-use std::{borrow::Cow, fmt, hash::Hash};
+use std::{borrow::Cow, fmt, hash::Hash, sync::Arc};
 
 mod r#ref;
 use iri_rs::{Iri, IriBuf};
@@ -23,7 +23,11 @@ pub enum LocalTerm {
     BlankId(BlankIdBuf),
     Named(Term),
     /// RDF 1.2 triple term — a triple appearing as a term.
-    Triple(Box<TripleTerm>),
+    ///
+    /// Backed by [`Arc`] so that cloning a `LocalTerm::Triple` is an O(1)
+    /// reference-count bump regardless of inner triple-term depth — the
+    /// dominant cost in triple-term-heavy isomorphism descent.
+    Triple(Arc<TripleTerm>),
 }
 
 impl LocalTerm {
@@ -37,7 +41,14 @@ impl LocalTerm {
 
     /// Constructs a triple-term [`LocalTerm`] (RDF 1.2).
     pub fn triple(t: TripleTerm) -> Self {
-        Self::Triple(Box::new(t))
+        Self::Triple(Arc::new(t))
+    }
+
+    /// Constructs a triple-term [`LocalTerm`] from a pre-shared [`Arc`].
+    /// Useful for sharing identical triple-term bodies across many
+    /// [`LocalTerm::Triple`] occurrences without re-cloning the body.
+    pub const fn triple_arc(t: Arc<TripleTerm>) -> Self {
+        Self::Triple(t)
     }
 
     pub const fn is_blank_id(&self) -> bool {
@@ -79,18 +90,20 @@ impl LocalTerm {
     }
 
     /// Consumes self, returning the triple body for [`Self::Triple`].
+    /// If the inner [`Arc`] is shared, the body is cloned.
     pub fn into_triple(self) -> Option<TripleTerm> {
         match self {
-            Self::Triple(t) => Some(*t),
+            Self::Triple(t) => Some(Arc::try_unwrap(t).unwrap_or_else(|arc| (*arc).clone())),
             _ => None,
         }
     }
 
     /// Consumes self, returning the triple body for [`Self::Triple`] or the
-    /// original `LocalTerm` on mismatch.
+    /// original `LocalTerm` on mismatch. If the inner [`Arc`] is shared the
+    /// body is cloned.
     pub fn try_into_triple(self) -> Result<TripleTerm, Self> {
         match self {
-            Self::Triple(t) => Ok(*t),
+            Self::Triple(t) => Ok(Arc::try_unwrap(t).unwrap_or_else(|arc| (*arc).clone())),
             other => Err(other),
         }
     }
@@ -115,7 +128,7 @@ impl LocalTerm {
         match self {
             Self::BlankId(blank_id) => CowLocalTerm::BlankId(Cow::Owned(blank_id)),
             Self::Named(named) => CowLocalTerm::Named(named.into_cow()),
-            Self::Triple(t) => CowLocalTerm::Triple(Cow::Owned(*t)),
+            Self::Triple(t) => CowLocalTerm::Triple(Cow::Owned(Arc::try_unwrap(t).unwrap_or_else(|arc| (*arc).clone()))),
         }
     }
 }

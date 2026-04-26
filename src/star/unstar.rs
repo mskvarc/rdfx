@@ -148,7 +148,7 @@ where
 {
     match o {
         LocalTerm::Triple(boxed) => {
-            let t = *boxed;
+            let t = std::sync::Arc::try_unwrap(boxed).unwrap_or_else(|arc| (*arc).clone());
 
             // Recurse on inner object first so the cache is populated for
             // nested triple terms before the outer four-tuple is emitted.

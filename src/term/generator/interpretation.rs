@@ -87,6 +87,19 @@ impl<G> ReverseInterpretation for LocalGeneratorInterpretation<G> {
             _ => None,
         }
     }
+
+    fn triple_term_components_view<'a>(&'a self, resource: &'a LocalTerm) -> Option<(Cow<'a, LocalTerm>, Cow<'a, LocalTerm>, Cow<'a, LocalTerm>)> {
+        match resource {
+            LocalTerm::Triple(t) => {
+                let s = match &t.0 {
+                    crate::Id::Iri(iri) => LocalTerm::iri(iri.clone()),
+                    crate::Id::BlankId(b) => LocalTerm::BlankId(b.clone()),
+                };
+                Some((Cow::Owned(s), Cow::Owned(LocalTerm::iri(t.1.clone())), Cow::Borrowed(&t.2)))
+            }
+            _ => None,
+        }
+    }
 }
 
 impl<G> ReverseLocalInterpretation for LocalGeneratorInterpretation<G> {

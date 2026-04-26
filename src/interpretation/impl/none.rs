@@ -58,6 +58,15 @@ impl ReverseInterpretation for () {
             _ => None,
         }
     }
+
+    /// Zero-clone for the (recursive, hot) Object position; Subject and
+    /// Predicate still allocate cheap wrappers (Id / IriBuf → LocalTerm).
+    fn triple_term_components_view<'a>(&'a self, resource: &'a LocalTerm) -> Option<(Cow<'a, LocalTerm>, Cow<'a, LocalTerm>, Cow<'a, LocalTerm>)> {
+        match resource {
+            LocalTerm::Triple(t) => Some((Cow::Owned(id_to_local_term(&t.0)), Cow::Owned(LocalTerm::iri(t.1.clone())), Cow::Borrowed(&t.2))),
+            _ => None,
+        }
+    }
 }
 
 fn id_to_local_term(id: &Id) -> LocalTerm {

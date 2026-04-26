@@ -407,41 +407,43 @@ where
 }
 
 /// Walks each component of a quad, descending through any triple-term
-/// resources, and invokes `f` with each blank node found (cloned).
+/// resources, and invokes `f` with each blank node found (cloned at the
+/// leaf only).
 fn for_each_quad_blank<I, F>(interpretation: &I, q: Quad<&I::Resource, &I::Resource, &I::Resource, &I::Resource>, f: &mut F)
 where
     I: ReverseInterpretation,
     I::Resource: Resource + Clone,
     F: FnMut(I::Resource),
 {
-    for_each_blank_in(interpretation, q.0.clone(), f);
-    for_each_blank_in(interpretation, q.1.clone(), f);
-    for_each_blank_in(interpretation, q.2.clone(), f);
+    for_each_blank_in(interpretation, q.0, f);
+    for_each_blank_in(interpretation, q.1, f);
+    for_each_blank_in(interpretation, q.2, f);
     if let Some(g) = q.3 {
-        for_each_blank_in(interpretation, g.clone(), f);
+        for_each_blank_in(interpretation, g, f);
     }
 }
 
-fn for_each_blank_in<I, F>(interpretation: &I, r: I::Resource, f: &mut F)
+fn for_each_blank_in<I, F>(interpretation: &I, r: &I::Resource, f: &mut F)
 where
     I: ReverseInterpretation,
     I::Resource: Clone,
     F: FnMut(I::Resource),
 {
-    if interpretation.is_blank_id(&r) {
-        f(r);
+    if interpretation.is_blank_id(r) {
+        f(r.clone());
         return;
     }
-    if let Some((s, p, o)) = interpretation.triple_term_components(&r) {
-        for_each_blank_in(interpretation, s, f);
-        for_each_blank_in(interpretation, p, f);
-        for_each_blank_in(interpretation, o, f);
+    if let Some((s, p, o)) = interpretation.triple_term_components_view(r) {
+        for_each_blank_in(interpretation, &*s, f);
+        for_each_blank_in(interpretation, &*p, f);
+        for_each_blank_in(interpretation, &*o, f);
     }
 }
 
 fn resource_matches<I>(interpretation: &I, a: &I::Resource, b: &I::Resource) -> bool
 where
     I: ReverseInterpretation,
+    I::Resource: Clone,
 {
     for a in interpretation.iris_of(a) {
         for b in interpretation.iris_of(b) {
@@ -459,8 +461,8 @@ where
         }
     }
 
-    if let (Some((sa, pa, oa)), Some((sb, pb, ob))) = (interpretation.triple_term_components(a), interpretation.triple_term_components(b)) {
-        return resource_matches(interpretation, &sa, &sb) && resource_matches(interpretation, &pa, &pb) && resource_matches(interpretation, &oa, &ob);
+    if let (Some((sa, pa, oa)), Some((sb, pb, ob))) = (interpretation.triple_term_components_view(a), interpretation.triple_term_components_view(b)) {
+        return resource_matches(interpretation, &*sa, &*sb) && resource_matches(interpretation, &*pa, &*pb) && resource_matches(interpretation, &*oa, &*ob);
     }
 
     interpretation.is_blank_id(a) && interpretation.is_blank_id(b)
@@ -473,7 +475,7 @@ fn quad_matches<I>(
 ) -> bool
 where
     I: ReverseInterpretation,
-    I::Resource: Resource,
+    I::Resource: Resource + Clone,
 {
     resource_matches(interpretation, a.0, b.0)
         && resource_matches(interpretation, a.1, b.1)
@@ -574,9 +576,10 @@ impl<R: Resource + Clone + Ord> Bijection<R> {
 
         // RDF 1.2: descend through triple-term components, recursing under
         // the same bijection so that interior blanks consult forward/backward
-        // maps just like outer blanks.
-        if let (Some((sa, pa, oa)), Some((sb, pb, ob))) = (interpretation.triple_term_components(a), interpretation.triple_term_components(b)) {
-            return self.resource_matches_with(interpretation, &sa, &sb) && self.resource_matches_with(interpretation, &pa, &pb) && self.resource_matches_with(interpretation, &oa, &ob);
+        // maps just like outer blanks. Uses the borrow-or-own view to
+        // skip clones for components that are storage-natural to `R`.
+        if let (Some((sa, pa, oa)), Some((sb, pb, ob))) = (interpretation.triple_term_components_view(a), interpretation.triple_term_components_view(b)) {
+            return self.resource_matches_with(interpretation, &*sa, &*sb) && self.resource_matches_with(interpretation, &*pa, &*pb) && self.resource_matches_with(interpretation, &*oa, &*ob);
         }
 
         match self.forward.get(a) {
@@ -674,6 +677,7 @@ impl<'a, R: Resource> BlankSignature<'a, R> {
     fn matches<I>(&self, interpretation: &I, other: &BlankSignature<R>) -> bool
     where
         I: ReverseInterpretation<Resource = R>,
+        R: Clone,
     {
         match_quad_lists(&self.0, &other.0, |qa, qb| quad_matches(interpretation, qa, qb))
     }
