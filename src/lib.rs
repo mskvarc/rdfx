@@ -52,6 +52,7 @@ pub use triple::*;
 pub mod dataset;
 pub mod interpretation;
 pub mod pattern;
+pub mod star;
 pub mod utils;
 
 #[cfg(feature = "meta")]
