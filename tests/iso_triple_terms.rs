@@ -136,8 +136,8 @@ fn triple_terms_blank_subject_aligned_via_outer_bijection() {
     // verifies the inner occurrence matches via Borrow-based map lookup.
     let blank_a = Id::BlankId(BlankIdBuf::new("_:x".to_owned()).unwrap());
     let blank_b = Id::BlankId(BlankIdBuf::new("_:y".to_owned()).unwrap());
-    let body_a: TripleTerm = Triple(blank_a.clone(), ex("p"), LocalTerm::iri(ex("o")));
-    let body_b: TripleTerm = Triple(blank_b.clone(), ex("p"), LocalTerm::iri(ex("o")));
+    let body_a: TripleTerm = Triple(blank_a, ex("p"), LocalTerm::iri(ex("o")));
+    let body_b: TripleTerm = Triple(blank_b, ex("p"), LocalTerm::iri(ex("o")));
 
     let a = graph_with(&[
         (iri_lex("a"), iri_lex("says"), tt_lex(body_a)),
@@ -153,7 +153,7 @@ fn triple_terms_blank_subject_aligned_via_outer_bijection() {
 #[test]
 fn nested_triple_terms_match_componentwise() {
     let inner: TripleTerm = Triple(Id::iri(ex("s")), ex("p"), LocalTerm::iri(ex("o")));
-    let outer: TripleTerm = Triple(Id::iri(ex("a")), ex("says"), LocalTerm::triple(inner.clone()));
+    let outer: TripleTerm = Triple(Id::iri(ex("a")), ex("says"), LocalTerm::triple(inner));
     let g1 = graph_with(&[(iri_lex("z"), iri_lex("witnesses"), tt_lex(outer.clone()))]);
     let g2 = graph_with(&[(iri_lex("z"), iri_lex("witnesses"), tt_lex(outer))]);
     assert!(graph_equivalent_with(&LexInterp, &g1, &g2));

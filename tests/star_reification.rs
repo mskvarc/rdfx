@@ -95,7 +95,7 @@ fn distinct_objects(g: &TestGraph) -> HashSet<String> {
 #[test]
 fn unstar_emits_four_reification_triples_per_triple_term() {
     let inner: TripleTerm = Triple(s_iri("s"), ex("p"), o_iri("o"));
-    let outer = Triple(s_iri("a"), ex("says"), LocalTerm::triple(inner.clone()));
+    let outer = Triple(s_iri("a"), ex("says"), LocalTerm::triple(inner));
 
     let src = TestGraph(vec![outer]);
     let mut dest = TestGraph::default();
@@ -140,7 +140,7 @@ fn unstar_nested_triple_terms() {
     let middle: TripleTerm = Triple(s_iri("b"), ex("says"), LocalTerm::triple(innermost.clone()));
     let outer = Triple(s_iri("a"), ex("says"), LocalTerm::triple(middle.clone()));
 
-    let src = TestGraph(vec![outer.clone()]);
+    let src = TestGraph(vec![outer]);
     let mut reified = TestGraph::default();
     let mut g = Blank::new();
     unstar_graph(&src, &mut reified, &mut g, UnstarOptions::default());
@@ -164,7 +164,7 @@ fn unstar_nested_triple_terms() {
 fn unstar_reuses_reifier_for_identical_triple_terms_when_enabled() {
     let body: TripleTerm = Triple(s_iri("s"), ex("p"), o_iri("o"));
     let t1 = Triple(s_iri("a"), ex("says"), LocalTerm::triple(body.clone()));
-    let t2 = Triple(s_iri("b"), ex("says"), LocalTerm::triple(body.clone()));
+    let t2 = Triple(s_iri("b"), ex("says"), LocalTerm::triple(body));
 
     let src = TestGraph(vec![t1, t2]);
     let mut dest = TestGraph::default();
@@ -180,7 +180,7 @@ fn unstar_reuses_reifier_for_identical_triple_terms_when_enabled() {
 fn unstar_unique_reifier_per_occurrence_when_disabled() {
     let body: TripleTerm = Triple(s_iri("s"), ex("p"), o_iri("o"));
     let t1 = Triple(s_iri("a"), ex("says"), LocalTerm::triple(body.clone()));
-    let t2 = Triple(s_iri("b"), ex("says"), LocalTerm::triple(body.clone()));
+    let t2 = Triple(s_iri("b"), ex("says"), LocalTerm::triple(body));
 
     let src = TestGraph(vec![t1, t2]);
     let mut dest = TestGraph::default();
@@ -212,7 +212,7 @@ fn restar_leaves_incomplete_reifier_alone() {
     let triple_term_iri = LocalTerm::iri(IriBuf::from(RDF_TRIPLE_TERM));
     let src = TestGraph(vec![
         Triple(r.clone(), IriBuf::from(RDF_TYPE), triple_term_iri),
-        Triple(r.clone(), IriBuf::from(RDF_SUBJECT), o_iri("s")),
+        Triple(r, IriBuf::from(RDF_SUBJECT), o_iri("s")),
         // Missing rdf:predicate, rdf:object
         Triple(s_iri("a"), ex("p"), LocalTerm::BlankId(BlankIdBuf::new("_:r".to_owned()).unwrap())),
     ]);
@@ -230,7 +230,7 @@ fn restar_preserves_unrelated_triples() {
     let outer = Triple(s_iri("a"), ex("says"), LocalTerm::triple(inner.clone()));
     let unrelated = Triple(s_iri("z"), ex("p"), o_iri("o"));
 
-    let src = TestGraph(vec![outer.clone(), unrelated.clone()]);
+    let src = TestGraph(vec![outer, unrelated.clone()]);
     let mut reified = TestGraph::default();
     let mut g = Blank::new();
     unstar_graph(&src, &mut reified, &mut g, UnstarOptions::default());
@@ -252,7 +252,7 @@ fn rdf_reifies_constant_is_correct_iri() {
 #[test]
 fn unstar_wraps_blank_subject_inside_triple_term() {
     let blank_subj = Id::BlankId(BlankIdBuf::new("_:inner".to_owned()).unwrap());
-    let inner: TripleTerm = Triple(blank_subj.clone(), ex("p"), o_iri("o"));
+    let inner: TripleTerm = Triple(blank_subj, ex("p"), o_iri("o"));
     let outer = Triple(s_iri("a"), ex("says"), LocalTerm::triple(inner));
 
     let src = TestGraph(vec![outer]);

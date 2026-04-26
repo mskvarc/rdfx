@@ -417,6 +417,7 @@ impl<'de> serde::Deserialize<'de> for BlankIdBuf {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::panic, clippy::expect_used)]
 mod tests {
     use super::{BlankId, BlankIdBuf};
     use crate::RdfDisplay;

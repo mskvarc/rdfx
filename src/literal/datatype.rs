@@ -27,7 +27,7 @@ pub enum ReservedDatatypeError {
 
 impl ReservedDatatypeError {
     /// Returns the IRI that triggered the error.
-    pub fn iri(&self) -> &IriBuf {
+    pub const fn iri(&self) -> &IriBuf {
         match self {
             Self::LangString(i) | Self::DirLangString(i) => i,
         }

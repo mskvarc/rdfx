@@ -156,7 +156,7 @@ fn fully_generalized_triple_strict_triple_term_narrows() {
 #[test]
 fn from_local_term_into_generalized_local_term_preserves_triple() {
     let body = Triple(s_iri("s"), ex("p"), o_iri("o"));
-    let lt = LocalTerm::triple(body.clone());
+    let lt = LocalTerm::triple(body);
     let g: GeneralizedLocalTerm = lt.into();
     assert!(g.is_triple());
 }

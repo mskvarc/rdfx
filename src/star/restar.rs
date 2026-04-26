@@ -117,8 +117,9 @@ fn expand_all(typed: &HashSet<BlankIdBuf>, parts: &HashMap<BlankIdBuf, Parts>) -
 
     let mut expanded: HashMap<BlankIdBuf, TripleTerm> = HashMap::new();
     let mut visiting: HashSet<BlankIdBuf> = HashSet::new();
-    for b in raw.keys().cloned().collect::<Vec<_>>() {
-        expand_one(&b, &raw, &mut expanded, &mut visiting);
+    let keys: Vec<BlankIdBuf> = raw.keys().cloned().collect();
+    for b in &keys {
+        expand_one(b, &raw, &mut expanded, &mut visiting);
     }
     expanded
 }

@@ -97,7 +97,7 @@ where
                     return LocalTerm::BlankId(b.clone());
                 }
                 let b = next_blank(generator);
-                cache.insert(t.clone(), b.clone());
+                cache.insert(t, b.clone());
                 b
             } else {
                 next_blank(generator)
@@ -114,7 +114,13 @@ where
     }
 }
 
+#[allow(clippy::panic)]
 fn next_blank<G: LocalGenerator>(generator: &mut G) -> BlankIdBuf {
+    // The reification mapping requires fresh blank node identifiers as
+    // reifiers; the [`LocalGenerator`] contract for this helper is that
+    // `next_local_term` yields a `LocalTerm::BlankId`. The standard
+    // [`Blank`](crate::generator::Blank) generator satisfies this; bespoke
+    // generators yielding non-blank terms violate the contract and panic.
     match generator.next_local_term() {
         LocalTerm::BlankId(b) => b,
         other => panic!("LocalGenerator yielded non-blank LocalTerm during reification: {other:?}"),

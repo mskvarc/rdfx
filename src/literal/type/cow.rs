@@ -1,3 +1,8 @@
+// Educe's `Clone` derive on a struct-style variant emits `_x`-prefixed
+// shadow bindings whose spans point back to the field declarations,
+// triggering false-positive `used_underscore_binding` warnings.
+#![allow(clippy::used_underscore_binding)]
+
 use std::borrow::Cow;
 
 use educe::Educe;
