@@ -38,7 +38,6 @@ pub trait TraversableDataset: Dataset {
     }
 }
 
-
 pub trait ResourceTraversableDataset: Dataset {
     type Resources<'a>: Iterator<Item = &'a Self::Subject>
     where
@@ -50,7 +49,6 @@ pub trait ResourceTraversableDataset: Dataset {
         self.resources().count()
     }
 }
-
 
 pub trait SubjectTraversableDataset: Dataset {
     type Subjects<'a>: Iterator<Item = &'a Self::Subject>
@@ -64,7 +62,6 @@ pub trait SubjectTraversableDataset: Dataset {
     }
 }
 
-
 pub trait PredicateTraversableDataset: Dataset {
     type Predicates<'a>: Iterator<Item = &'a Self::Predicate>
     where
@@ -76,7 +73,6 @@ pub trait PredicateTraversableDataset: Dataset {
         self.predicates().count()
     }
 }
-
 
 pub trait ObjectTraversableDataset: Dataset {
     type Objects<'a>: Iterator<Item = &'a Self::Object>
@@ -90,7 +86,6 @@ pub trait ObjectTraversableDataset: Dataset {
     }
 }
 
-
 pub trait NamedGraphTraversableDataset: Dataset {
     type NamedGraphs<'a>: Iterator<Item = &'a <Self as Dataset>::Graph>
     where
@@ -102,7 +97,6 @@ pub trait NamedGraphTraversableDataset: Dataset {
         self.named_graphs().count()
     }
 }
-
 
 pub trait MultiPatternMatchingDataset: Dataset
 where
@@ -210,7 +204,6 @@ where
         }
     }
 }
-
 
 pub struct QuadPredicatesObjects<'a, 'p, D: 'a + ?Sized + PredicateTraversableDataset + PatternMatchingDataset>
 where

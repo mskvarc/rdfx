@@ -9,15 +9,7 @@ use crate::{
     RdfDisplay,
     Resource,
     Triple,
-    dataset::{
-        BTreeGraph,
-        GraphMut,
-        ObjectTraversableGraph,
-        PredicateTraversableGraph,
-        ResourceTraversableGraph,
-        SubjectTraversableGraph,
-        TraversableGraph,
-    },
+    dataset::{BTreeGraph, GraphMut, ObjectTraversableGraph, PredicateTraversableGraph, ResourceTraversableGraph, SubjectTraversableGraph, TraversableGraph},
     pattern::{
         CanonicalTriplePattern,
         triple::canonical::{PatternObject, PatternPredicate, PatternSubject},
@@ -36,11 +28,17 @@ fn triple_with_resources<R: Resource>(resources: &Slab<Entry<R>>, Triple(s, p, o
     Triple(&resources[s].value, &resources[p].value, &resources[o].value)
 }
 
-fn triple_cmp<'a, R: Resource + Ord>(resources: &'a Slab<Entry<R>>, triples: &'a Slab<Triple<usize, usize, usize>>) -> impl 'a + Fn(&usize, &Triple<&R, &R, &R>) -> Ordering {
+fn triple_cmp<'a, R: Resource + Ord>(
+    resources: &'a Slab<Entry<R>>,
+    triples: &'a Slab<Triple<usize, usize, usize>>,
+) -> impl 'a + Fn(&usize, &Triple<&R, &R, &R>) -> Ordering {
     |&i, triple| triple_with_resources(resources, triples[i]).cmp(triple)
 }
 
-fn triple_index_cmp<'a, R: Resource + Ord>(resources: &'a Slab<Entry<R>>, triples: &'a Slab<Triple<usize, usize, usize>>) -> impl 'a + Fn(&usize, &usize) -> Ordering {
+fn triple_index_cmp<'a, R: Resource + Ord>(
+    resources: &'a Slab<Entry<R>>,
+    triples: &'a Slab<Triple<usize, usize, usize>>,
+) -> impl 'a + Fn(&usize, &usize) -> Ordering {
     |&i, &j| triple_with_resources(resources, triples[i]).cmp(&triple_with_resources(resources, triples[j]))
 }
 

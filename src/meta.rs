@@ -103,7 +103,22 @@ macro_rules! identity_strip {
     };
 }
 
-identity_strip!(BlankIdBuf, IriBuf, Id, Datatype, Literal, LiteralType, Term, LocalTerm, usize, u32, u64, i32, i64, String);
+identity_strip!(
+    BlankIdBuf,
+    IriBuf,
+    Id,
+    Datatype,
+    Literal,
+    LiteralType,
+    Term,
+    LocalTerm,
+    usize,
+    u32,
+    u64,
+    i32,
+    i64,
+    String
+);
 
 impl<S, P, O> Strip for Triple<S, P, O>
 where

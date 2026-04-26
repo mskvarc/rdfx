@@ -162,10 +162,7 @@ impl<'de> serde::Deserialize<'de> for Datatype {
     {
         let iri = IriBuf::deserialize(deserializer)?;
         Datatype::new(iri).map_err(|RdfLangStringDatatypeError(bad)| {
-            <D::Error as serde::de::Error>::invalid_value(
-                serde::de::Unexpected::Str(bad.as_str()),
-                &"a non-rdf:langString datatype IRI",
-            )
+            <D::Error as serde::de::Error>::invalid_value(serde::de::Unexpected::Str(bad.as_str()), &"a non-rdf:langString datatype IRI")
         })
     }
 }

@@ -28,7 +28,10 @@ pub struct Blank {
 impl Blank {
     /// Creates a new numbered generator with no prefix.
     pub const fn new() -> Self {
-        Self { prefix: String::new(), count: 0 }
+        Self {
+            prefix: String::new(),
+            count: 0,
+        }
     }
 
     /// Creates a new numbered generator with no prefix,
@@ -37,7 +40,10 @@ impl Blank {
     /// The returned generator can create `usize::MAX - offset` unique blank node identifiers
     /// before panicking.
     pub const fn new_with_offset(offset: usize) -> Self {
-        Self { prefix: String::new(), count: offset }
+        Self {
+            prefix: String::new(),
+            count: offset,
+        }
     }
 
     /// Creates a new numbered generator with the given prefix.

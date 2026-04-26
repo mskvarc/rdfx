@@ -22,7 +22,9 @@ impl<D: Dataset> FallibleDataset for D {
 /// Fallible traversable dataset.
 pub trait FallibleTraversableDataset: FallibleDataset {
     /// Fallible quads iterator.
-    type TryQuads<'a>: Iterator<Item = Result<Quad<&'a Self::Subject, &'a Self::Predicate, &'a Self::Object, &'a <Self as FallibleDataset>::Graph>, Self::Error>>
+    type TryQuads<'a>: Iterator<
+        Item = Result<Quad<&'a Self::Subject, &'a Self::Predicate, &'a Self::Object, &'a <Self as FallibleDataset>::Graph>, Self::Error>,
+    >
     where
         Self: 'a;
 

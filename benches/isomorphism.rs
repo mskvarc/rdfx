@@ -13,8 +13,7 @@ use rdf_rs::{
     interpretation::{Interpretation, LocalInterpretation, ReverseInterpretation, ReverseLocalInterpretation},
     iri,
 };
-use std::borrow::Cow;
-use std::hint::black_box;
+use std::{borrow::Cow, hint::black_box};
 
 const SIZES: &[usize] = &[32, 128, 512];
 

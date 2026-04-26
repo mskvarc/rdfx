@@ -86,13 +86,7 @@ const IRI_ESC: [[u8; 6]; 256] = {
 };
 
 #[inline]
-fn iri_emit_escapes(
-    f: &mut fmt::Formatter,
-    mut mask: u64,
-    base: usize,
-    bytes: &[u8],
-    start: &mut usize,
-) -> fmt::Result {
+fn iri_emit_escapes(f: &mut fmt::Formatter, mut mask: u64, base: usize, bytes: &[u8], start: &mut usize) -> fmt::Result {
     while mask != 0 {
         let pos = base + crate::swar::first_set_byte_index(mask) as usize;
         if pos > *start {

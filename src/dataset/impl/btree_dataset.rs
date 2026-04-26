@@ -33,11 +33,17 @@ fn quad_with_resources<R: Resource>(resources: &Slab<Entry<R>>, Quad(s, p, o, g)
     }
 }
 
-fn quad_cmp<'a, R: Resource + Ord>(resources: &'a Slab<Entry<R>>, quads: &'a Slab<Quad<usize, usize, usize, usize>>) -> impl 'a + Fn(&usize, &Quad<&R, &R, &R, &R>) -> Ordering {
+fn quad_cmp<'a, R: Resource + Ord>(
+    resources: &'a Slab<Entry<R>>,
+    quads: &'a Slab<Quad<usize, usize, usize, usize>>,
+) -> impl 'a + Fn(&usize, &Quad<&R, &R, &R, &R>) -> Ordering {
     |&i, quad| quad_with_resources(resources, quads[i]).cmp(quad)
 }
 
-fn quad_index_cmp<'a, R: Resource + Ord>(resources: &'a Slab<Entry<R>>, quads: &'a Slab<Quad<usize, usize, usize, usize>>) -> impl 'a + Fn(&usize, &usize) -> Ordering {
+fn quad_index_cmp<'a, R: Resource + Ord>(
+    resources: &'a Slab<Entry<R>>,
+    quads: &'a Slab<Quad<usize, usize, usize, usize>>,
+) -> impl 'a + Fn(&usize, &usize) -> Ordering {
     |&i, &j| quad_with_resources(resources, quads[i]).cmp(&quad_with_resources(resources, quads[j]))
 }
 

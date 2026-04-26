@@ -41,9 +41,9 @@ pub use display::*;
 pub use generalized::*;
 pub use id::*;
 pub use literal::*;
-pub use positions::{IsGraph, IsObject, IsPredicate, IsSubject, Resource};
 #[doc(hidden)]
 pub use positions::__seal;
+pub use positions::{IsGraph, IsObject, IsPredicate, IsSubject, Resource};
 pub use quad::*;
 pub use schema::*;
 pub use term::*;

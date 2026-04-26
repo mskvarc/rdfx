@@ -1,10 +1,17 @@
 #![allow(clippy::unwrap_used, clippy::panic, clippy::expect_used, clippy::get_unwrap)]
 
 use iri_rs::{Iri, IriBuf};
-use rdf_rs::{BlankId, BlankIdBuf, CowLiteral, Quad, dataset::BTreeDataset, impl_resource, iri};
-use rdf_rs::dataset::isomorphism::find_bijection_with;
-use rdf_rs::interpretation::{Interpretation, LocalInterpretation, ReverseInterpretation, ReverseLocalInterpretation};
-use rdf_rs::LiteralRef;
+use rdf_rs::{
+    BlankId,
+    BlankIdBuf,
+    CowLiteral,
+    LiteralRef,
+    Quad,
+    dataset::{BTreeDataset, isomorphism::find_bijection_with},
+    impl_resource,
+    interpretation::{Interpretation, LocalInterpretation, ReverseInterpretation, ReverseLocalInterpretation},
+    iri,
+};
 use std::borrow::Cow;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -22,7 +29,9 @@ impl Interpretation for TestInterp {
     fn iri(&self, iri: Iri<&str>) -> Option<TestId> {
         Some(TestId::Iri(iri.into()))
     }
-    fn literal<'a>(&self, _literal: impl Into<LiteralRef<'a>>) -> Option<TestId> { None }
+    fn literal<'a>(&self, _literal: impl Into<LiteralRef<'a>>) -> Option<TestId> {
+        None
+    }
 }
 
 impl LocalInterpretation for TestInterp {
@@ -35,15 +44,23 @@ impl ReverseInterpretation for TestInterp {
     type Iris<'a> = std::option::IntoIter<Cow<'a, IriBuf>>;
     type Literals<'a> = std::option::IntoIter<CowLiteral<'a>>;
     fn iris_of<'a>(&'a self, r: &'a Self::Resource) -> Self::Iris<'a> {
-        match r { TestId::Iri(i) => Some(Cow::Borrowed(i)).into_iter(), _ => None.into_iter() }
+        match r {
+            TestId::Iri(i) => Some(Cow::Borrowed(i)).into_iter(),
+            _ => None.into_iter(),
+        }
     }
-    fn literals_of<'a>(&'a self, _r: &'a Self::Resource) -> Self::Literals<'a> { None.into_iter() }
+    fn literals_of<'a>(&'a self, _r: &'a Self::Resource) -> Self::Literals<'a> {
+        None.into_iter()
+    }
 }
 
 impl ReverseLocalInterpretation for TestInterp {
     type BlankIds<'a> = std::option::IntoIter<Cow<'a, BlankId>>;
     fn blank_ids_of<'a>(&'a self, r: &'a Self::Resource) -> Self::BlankIds<'a> {
-        match r { TestId::Blank(b) => Some(Cow::Borrowed(b.as_blank_id_ref())).into_iter(), _ => None.into_iter() }
+        match r {
+            TestId::Blank(b) => Some(Cow::Borrowed(b.as_blank_id_ref())).into_iter(),
+            _ => None.into_iter(),
+        }
     }
 }
 

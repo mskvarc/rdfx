@@ -22,22 +22,7 @@ use std::borrow::Cow;
 
 use iri_rs::{Iri, IriBuf};
 
-use crate::{
-    BlankId,
-    BlankIdBuf,
-    CowId,
-    CowLiteral,
-    CowLocalTerm,
-    CowTerm,
-    Id,
-    IdRef,
-    Literal,
-    LiteralRef,
-    LocalTerm,
-    LocalTermRef,
-    Term,
-    TermRef,
-};
+use crate::{BlankId, BlankIdBuf, CowId, CowLiteral, CowLocalTerm, CowTerm, Id, IdRef, Literal, LiteralRef, LocalTerm, LocalTermRef, Term, TermRef};
 
 #[doc(hidden)]
 pub mod __seal {
@@ -93,8 +78,6 @@ macro_rules! impl_iri_positions {
         impl IsGraph for $t {}
     };
 }
-
-
 
 impl_iri_positions!(IriBuf);
 impl_iri_positions!(Iri<&'_ str>);

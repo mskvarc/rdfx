@@ -2,10 +2,7 @@
 
 use std::str::FromStr;
 
-use rdf_rs::langtag::LangTagBuf;
-use rdf_rs::{
-    Literal, LiteralType, LocalTerm, Term, generalized_quad, generalized_triple, quad, triple,
-};
+use rdf_rs::{Literal, LiteralType, LocalTerm, Term, generalized_quad, generalized_triple, langtag::LangTagBuf, quad, triple};
 
 #[test]
 fn triple_macro_lang_string_object() {

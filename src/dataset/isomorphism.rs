@@ -353,7 +353,11 @@ where
     interpretation.is_blank_id(a) && interpretation.is_blank_id(b)
 }
 
-fn quad_matches<I>(interpretation: &I, a: Quad<&I::Resource, &I::Resource, &I::Resource, &I::Resource>, b: Quad<&I::Resource, &I::Resource, &I::Resource, &I::Resource>) -> bool
+fn quad_matches<I>(
+    interpretation: &I,
+    a: Quad<&I::Resource, &I::Resource, &I::Resource, &I::Resource>,
+    b: Quad<&I::Resource, &I::Resource, &I::Resource, &I::Resource>,
+) -> bool
 where
     I: ReverseInterpretation,
     I::Resource: Resource,

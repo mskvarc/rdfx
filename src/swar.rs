@@ -168,9 +168,7 @@ mod tests {
         let w = u64::from_le_bytes([0x05, 0x80, 0x10, 0xFF, 0x00, 0x20, 0x21, 0x7F]);
         let m = has_byte_lt(w, 0x21);
         // bytes < 0x21 with high bit unset: 0x05, 0x10, 0x00, 0x20 → indices 0, 2, 4, 5
-        let positions: Vec<u32> = (0..8u32)
-            .filter(|i| (m >> (i * 8 + 7)) & 1 == 1)
-            .collect();
+        let positions: Vec<u32> = (0..8u32).filter(|i| (m >> (i * 8 + 7)) & 1 == 1).collect();
         assert_eq!(positions, vec![0, 2, 4, 5]);
     }
 
@@ -178,9 +176,7 @@ mod tests {
     fn has_byte_in_range_alpha() {
         let w = u64::from_le_bytes([b'A', b'Z', b'a', b'z', b'0', b'_', b'@', b'`']);
         let m = has_byte_in_range(w | broadcast(0x20), b'a', b'z');
-        let positions: Vec<u32> = (0..8u32)
-            .filter(|i| (m >> (i * 8 + 7)) & 1 == 1)
-            .collect();
+        let positions: Vec<u32> = (0..8u32).filter(|i| (m >> (i * 8 + 7)) & 1 == 1).collect();
         assert_eq!(positions, vec![0, 1, 2, 3]);
     }
 
@@ -197,19 +193,13 @@ mod tests {
         assert_eq!(blankid_body_scan(b"abc"), BodyScan::AllValidAscii);
         assert_eq!(blankid_body_scan(b"abcdefgh"), BodyScan::AllValidAscii);
         assert_eq!(blankid_body_scan(b"abc.def"), BodyScan::AllValidAscii);
-        assert_eq!(
-            blankid_body_scan(b"ABCdefgh01234.-_:abcdefghij"),
-            BodyScan::AllValidAscii
-        );
+        assert_eq!(blankid_body_scan(b"ABCdefgh01234.-_:abcdefghij"), BodyScan::AllValidAscii);
     }
 
     #[test]
     fn blankid_scan_invalid() {
         assert_eq!(blankid_body_scan(b"abc!def"), BodyScan::InvalidAt(3));
-        assert_eq!(
-            blankid_body_scan(b"abcdefgh!"),
-            BodyScan::InvalidAt(8)
-        );
+        assert_eq!(blankid_body_scan(b"abcdefgh!"), BodyScan::InvalidAt(8));
         assert_eq!(blankid_body_scan(b" "), BodyScan::InvalidAt(0));
     }
 
@@ -231,10 +221,7 @@ mod tests {
 
     #[test]
     fn iri_escape_word_finds_specials() {
-        for &b in &[
-            b'<', b'>', b'"', b'{', b'}', b'|', b'^', b'`', b'\\', b' ', b'\t', 0x00, 0x1F,
-            0x20,
-        ] {
+        for &b in &[b'<', b'>', b'"', b'{', b'}', b'|', b'^', b'`', b'\\', b' ', b'\t', 0x00, 0x1F, 0x20] {
             let arr = [b'a', b, b'a', b'a', b'a', b'a', b'a', b'a'];
             let w = u64::from_le_bytes(arr);
             let mask = iri_escape_word(w);
