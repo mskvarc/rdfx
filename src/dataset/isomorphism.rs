@@ -179,6 +179,19 @@ where
         return None;
     }
 
+    // The signature-bucket bijection below only visits blank-touching quads,
+    // so quads with no blanks anywhere must be compared as a separate
+    // multiset under `quad_matches` (i.e. resources matched via the
+    // interpretation's IRI/literal sets, not the bijection).
+    let a_blankless: Vec<_> = a.quads().filter(|q| blank_count(interpretation, *q) == 0).collect();
+    let b_blankless: Vec<_> = b.quads().filter(|q| blank_count(interpretation, *q) == 0).collect();
+    if a_blankless.len() != b_blankless.len() {
+        return None;
+    }
+    if !match_quad_lists(&a_blankless, &b_blankless, |qa, qb| quad_matches(interpretation, qa, qb)) {
+        return None;
+    }
+
     // Step 1: collect signatures.
     let mut a_blanks_map = BTreeMap::new();
     let mut b_blanks_map = BTreeMap::new();
@@ -255,6 +268,18 @@ where
     let b_blank_count = b_quads.iter().fold(0, |c, q| c + blank_count(interpretation, *q));
 
     if a_blank_count != b_blank_count {
+        return None;
+    }
+
+    // Blankless triples (projected as default-graph quads) must form a
+    // matching multiset under the interpretation; the bijection search below
+    // only walks blank-touching triples.
+    let a_blankless: Vec<_> = a_quads.iter().copied().filter(|q| blank_count(interpretation, *q) == 0).collect();
+    let b_blankless: Vec<_> = b_quads.iter().copied().filter(|q| blank_count(interpretation, *q) == 0).collect();
+    if a_blankless.len() != b_blankless.len() {
+        return None;
+    }
+    if !match_quad_lists(&a_blankless, &b_blankless, |qa, qb| quad_matches(interpretation, qa, qb)) {
         return None;
     }
 
