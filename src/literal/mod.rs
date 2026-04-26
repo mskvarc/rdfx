@@ -37,11 +37,12 @@ impl Literal {
     }
 
     /// Constructs a simple literal — equivalent to a typed literal with
-    /// datatype `xsd:string` per [RDF 1.1 Concepts §3.3][s].
+    /// datatype `xsd:string` per [RDF 1.1 §3.3][s] / [RDF 1.2 §3.4][s2].
     ///
     /// Round-trips: `Literal::plain(v) == Literal::typed(v, Datatype::xsd_string())`.
     ///
-    /// [s]: https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal
+    /// [s]:  https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal
+    /// [s2]: https://www.w3.org/TR/rdf12-concepts/#section-Graph-Literal
     pub fn plain(value: impl Into<String>) -> Self {
         Self {
             value: value.into(),

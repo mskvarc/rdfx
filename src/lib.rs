@@ -13,8 +13,34 @@
 //!   domain;
 //! - Graphs and datasets representing collections of interpreted triples/quads.
 //!
-//! [rdf]: <https://w3c.github.io/rdf-primer/spec/>
-//! [w3c]: <https://www.w3.org/>
+//! # RDF 1.2
+//!
+//! As of `0.24.0` this crate targets [RDF 1.2 Concepts][rdf12] alongside
+//! RDF 1.1 — RDF 1.1 graphs are a syntactic subset (they never construct the
+//! new variants):
+//!
+//! - **Triple terms** ([RDF 1.2 §4][s32-tt]) — a triple appearing as an RDF
+//!   term, restricted to object position in strict RDF (any position via the
+//!   [`GeneralizedTriple`] / [`GeneralizedLocalTerm`] types). Carried by
+//!   [`LocalTerm::Triple`]; aliased as [`TripleTerm`]. Macro syntax
+//!   `<<( s p o )>>`.
+//! - **Directional language strings** ([RDF 1.2 §3.4][s32-dls]) — language
+//!   tag plus base direction (`ltr` / `rtl`), datatype `rdf:dirLangString`.
+//!   Carried by [`LiteralType::DirLangString`]; constructor
+//!   [`Literal::dir_lang_string`]; helper enum [`Direction`]. Macro syntax
+//!   `"v" @ "lang" / "ltr"`.
+//! - **`rdf:reifies` annotation model** ([RDF 1.2 §6][s32-ann]) — a
+//!   round-trippable mapping between triple-term-bearing graphs and their
+//!   reified RDF 1.1-compatible form, exposed as
+//!   [`star::unstar_graph`] / [`star::restar_graph`] (and the dataset
+//!   variants).
+//!
+//! [rdf]:    <https://w3c.github.io/rdf-primer/spec/>
+//! [w3c]:    <https://www.w3.org/>
+//! [rdf12]:  <https://www.w3.org/TR/rdf12-concepts/>
+//! [s32-tt]:  <https://www.w3.org/TR/rdf12-concepts/#section-triples>
+//! [s32-dls]: <https://www.w3.org/TR/rdf12-concepts/#section-Graph-Literal>
+//! [s32-ann]: <https://www.w3.org/TR/rdf12-concepts/#section-reification>
 #![recursion_limit = "1024"]
 
 #[doc(hidden)]

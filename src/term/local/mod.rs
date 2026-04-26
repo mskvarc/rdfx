@@ -15,7 +15,7 @@ use super::Term;
 /// Per RDF 1.2 Concepts §4 a term may also be a *triple term* — a triple
 /// appearing in object position. The [`LocalTerm::Triple`] variant carries a
 /// strict-RDF triple body, restricting triple terms to the object slot via
-/// the position-trait machinery in [`crate::positions`].
+/// the position-trait machinery ([`IsObject`](crate::IsObject)).
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(untagged))]

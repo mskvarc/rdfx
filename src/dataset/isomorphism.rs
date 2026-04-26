@@ -1,8 +1,9 @@
 //! Blank-node bijection between graphs and datasets — RDF 1.1 §3.6 / §4.4
-//! equivalence under blank-node renaming.
+//! and RDF 1.2 equivalence under blank-node renaming.
 //!
-//! Per [RDF 1.1 Concepts §3.6][s3] / [§4.4][s4], two graphs (resp. datasets)
-//! are equivalent iff there exists a bijection between their blank node
+//! Per [RDF 1.1 Concepts §3.6][s3] / [§4.4][s4] (resp.
+//! [RDF 1.2 §3.6][s32] / [§5.4][s42]), two graphs (resp. datasets) are
+//! equivalent iff there exists a bijection between their blank node
 //! identifiers that maps one to the other while preserving all triples (resp.
 //! quads). [`find_bijection_with`] / [`find_bijection_graph_with`] compute
 //! that bijection if it exists; [`graph_equivalent_with`] /
@@ -13,15 +14,20 @@
 //! "blank-like" handle, yielding *structural* equivalence (any equipotent
 //! injection works). For RDF-semantic equivalence (where common IRIs must
 //! match exactly), pass a real [`ReverseInterpretation`] via the `_with`
-//! variants.
+//! variants. For RDF 1.2 *triple-term-aware* equivalence, pass `&()` (the
+//! lexical interpretation) — its
+//! [`triple_term_components`](crate::interpretation::ReverseInterpretation::triple_term_components)
+//! override drives componentwise descent through triple-term resources.
 //!
 //! Implementation: signature-bucket pre-filter (split by neighbourhood
 //! signature size, then by per-quad match-set) followed by augmenting-path
 //! bipartite matching. Not [RDFC-1.0][rdfc]; just the structural bijection
-//! prescribed by RDF 1.1 §3.6 / §4.4.
+//! prescribed by RDF 1.1 §3.6 / §4.4 / RDF 1.2 §3.6 / §5.4.
 //!
-//! [s3]: https://www.w3.org/TR/rdf11-concepts/#section-graph-equality
-//! [s4]: https://www.w3.org/TR/rdf11-concepts/#section-dataset-equality
+//! [s3]:  https://www.w3.org/TR/rdf11-concepts/#section-graph-equality
+//! [s4]:  https://www.w3.org/TR/rdf11-concepts/#section-dataset-equality
+//! [s32]: https://www.w3.org/TR/rdf12-concepts/#section-graph-equality
+//! [s42]: https://www.w3.org/TR/rdf12-concepts/#section-dataset-equality
 //! [rdfc]: https://www.w3.org/TR/rdf-canon/
 use std::{
     borrow::Cow,

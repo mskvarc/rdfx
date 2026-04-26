@@ -1,6 +1,6 @@
 [package]
 name = "rdf-rs"
-description = "RDF data-structures, traits and utilities: terms, triples, quads, interpretations, graphs and datasets."
+description = "RDF 1.2 data-structures, traits and utilities: terms (incl. triple terms), triples, quads, interpretations, graphs, datasets, unstar/restar reification helpers."
 version = "0.23.0"
 edition = "2024"
 rust-version = "1.85.0"
