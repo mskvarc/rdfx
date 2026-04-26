@@ -79,3 +79,7 @@ harness = false
 [[bench]]
 name = "swar"
 harness = false
+
+[[bench]]
+name = "triple_terms"
+harness = false

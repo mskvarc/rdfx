@@ -61,8 +61,20 @@ impl<'a> LiteralRef<'a> {
         self.type_.is_lang_string()
     }
 
+    pub const fn is_undirected_lang_string(&self) -> bool {
+        self.type_.is_undirected_lang_string()
+    }
+
+    pub const fn is_dir_lang_string(&self) -> bool {
+        self.type_.is_dir_lang_string()
+    }
+
     pub const fn lang_tag(&self) -> Option<&'a LangTag> {
         self.type_.lang_tag()
+    }
+
+    pub const fn direction(&self) -> Option<crate::Direction> {
+        self.type_.direction()
     }
 
     pub fn into_cow(self) -> CowLiteral<'a> {

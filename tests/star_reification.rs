@@ -1,0 +1,290 @@
+//! RDF 1.2 unstar/restar round-trip tests.
+//!
+//! Uses a tiny `Vec`-backed `TestGraph` to satisfy the
+//! `TraversableGraph<Subject=Id, Predicate=IriBuf, Object=LocalTerm>` /
+//! `GraphMut<...>` shape required by `unstar_graph` / `restar_graph` —
+//! the heterogeneous lexical alphabet has no built-in storage type.
+#![allow(clippy::unwrap_used, clippy::panic, clippy::expect_used)]
+
+use std::collections::HashSet;
+
+use iri_rs::IriBuf;
+use rdf_rs::{
+    BlankIdBuf,
+    Id,
+    LexicalTriple,
+    LocalTerm,
+    RDF_OBJECT,
+    RDF_PREDICATE,
+    RDF_REIFIES,
+    RDF_SUBJECT,
+    RDF_TRIPLE_TERM,
+    RDF_TYPE,
+    Term,
+    Triple,
+    TripleTerm,
+    dataset::{Graph, GraphMut, TraversableGraph},
+    star::{UnstarOptions, restar_graph, unstar_graph},
+    generator::Blank,
+};
+
+// ----- minimal test graph -----
+
+#[derive(Default, Debug)]
+struct TestGraph(Vec<LexicalTriple>);
+
+impl Graph for TestGraph {
+    type Subject = Id;
+    type Predicate = IriBuf;
+    type Object = LocalTerm;
+}
+
+struct TripleIter<'a>(std::slice::Iter<'a, LexicalTriple>);
+
+impl<'a> Iterator for TripleIter<'a> {
+    type Item = Triple<&'a Id, &'a IriBuf, &'a LocalTerm>;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next().map(|t| Triple(&t.0, &t.1, &t.2))
+    }
+}
+
+impl TraversableGraph for TestGraph {
+    type Triples<'a> = TripleIter<'a> where Self: 'a;
+    fn triples(&self) -> Self::Triples<'_> {
+        TripleIter(self.0.iter())
+    }
+}
+
+impl GraphMut for TestGraph {
+    fn insert(&mut self, t: LexicalTriple) {
+        self.0.push(t);
+    }
+    fn remove(&mut self, _t: Triple<&Id, &IriBuf, &LocalTerm>) {
+        // not exercised by unstar/restar
+    }
+}
+
+// ----- helpers -----
+
+fn ex(s: &str) -> IriBuf {
+    IriBuf::new(format!("http://example.org/{s}")).unwrap()
+}
+
+fn s_iri(s: &str) -> Id {
+    Id::iri(ex(s))
+}
+
+fn o_iri(s: &str) -> LocalTerm {
+    LocalTerm::iri(ex(s))
+}
+
+fn count_with_predicate(g: &TestGraph, p: &str) -> usize {
+    g.0.iter().filter(|t| t.1.as_str() == p).count()
+}
+
+fn contains_triple_term_object(g: &TestGraph, expected_body: &TripleTerm) -> bool {
+    g.0.iter().any(|t| matches!(&t.2, LocalTerm::Triple(b) if &**b == expected_body))
+}
+
+fn distinct_objects(g: &TestGraph) -> HashSet<String> {
+    g.0.iter().map(|t| format!("{:?}", t.2)).collect()
+}
+
+// ----- tests -----
+
+#[test]
+fn unstar_emits_four_reification_triples_per_triple_term() {
+    let inner: TripleTerm = Triple(s_iri("s"), ex("p"), o_iri("o"));
+    let outer = Triple(s_iri("a"), ex("says"), LocalTerm::triple(inner.clone()));
+
+    let src = TestGraph(vec![outer]);
+    let mut dest = TestGraph::default();
+    let mut g = Blank::new();
+    unstar_graph(&src, &mut dest, &mut g, UnstarOptions::default());
+
+    // 1 original (rewritten) + 4 reification triples
+    assert_eq!(dest.0.len(), 5);
+    assert_eq!(count_with_predicate(&dest, RDF_TYPE.as_str()), 1);
+    assert_eq!(count_with_predicate(&dest, RDF_SUBJECT.as_str()), 1);
+    assert_eq!(count_with_predicate(&dest, RDF_PREDICATE.as_str()), 1);
+    assert_eq!(count_with_predicate(&dest, RDF_OBJECT.as_str()), 1);
+
+    // The original triple's object is no longer a triple term.
+    let original = dest.0.iter().find(|t| t.1.as_str() == "http://example.org/says").unwrap();
+    assert!(!original.2.is_triple());
+    assert!(matches!(original.2, LocalTerm::BlankId(_)));
+}
+
+#[test]
+fn unstar_then_restar_round_trip() {
+    let inner: TripleTerm = Triple(s_iri("s"), ex("p"), o_iri("o"));
+    let outer = Triple(s_iri("a"), ex("says"), LocalTerm::triple(inner.clone()));
+
+    let src = TestGraph(vec![outer.clone()]);
+    let mut reified = TestGraph::default();
+    let mut g = Blank::new();
+    unstar_graph(&src, &mut reified, &mut g, UnstarOptions::default());
+
+    let mut refolded = TestGraph::default();
+    restar_graph(&reified, &mut refolded);
+
+    assert_eq!(refolded.0.len(), 1, "reified form refolds back to a single triple");
+    assert!(contains_triple_term_object(&refolded, &inner));
+    assert_eq!(refolded.0[0].0, outer.0);
+    assert_eq!(refolded.0[0].1.as_str(), outer.1.as_str());
+}
+
+#[test]
+fn unstar_nested_triple_terms() {
+    let innermost: TripleTerm = Triple(s_iri("s"), ex("p"), o_iri("o"));
+    let middle: TripleTerm = Triple(s_iri("b"), ex("says"), LocalTerm::triple(innermost.clone()));
+    let outer = Triple(s_iri("a"), ex("says"), LocalTerm::triple(middle.clone()));
+
+    let src = TestGraph(vec![outer.clone()]);
+    let mut reified = TestGraph::default();
+    let mut g = Blank::new();
+    unstar_graph(&src, &mut reified, &mut g, UnstarOptions::default());
+
+    // 1 outer + 4 (middle reification) + 4 (innermost reification) = 9
+    assert_eq!(reified.0.len(), 9);
+    assert_eq!(count_with_predicate(&reified, RDF_TYPE.as_str()), 2);
+    assert_eq!(count_with_predicate(&reified, RDF_SUBJECT.as_str()), 2);
+
+    // Round-trip
+    let mut refolded = TestGraph::default();
+    restar_graph(&reified, &mut refolded);
+    assert_eq!(refolded.0.len(), 1);
+    let body = refolded.0[0].2.as_triple().unwrap();
+    assert_eq!(body, &middle);
+    let inner_body = body.2.as_triple().unwrap();
+    assert_eq!(inner_body, &innermost);
+}
+
+#[test]
+fn unstar_reuses_reifier_for_identical_triple_terms_when_enabled() {
+    let body: TripleTerm = Triple(s_iri("s"), ex("p"), o_iri("o"));
+    let t1 = Triple(s_iri("a"), ex("says"), LocalTerm::triple(body.clone()));
+    let t2 = Triple(s_iri("b"), ex("says"), LocalTerm::triple(body.clone()));
+
+    let src = TestGraph(vec![t1, t2]);
+    let mut dest = TestGraph::default();
+    let mut g = Blank::new();
+    unstar_graph(&src, &mut dest, &mut g, UnstarOptions { reuse_reifier: true });
+
+    // 2 originals + 4 reification (shared) = 6
+    assert_eq!(dest.0.len(), 6);
+    assert_eq!(count_with_predicate(&dest, RDF_TYPE.as_str()), 1);
+}
+
+#[test]
+fn unstar_unique_reifier_per_occurrence_when_disabled() {
+    let body: TripleTerm = Triple(s_iri("s"), ex("p"), o_iri("o"));
+    let t1 = Triple(s_iri("a"), ex("says"), LocalTerm::triple(body.clone()));
+    let t2 = Triple(s_iri("b"), ex("says"), LocalTerm::triple(body.clone()));
+
+    let src = TestGraph(vec![t1, t2]);
+    let mut dest = TestGraph::default();
+    let mut g = Blank::new();
+    unstar_graph(&src, &mut dest, &mut g, UnstarOptions { reuse_reifier: false });
+
+    // 2 originals + 8 reification = 10
+    assert_eq!(dest.0.len(), 10);
+    assert_eq!(count_with_predicate(&dest, RDF_TYPE.as_str()), 2);
+}
+
+#[test]
+fn restar_leaves_non_reifier_blanks_untouched() {
+    let blank = LocalTerm::BlankId(BlankIdBuf::new("_:b0".to_owned()).unwrap());
+    let t = Triple(s_iri("a"), ex("p"), blank.clone());
+    let src = TestGraph(vec![t]);
+
+    let mut dest = TestGraph::default();
+    restar_graph(&src, &mut dest);
+
+    assert_eq!(dest.0.len(), 1);
+    assert_eq!(dest.0[0].2, blank);
+}
+
+#[test]
+fn restar_leaves_incomplete_reifier_alone() {
+    // Only `rdf:type rdf:TripleTerm` and `rdf:subject` — incomplete.
+    let r = Id::BlankId(BlankIdBuf::new("_:r".to_owned()).unwrap());
+    let triple_term_iri = LocalTerm::iri(IriBuf::from(RDF_TRIPLE_TERM));
+    let src = TestGraph(vec![
+        Triple(r.clone(), IriBuf::from(RDF_TYPE), triple_term_iri),
+        Triple(r.clone(), IriBuf::from(RDF_SUBJECT), o_iri("s")),
+        // Missing rdf:predicate, rdf:object
+        Triple(s_iri("a"), ex("p"), LocalTerm::BlankId(BlankIdBuf::new("_:r".to_owned()).unwrap())),
+    ]);
+
+    let mut dest = TestGraph::default();
+    restar_graph(&src, &mut dest);
+
+    // All input copied through untouched (no refolding).
+    assert_eq!(dest.0.len(), src.0.len());
+}
+
+#[test]
+fn restar_preserves_unrelated_triples() {
+    let inner: TripleTerm = Triple(s_iri("s"), ex("p"), o_iri("o"));
+    let outer = Triple(s_iri("a"), ex("says"), LocalTerm::triple(inner.clone()));
+    let unrelated = Triple(s_iri("z"), ex("p"), o_iri("o"));
+
+    let src = TestGraph(vec![outer.clone(), unrelated.clone()]);
+    let mut reified = TestGraph::default();
+    let mut g = Blank::new();
+    unstar_graph(&src, &mut reified, &mut g, UnstarOptions::default());
+
+    let mut refolded = TestGraph::default();
+    restar_graph(&reified, &mut refolded);
+
+    assert_eq!(refolded.0.len(), 2);
+    assert!(contains_triple_term_object(&refolded, &inner));
+    assert!(refolded.0.iter().any(|t| t.0 == unrelated.0 && t.1.as_str() == unrelated.1.as_str()));
+}
+
+#[test]
+fn rdf_reifies_constant_is_correct_iri() {
+    assert_eq!(RDF_REIFIES.as_str(), "http://www.w3.org/1999/02/22-rdf-syntax-ns#reifies");
+    assert_eq!(RDF_TRIPLE_TERM.as_str(), "http://www.w3.org/1999/02/22-rdf-syntax-ns#TripleTerm");
+}
+
+#[test]
+fn unstar_wraps_blank_subject_inside_triple_term() {
+    let blank_subj = Id::BlankId(BlankIdBuf::new("_:inner".to_owned()).unwrap());
+    let inner: TripleTerm = Triple(blank_subj.clone(), ex("p"), o_iri("o"));
+    let outer = Triple(s_iri("a"), ex("says"), LocalTerm::triple(inner));
+
+    let src = TestGraph(vec![outer]);
+    let mut dest = TestGraph::default();
+    let mut g = Blank::new();
+    unstar_graph(&src, &mut dest, &mut g, UnstarOptions::default());
+
+    // Find the rdf:subject triple, verify object is the blank from inner subject.
+    let sub_triple = dest.0.iter().find(|t| t.1.as_str() == RDF_SUBJECT.as_str()).unwrap();
+    assert!(matches!(sub_triple.2, LocalTerm::BlankId(ref b) if b.as_str() == "_:inner"));
+}
+
+#[test]
+fn objects_after_round_trip_set_distinct_from_reified_intermediate() {
+    // Documents that reified intermediate has different object set than refolded form.
+    let inner: TripleTerm = Triple(s_iri("s"), ex("p"), o_iri("o"));
+    let outer = Triple(s_iri("a"), ex("says"), LocalTerm::triple(inner));
+    let src = TestGraph(vec![outer]);
+
+    let mut reified = TestGraph::default();
+    let mut g = Blank::new();
+    unstar_graph(&src, &mut reified, &mut g, UnstarOptions::default());
+    let mut refolded = TestGraph::default();
+    restar_graph(&reified, &mut refolded);
+
+    let reified_objects = distinct_objects(&reified);
+    let refolded_objects = distinct_objects(&refolded);
+    assert_ne!(reified_objects, refolded_objects);
+}
+
+#[test]
+fn unused_term_namespace_stays_silent() {
+    // Sanity: `Term` re-exported and importable.
+    let _ = Term::Iri(ex("x"));
+}
