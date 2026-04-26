@@ -5,6 +5,8 @@ use std::{
     str::FromStr,
 };
 
+use crate::RdfDisplay;
+
 /// Invalid blank node identifier.
 ///
 /// This error is raised by the [`BlankId::new`] and [`BlankIdBuf::new`] functions
@@ -100,6 +102,13 @@ impl fmt::Display for BlankId {
     #[inline(always)]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.0.fmt(f)
+    }
+}
+
+impl RdfDisplay for BlankId {
+    #[inline(always)]
+    fn rdf_fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(&self.0)
     }
 }
 
@@ -280,6 +289,13 @@ impl fmt::Display for BlankIdBuf {
     }
 }
 
+impl RdfDisplay for BlankIdBuf {
+    #[inline(always)]
+    fn rdf_fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
 impl fmt::Debug for BlankIdBuf {
     #[inline(always)]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -402,10 +418,19 @@ impl<'de> serde::Deserialize<'de> for BlankIdBuf {
 
 #[cfg(test)]
 mod tests {
-    use super::BlankId;
+    use super::{BlankId, BlankIdBuf};
+    use crate::RdfDisplay;
 
     fn ok(s: &str) -> bool {
         BlankId::new(s).is_ok()
+    }
+
+    #[test]
+    fn rdf_display_renders_unquoted() {
+        let buf = BlankIdBuf::new("_:foo".to_owned()).unwrap();
+        let bid: &BlankId = &buf;
+        assert_eq!(format!("{}", bid.rdf_display()), "_:foo");
+        assert_eq!(format!("{}", buf.rdf_display()), "_:foo");
     }
 
     #[test]
