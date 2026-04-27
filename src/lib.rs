@@ -80,6 +80,7 @@ pub mod interpretation;
 pub mod pattern;
 pub mod star;
 pub mod utils;
+pub mod vocabulary;
 
 #[cfg(feature = "meta")]
 pub mod meta;

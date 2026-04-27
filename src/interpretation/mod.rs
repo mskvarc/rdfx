@@ -13,6 +13,21 @@ pub use r#impl::*;
 pub mod fallible;
 pub use fallible::FallibleInterpretation;
 
+mod iri;
+pub use iri::*;
+
+mod blank_id;
+pub use blank_id::*;
+
+mod literal;
+pub use literal::*;
+
+mod id;
+pub use id::*;
+
+mod term;
+pub use term::*;
+
 use iri_rs::{Iri, IriBuf};
 
 /// RDF resource interpretation.
@@ -28,6 +43,30 @@ pub trait Interpretation {
             TermRef::Iri(iri) => self.iri(iri),
             TermRef::Literal(l) => self.literal(l),
         }
+    }
+}
+
+impl<I: Interpretation> Interpretation for &I {
+    type Resource = I::Resource;
+
+    fn iri(&self, iri: Iri<&str>) -> Option<Self::Resource> {
+        I::iri(*self, iri)
+    }
+
+    fn literal<'a>(&self, literal: impl Into<LiteralRef<'a>>) -> Option<Self::Resource> {
+        I::literal(*self, literal)
+    }
+}
+
+impl<I: Interpretation> Interpretation for &mut I {
+    type Resource = I::Resource;
+
+    fn iri(&self, iri: Iri<&str>) -> Option<Self::Resource> {
+        I::iri(*self, iri)
+    }
+
+    fn literal<'a>(&self, literal: impl Into<LiteralRef<'a>>) -> Option<Self::Resource> {
+        I::literal(*self, literal)
     }
 }
 

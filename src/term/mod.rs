@@ -11,6 +11,15 @@ pub use cow::*;
 mod local;
 pub use local::*;
 
+mod maybe_blank;
+pub use maybe_blank::*;
+
+mod maybe_iri;
+pub use maybe_iri::*;
+
+mod maybe_literal;
+pub use maybe_literal::*;
+
 pub mod generator;
 pub use generator::{Generator, LocalGenerator};
 

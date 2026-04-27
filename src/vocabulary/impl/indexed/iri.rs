@@ -1,0 +1,80 @@
+use iri_rs::Iri;
+use std::convert::TryFrom;
+
+/// Iri index.
+#[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
+pub struct IriIndex(usize);
+
+impl From<usize> for IriIndex {
+    fn from(i: usize) -> Self {
+        Self(i)
+    }
+}
+
+impl From<IriIndex> for usize {
+    fn from(value: IriIndex) -> Self {
+        value.0
+    }
+}
+
+impl IndexedIri for IriIndex {
+    fn index(&self) -> IriOrIndex<Iri<&str>> {
+        IriOrIndex::Index(self.0)
+    }
+}
+
+impl<'a> TryFrom<Iri<&'a str>> for IriIndex {
+    type Error = ();
+
+    fn try_from(_value: Iri<&'a str>) -> Result<Self, Self::Error> {
+        Err(())
+    }
+}
+
+#[cfg(feature = "contextual")]
+impl<V: crate::vocabulary::IriVocabulary<Iri = Self>> contextual::DisplayWithContext<V>
+    for IriIndex
+{
+    fn fmt_with(&self, vocabulary: &V, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        std::fmt::Display::fmt(&vocabulary.iri(self).unwrap(), f)
+    }
+}
+
+#[cfg(feature = "contextual")]
+impl<V: crate::vocabulary::IriVocabulary<Iri = Self>> crate::RdfDisplayWithContext<V> for IriIndex {
+    fn rdf_fmt_with(&self, vocabulary: &V, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        std::fmt::Display::fmt(&vocabulary.iri(self).unwrap(), f)
+    }
+}
+
+/// Partly indexed IRI identifier type.
+pub trait IndexedIri: From<usize> + for<'a> TryFrom<Iri<&'a str>> {
+    fn index(&self) -> IriOrIndex<Iri<&str>>;
+}
+
+/// IRI or index.
+///
+/// This can be used as an IRI identifier that mixes IRIs that are statically
+/// known (of type `I`) and IRIs added at run time with a dynamic index.
+#[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
+pub enum IriOrIndex<I> {
+    /// Index of the IRI in the vocabulary.
+    Index(usize),
+
+    /// Non indexed IRI.
+    Iri(I),
+}
+
+impl<I> From<usize> for IriOrIndex<I> {
+    fn from(i: usize) -> Self {
+        Self::Index(i)
+    }
+}
+
+impl<'a, I: TryFrom<Iri<&'a str>>> TryFrom<Iri<&'a str>> for IriOrIndex<I> {
+    type Error = I::Error;
+
+    fn try_from(value: Iri<&'a str>) -> Result<Self, Self::Error> {
+        Ok(Self::Iri(I::try_from(value)?))
+    }
+}
