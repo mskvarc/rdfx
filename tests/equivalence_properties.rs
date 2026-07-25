@@ -5,7 +5,7 @@
 //! (`graph_equivalent` / `dataset_equivalent`, which use `BlindInterpretation`).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::expect_used)]
 
-use rdf_rs::{
+use rdfx::{
     Quad,
     Triple,
     dataset::{

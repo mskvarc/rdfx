@@ -2,7 +2,7 @@
 
 use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 use iri_rs::{Iri, IriBuf};
-use rdf_rs::{
+use rdfx::{
     BlankId,
     BlankIdBuf,
     CowLiteral,

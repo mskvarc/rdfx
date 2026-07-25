@@ -1,6 +1,6 @@
 //! Literals are forbidden in graph-name position by RDF 1.1 §4.
 use iri_rs::IriBuf;
-use rdf_rs::{Id, Literal, LocalTerm, Quad};
+use rdfx::{Id, Literal, LocalTerm, Quad};
 
 fn main() {
     let _q: Quad<Id, IriBuf, LocalTerm, Literal> = Quad::new(

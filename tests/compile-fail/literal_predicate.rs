@@ -1,6 +1,6 @@
 //! Literals are forbidden in predicate position by RDF 1.1 §3.
 use iri_rs::IriBuf;
-use rdf_rs::{Id, Literal, LocalTerm, Triple};
+use rdfx::{Id, Literal, LocalTerm, Triple};
 
 fn main() {
     let _t: Triple<Id, Literal, LocalTerm> = Triple::new(

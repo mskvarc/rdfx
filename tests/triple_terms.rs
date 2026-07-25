@@ -8,7 +8,7 @@ use std::{
 };
 
 use iri_rs::{IriBuf, iri};
-use rdf_rs::{
+use rdfx::{
     BlankIdBuf, FullyGeneralizedTriple, GeneralizationError, GeneralizedLocalTerm, GeneralizedTriple, Id, Literal, LocalTerm, LocalTermRef, RdfDisplay, Term, Triple, TripleTerm, triple,
 };
 

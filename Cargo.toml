@@ -1,5 +1,5 @@
 [package]
-name = "rdf-rs"
+name = "rdfx"
 description = "RDF 1.2 data-structures, traits and utilities: terms (incl. triple terms), triples, quads, interpretations, graphs, datasets, unstar/restar reification helpers."
 version = "0.23.0"
 edition = "2024"
@@ -10,9 +10,13 @@ authors = [
 ]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
-repository = "https://github.com/mskvarc/rdf-rs/"
+repository = "https://github.com/mskvarc/rdfx/"
 categories = ["data-structures", "web-programming", "encoding"]
 keywords = ["rdf", "graph", "dataset", "triple", "semantic-web"]
+autobenches = false
+# The generated isomorphism suites are 2.3 MiB each and only serve local
+# regression testing.
+exclude = ["tests/iso_btree.rs", "tests/iso_hash.rs"]
 
 [package.metadata.docs.rs]
 all-features = true
@@ -64,4 +68,8 @@ harness = false
 
 [[bench]]
 name = "triple_terms"
+harness = false
+
+[[bench]]
+name = "vocabulary"
 harness = false

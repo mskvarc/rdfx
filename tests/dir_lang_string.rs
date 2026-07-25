@@ -2,7 +2,7 @@
 //! equality, lexical form, and (with `serde`) round-trip.
 #![allow(clippy::unwrap_used, clippy::panic, clippy::expect_used)]
 
-use rdf_rs::{Direction, InvalidDirection, Literal, LiteralType, RdfDisplay, langtag::LangTagBuf};
+use rdfx::{Direction, InvalidDirection, Literal, LiteralType, RdfDisplay, langtag::LangTagBuf};
 
 fn en() -> LangTagBuf {
     "en".parse().unwrap()
@@ -89,7 +89,7 @@ fn literal_type_helpers_flag_dir_lang_string() {
 
 #[test]
 fn dir_lang_string_via_macro() {
-    use rdf_rs::triple;
+    use rdfx::triple;
     let t = triple![ <"http://ex/s"> <"http://ex/p"> "hello" @ "en" / "ltr" ];
     let lit = t.into_object().as_literal().unwrap().to_owned();
     assert!(lit.is_dir_lang_string());

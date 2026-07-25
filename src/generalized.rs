@@ -31,12 +31,16 @@ use crate::{BlankId, BlankIdBuf, Id, IsGraph, IsObject, IsPredicate, IsSubject, 
 #[derive(Debug, thiserror::Error)]
 pub enum GeneralizationError {
     #[error("literal in subject position")]
+    /// A literal sits in subject position.
     LiteralSubject,
     #[error("literal in predicate position")]
+    /// A literal sits in predicate position.
     LiteralPredicate,
     #[error("blank node in predicate position")]
+    /// A blank node sits in predicate position.
     BlankPredicate,
     #[error("literal in graph position")]
+    /// A literal sits in graph position.
     LiteralGraph,
     /// A triple term sits in subject position. Strict RDF 1.2 only allows
     /// triple terms in object position.
@@ -56,60 +60,74 @@ pub enum GeneralizationError {
 pub struct GeneralizedTriple<S = LocalTerm, P = S, O = S>(pub S, pub P, pub O);
 
 impl<S, P, O> GeneralizedTriple<S, P, O> {
+    /// Creates a generalized triple from its components.
     pub const fn new(subject: S, predicate: P, object: O) -> Self {
         Self(subject, predicate, object)
     }
 
+    /// Returns the subject of this triple.
     pub const fn subject(&self) -> &S {
         &self.0
     }
 
+    /// Returns the predicate of this triple.
     pub const fn predicate(&self) -> &P {
         &self.1
     }
 
+    /// Returns the object of this triple.
     pub const fn object(&self) -> &O {
         &self.2
     }
 
+    /// Consumes this triple, returning its subject.
     pub fn into_subject(self) -> S {
         self.0
     }
 
+    /// Consumes this triple, returning its predicate.
     pub fn into_predicate(self) -> P {
         self.1
     }
 
+    /// Consumes this triple, returning its object.
     pub fn into_object(self) -> O {
         self.2
     }
 
+    /// Consumes this triple, returning each component separately.
     pub fn into_parts(self) -> (S, P, O) {
         (self.0, self.1, self.2)
     }
 
+    /// Lifts this triple into a generalized quad in the given graph.
     pub fn into_quad<G>(self, graph: Option<G>) -> GeneralizedQuad<S, P, O, G> {
         GeneralizedQuad(self.0, self.1, self.2, graph)
     }
 
+    /// Maps the subject of this triple with `f`.
     pub fn map_subject<U>(self, f: impl FnOnce(S) -> U) -> GeneralizedTriple<U, P, O> {
         GeneralizedTriple(f(self.0), self.1, self.2)
     }
 
+    /// Maps the predicate of this triple with `f`.
     pub fn map_predicate<U>(self, f: impl FnOnce(P) -> U) -> GeneralizedTriple<S, U, O> {
         GeneralizedTriple(self.0, f(self.1), self.2)
     }
 
+    /// Maps the object of this triple with `f`.
     pub fn map_object<U>(self, f: impl FnOnce(O) -> U) -> GeneralizedTriple<S, P, U> {
         GeneralizedTriple(self.0, self.1, f(self.2))
     }
 
+    /// Borrows the components of this triple.
     pub const fn as_ref(&self) -> GeneralizedTriple<&S, &P, &O> {
         GeneralizedTriple(&self.0, &self.1, &self.2)
     }
 }
 
 impl<S, P, O> GeneralizedTriple<&S, &P, &O> {
+    /// Clones the borrowed components of this triple.
     pub fn cloned(&self) -> GeneralizedTriple<S, P, O>
     where
         S: Clone,
@@ -119,6 +137,7 @@ impl<S, P, O> GeneralizedTriple<&S, &P, &O> {
         GeneralizedTriple(self.0.clone(), self.1.clone(), self.2.clone())
     }
 
+    /// Consumes this triple, cloning its borrowed components.
     pub fn into_cloned(self) -> GeneralizedTriple<S, P, O>
     where
         S: Clone,
@@ -128,6 +147,7 @@ impl<S, P, O> GeneralizedTriple<&S, &P, &O> {
         GeneralizedTriple(self.0.clone(), self.1.clone(), self.2.clone())
     }
 
+    /// Copies the borrowed components of this triple.
     pub const fn copied(&self) -> GeneralizedTriple<S, P, O>
     where
         S: Copy,
@@ -137,6 +157,7 @@ impl<S, P, O> GeneralizedTriple<&S, &P, &O> {
         GeneralizedTriple(*self.0, *self.1, *self.2)
     }
 
+    /// Consumes this triple, copying its borrowed components.
     pub const fn into_copied(self) -> GeneralizedTriple<S, P, O>
     where
         S: Copy,
@@ -148,6 +169,7 @@ impl<S, P, O> GeneralizedTriple<&S, &P, &O> {
 }
 
 impl<T> GeneralizedTriple<T, T, T> {
+    /// Maps every component of this triple with `f`.
     pub fn map<U>(self, mut f: impl FnMut(T) -> U) -> GeneralizedTriple<U, U, U> {
         GeneralizedTriple(f(self.0), f(self.1), f(self.2))
     }
@@ -218,70 +240,87 @@ impl<S: RdfDisplay, P: RdfDisplay, O: RdfDisplay> RdfDisplay for GeneralizedTrip
 pub struct GeneralizedQuad<S = LocalTerm, P = S, O = S, G = S>(pub S, pub P, pub O, pub Option<G>);
 
 impl<S, P, O, G> GeneralizedQuad<S, P, O, G> {
+    /// Creates a generalized quad from its components.
     pub const fn new(subject: S, predicate: P, object: O, graph: Option<G>) -> Self {
         Self(subject, predicate, object, graph)
     }
 
+    /// Returns the subject of this quad.
     pub const fn subject(&self) -> &S {
         &self.0
     }
 
+    /// Returns the predicate of this quad.
     pub const fn predicate(&self) -> &P {
         &self.1
     }
 
+    /// Returns the object of this quad.
     pub const fn object(&self) -> &O {
         &self.2
     }
 
+    /// Returns the graph of this quad.
     pub const fn graph(&self) -> Option<&G> {
         self.3.as_ref()
     }
 
+    /// Consumes this quad, returning its subject.
     pub fn into_subject(self) -> S {
         self.0
     }
 
+    /// Consumes this quad, returning its predicate.
     pub fn into_predicate(self) -> P {
         self.1
     }
 
+    /// Consumes this quad, returning its object.
     pub fn into_object(self) -> O {
         self.2
     }
 
+    /// Consumes this quad, returning its graph.
     pub fn into_graph(self) -> Option<G> {
         self.3
     }
 
+    /// Consumes this quad, returning each component separately.
     pub fn into_parts(self) -> (S, P, O, Option<G>) {
         (self.0, self.1, self.2, self.3)
     }
 
+    /// Splits this quad into a generalized triple and its graph.
     pub fn into_triple(self) -> (GeneralizedTriple<S, P, O>, Option<G>) {
         (GeneralizedTriple(self.0, self.1, self.2), self.3)
     }
 
+    /// Maps the subject of this quad with `f`.
     pub fn map_subject<U>(self, f: impl FnOnce(S) -> U) -> GeneralizedQuad<U, P, O, G> {
         GeneralizedQuad(f(self.0), self.1, self.2, self.3)
     }
 
+    /// Maps the predicate of this quad with `f`.
     pub fn map_predicate<U>(self, f: impl FnOnce(P) -> U) -> GeneralizedQuad<S, U, O, G> {
         GeneralizedQuad(self.0, f(self.1), self.2, self.3)
     }
 
+    /// Maps the object of this quad with `f`.
     pub fn map_object<U>(self, f: impl FnOnce(O) -> U) -> GeneralizedQuad<S, P, U, G> {
         GeneralizedQuad(self.0, self.1, f(self.2), self.3)
     }
 
+    /// Maps the graph of this quad with `f`.
     pub fn map_graph<U>(self, f: impl FnOnce(Option<G>) -> Option<U>) -> GeneralizedQuad<S, P, O, U> {
         GeneralizedQuad(self.0, self.1, self.2, f(self.3))
     }
 
+    /// Returns this quad moved into the given graph.
     pub fn with_graph(self, g: Option<G>) -> Self {
         Self(self.0, self.1, self.2, g)
     }
 
+    /// Maps every component of this quad with its own function.
     pub fn map_all<S2, P2, O2, G2>(
         self,
         s: impl FnOnce(S) -> S2,
@@ -292,12 +331,14 @@ impl<S, P, O, G> GeneralizedQuad<S, P, O, G> {
         GeneralizedQuad(s(self.0), p(self.1), o(self.2), g(self.3))
     }
 
+    /// Borrows the components of this quad.
     pub const fn as_ref(&self) -> GeneralizedQuad<&S, &P, &O, &G> {
         GeneralizedQuad(&self.0, &self.1, &self.2, self.3.as_ref())
     }
 }
 
 impl<S, P, O, G> GeneralizedQuad<&S, &P, &O, &G> {
+    /// Clones the borrowed components of this quad.
     pub fn cloned(&self) -> GeneralizedQuad<S, P, O, G>
     where
         S: Clone,
@@ -308,6 +349,7 @@ impl<S, P, O, G> GeneralizedQuad<&S, &P, &O, &G> {
         GeneralizedQuad(self.0.clone(), self.1.clone(), self.2.clone(), self.3.cloned())
     }
 
+    /// Consumes this quad, cloning its borrowed components.
     pub fn into_cloned(self) -> GeneralizedQuad<S, P, O, G>
     where
         S: Clone,
@@ -318,6 +360,7 @@ impl<S, P, O, G> GeneralizedQuad<&S, &P, &O, &G> {
         GeneralizedQuad(self.0.clone(), self.1.clone(), self.2.clone(), self.3.cloned())
     }
 
+    /// Copies the borrowed components of this quad.
     pub const fn copied(&self) -> GeneralizedQuad<S, P, O, G>
     where
         S: Copy,
@@ -328,6 +371,7 @@ impl<S, P, O, G> GeneralizedQuad<&S, &P, &O, &G> {
         GeneralizedQuad(*self.0, *self.1, *self.2, self.3.copied())
     }
 
+    /// Consumes this quad, copying its borrowed components.
     pub const fn into_copied(self) -> GeneralizedQuad<S, P, O, G>
     where
         S: Copy,
@@ -340,6 +384,7 @@ impl<S, P, O, G> GeneralizedQuad<&S, &P, &O, &G> {
 }
 
 impl<T> GeneralizedQuad<T, T, T, T> {
+    /// Maps every component of this quad with `f`.
     pub fn map<U>(self, mut f: impl FnMut(T) -> U) -> GeneralizedQuad<U, U, U, U> {
         GeneralizedQuad(f(self.0), f(self.1), f(self.2), self.3.map(f))
     }
@@ -481,7 +526,9 @@ impl<S: RdfDisplay, P: RdfDisplay, O: RdfDisplay, G: RdfDisplay> RdfDisplay for 
 /// [`FullyGeneralizedQuad`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum GeneralizedLocalTerm {
+    /// A blank node identifier.
     BlankId(BlankIdBuf),
+    /// An IRI or a literal.
     Named(Term),
     /// Fully-generalized triple term — body components are themselves
     /// [`GeneralizedLocalTerm`].
@@ -489,26 +536,32 @@ pub enum GeneralizedLocalTerm {
 }
 
 impl GeneralizedLocalTerm {
+    /// Creates a term from an IRI.
     pub const fn iri(iri: IriBuf) -> Self {
         Self::Named(Term::Iri(iri))
     }
 
+    /// Creates a term from a literal.
     pub const fn literal(literal: Literal) -> Self {
         Self::Named(Term::Literal(literal))
     }
 
+    /// Creates a term from a triple term.
     pub fn triple(t: GeneralizedTriple<GeneralizedLocalTerm>) -> Self {
         Self::Triple(Box::new(t))  // GeneralizedLocalTerm keeps Box (no shared-clone story; users construct in tree-shape)
     }
 
+    /// Checks whether this term is a blank node identifier.
     pub const fn is_blank_id(&self) -> bool {
         matches!(self, Self::BlankId(_))
     }
 
+    /// Checks whether this term is a triple term.
     pub const fn is_triple(&self) -> bool {
         matches!(self, Self::Triple(_))
     }
 
+    /// Returns the blank node identifier of this term, if it is one.
     pub fn as_blank_id(&self) -> Option<&BlankId> {
         match self {
             Self::BlankId(b) => Some(b),
@@ -516,6 +569,7 @@ impl GeneralizedLocalTerm {
         }
     }
 
+    /// Returns the IRI of this term, if it is one.
     pub fn as_iri(&self) -> Option<Iri<&str>> {
         match self {
             Self::Named(Term::Iri(iri)) => Some(iri.as_ref()),
@@ -523,6 +577,7 @@ impl GeneralizedLocalTerm {
         }
     }
 
+    /// Returns the literal of this term, if it is one.
     pub fn as_literal(&self) -> Option<LiteralRef<'_>> {
         match self {
             Self::Named(Term::Literal(l)) => Some(l.as_ref()),
@@ -530,6 +585,7 @@ impl GeneralizedLocalTerm {
         }
     }
 
+    /// Returns the triple term of this term, if it is one.
     pub fn as_triple(&self) -> Option<&GeneralizedTriple<GeneralizedLocalTerm>> {
         match self {
             Self::Triple(t) => Some(t),

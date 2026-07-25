@@ -13,7 +13,9 @@ use crate::{
 /// Canonical triple pattern.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum CanonicalQuadPattern<T> {
+    /// Any subject.
     AnySubject(AnySubject<T>),
+    /// A given subject.
     GivenSubject(T, GivenSubject<T>),
 }
 
@@ -54,6 +56,7 @@ impl<T: Resource, X: PartialEq> From<QuadPattern<T, X>> for CanonicalQuadPattern
 }
 
 impl<T: Resource> CanonicalQuadPattern<T> {
+    /// Builds a pattern matching exactly `triple`, in any graph.
     pub fn from_triple(triple: Triple<T, T, T>) -> Self {
         Self::GivenSubject(
             triple.0,
@@ -64,6 +67,7 @@ impl<T: Resource> CanonicalQuadPattern<T> {
         )
     }
 
+    /// Builds a pattern matching exactly `quad`.
     pub fn from_quad(quad: Quad<T, T, T, T>) -> Self {
         Self::GivenSubject(
             quad.0,
@@ -74,6 +78,7 @@ impl<T: Resource> CanonicalQuadPattern<T> {
         )
     }
 
+    /// Builds a pattern from a triple whose unset positions match anything.
     pub fn from_option_triple(triple: Triple<Option<T>, Option<T>, Option<T>>) -> Self {
         match triple.0 {
             Some(s) => Self::GivenSubject(s, GivenSubject::from_option_quad(triple.1, triple.2, None)),
@@ -81,6 +86,7 @@ impl<T: Resource> CanonicalQuadPattern<T> {
         }
     }
 
+    /// Builds a pattern from a quad whose unset positions match anything.
     pub fn from_option_quad(quad: Quad<Option<T>, Option<T>, Option<T>, Option<T>>) -> Self {
         match quad.0 {
             Some(s) => Self::GivenSubject(s, GivenSubject::from_option_quad(quad.1, quad.2, quad.3)),
@@ -88,6 +94,7 @@ impl<T: Resource> CanonicalQuadPattern<T> {
         }
     }
 
+    /// Builds a pattern from a triple pattern, matching any graph.
     pub fn from_triple_pattern<X: PartialEq>(pattern: TriplePattern<T, X>) -> Self {
         match pattern.0 {
             ResourceOrVar::Resource(s) => Self::GivenSubject(s, GivenSubject::from_pattern(pattern.1, pattern.2, None)),
@@ -95,6 +102,8 @@ impl<T: Resource> CanonicalQuadPattern<T> {
         }
     }
 
+    /// Builds a pattern from `pattern`, canonicalizing repeated
+    /// variables into `SameAs` positions.
     pub fn from_pattern<X: PartialEq>(pattern: QuadPattern<T, X>) -> Self {
         match pattern.0 {
             ResourceOrVar::Resource(s) => Self::GivenSubject(s, GivenSubject::from_pattern(pattern.1, pattern.2, pattern.3)),
@@ -104,6 +113,7 @@ impl<T: Resource> CanonicalQuadPattern<T> {
 }
 
 impl<T> CanonicalQuadPattern<T> {
+    /// Returns the subject of this pattern.
     pub const fn subject(&self) -> PatternSubject<&T> {
         match self {
             Self::AnySubject(_) => PatternSubject::Any,
@@ -111,6 +121,7 @@ impl<T> CanonicalQuadPattern<T> {
         }
     }
 
+    /// Consumes this pattern, returning its subject.
     pub fn into_subject(self) -> PatternSubject<T> {
         match self {
             Self::AnySubject(_) => PatternSubject::Any,
@@ -118,6 +129,7 @@ impl<T> CanonicalQuadPattern<T> {
         }
     }
 
+    /// Returns the predicate of this pattern.
     pub const fn predicate(&self) -> PatternPredicate<&T> {
         match self {
             Self::AnySubject(t) => t.predicate(),
@@ -125,6 +137,7 @@ impl<T> CanonicalQuadPattern<T> {
         }
     }
 
+    /// Consumes this pattern, returning its predicate.
     pub fn into_predicate(self) -> PatternPredicate<T> {
         match self {
             Self::AnySubject(t) => t.into_predicate(),
@@ -132,6 +145,7 @@ impl<T> CanonicalQuadPattern<T> {
         }
     }
 
+    /// Returns the object of this pattern.
     pub const fn object(&self) -> PatternObject<&T> {
         match self {
             Self::AnySubject(t) => t.object(),
@@ -139,6 +153,7 @@ impl<T> CanonicalQuadPattern<T> {
         }
     }
 
+    /// Consumes this pattern, returning its object.
     pub fn into_object(self) -> PatternObject<T> {
         match self {
             Self::AnySubject(t) => t.into_object(),
@@ -146,6 +161,7 @@ impl<T> CanonicalQuadPattern<T> {
         }
     }
 
+    /// Returns the graph of this pattern.
     pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnySubject(t) => t.graph(),
@@ -153,6 +169,7 @@ impl<T> CanonicalQuadPattern<T> {
         }
     }
 
+    /// Consumes this pattern, returning its graph.
     pub fn into_graph(self) -> PatternGraph<T> {
         match self {
             Self::AnySubject(t) => t.into_graph(),
@@ -160,6 +177,7 @@ impl<T> CanonicalQuadPattern<T> {
         }
     }
 
+    /// Consumes this pattern, returning each position separately.
     pub fn into_parts(self) -> (PatternSubject<T>, PatternPredicate<T>, PatternObject<T>, PatternGraph<T>) {
         match self {
             Self::AnySubject(pog) => {
@@ -173,6 +191,7 @@ impl<T> CanonicalQuadPattern<T> {
         }
     }
 
+    /// Splits this quad pattern into a triple pattern and a graph pattern.
     pub fn into_triple(self) -> (CanonicalTriplePattern<T>, PatternGraph<T>) {
         match self {
             Self::AnySubject(t) => {
@@ -186,6 +205,7 @@ impl<T> CanonicalQuadPattern<T> {
         }
     }
 
+    /// Borrows the resources of this pattern.
     pub const fn as_ref(&self) -> CanonicalQuadPattern<&T> {
         match self {
             Self::AnySubject(pog) => CanonicalQuadPattern::AnySubject(pog.as_ref()),
@@ -193,6 +213,7 @@ impl<T> CanonicalQuadPattern<T> {
         }
     }
 
+    /// Maps the resources of this pattern with `f`.
     pub fn map<U>(self, mut f: impl FnMut(T) -> U) -> CanonicalQuadPattern<U> {
         match self {
             Self::AnySubject(pog) => CanonicalQuadPattern::AnySubject(pog.map(f)),
@@ -200,6 +221,7 @@ impl<T> CanonicalQuadPattern<T> {
         }
     }
 
+    /// Maps each resource to a pair with `f`, splitting this pattern in two.
     pub fn map2<U, V>(self, mut f: impl FnMut(T) -> (U, V)) -> (CanonicalQuadPattern<U>, CanonicalQuadPattern<V>) {
         match self {
             Self::AnySubject(pog) => {
@@ -216,12 +238,16 @@ impl<T> CanonicalQuadPattern<T> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// Canonical quad pattern.
 pub enum PatternSubject<T> {
+    /// Any .
     Any,
+    /// A given .
     Given(T),
 }
 
 impl<T> PatternSubject<T> {
+    /// Returns the bound resource, if this position is given.
     pub const fn id(&self) -> Option<&T> {
         match self {
             Self::Any => None,
@@ -229,6 +255,8 @@ impl<T> PatternSubject<T> {
         }
     }
 
+    /// Consumes this value, returning the bound resource, if this position
+    /// is given.
     pub fn into_id(self) -> Option<T> {
         match self {
             Self::Any => None,
@@ -238,6 +266,7 @@ impl<T> PatternSubject<T> {
 }
 
 impl<T> PatternSubject<&T> {
+    /// Clones the borrowed resource.
     pub fn cloned(self) -> PatternSubject<T>
     where
         T: Clone,
@@ -250,13 +279,18 @@ impl<T> PatternSubject<&T> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// Canonical quad pattern.
 pub enum PatternPredicate<T> {
+    /// Any .
     Any,
+    /// A object equal to the subject.
     SameAsSubject,
+    /// A given .
     Given(T),
 }
 
 impl<T> PatternPredicate<T> {
+    /// Returns the bound resource, if this position is given.
     pub const fn id(&self) -> Option<&T> {
         match self {
             Self::Any => None,
@@ -265,6 +299,8 @@ impl<T> PatternPredicate<T> {
         }
     }
 
+    /// Consumes this value, returning the bound resource, if this position
+    /// is given.
     pub fn into_id(self) -> Option<T> {
         match self {
             Self::Any => None,
@@ -275,6 +311,7 @@ impl<T> PatternPredicate<T> {
 }
 
 impl<T> PatternPredicate<&T> {
+    /// Clones the borrowed resource.
     pub fn cloned(self) -> PatternPredicate<T>
     where
         T: Clone,
@@ -288,14 +325,20 @@ impl<T> PatternPredicate<&T> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// Canonical quad pattern.
 pub enum PatternObject<T> {
+    /// Any .
     Any,
+    /// A graph equal to the subject.
     SameAsSubject,
+    /// A graph equal to the predicate.
     SameAsPredicate,
+    /// A given .
     Given(T),
 }
 
 impl<T> PatternObject<T> {
+    /// Returns the bound resource, if this position is given.
     pub const fn id(&self) -> Option<&T> {
         match self {
             Self::Given(id) => Some(id),
@@ -303,6 +346,8 @@ impl<T> PatternObject<T> {
         }
     }
 
+    /// Consumes this value, returning the bound resource, if this position
+    /// is given.
     pub fn into_id(self) -> Option<T> {
         match self {
             Self::Given(id) => Some(id),
@@ -312,6 +357,7 @@ impl<T> PatternObject<T> {
 }
 
 impl<T> PatternObject<&T> {
+    /// Clones the borrowed resource.
     pub fn cloned(self) -> PatternObject<T>
     where
         T: Clone,
@@ -326,6 +372,7 @@ impl<T> PatternObject<&T> {
 }
 
 impl<T: Resource + PartialEq> PatternObject<T> {
+    /// Checks whether `triple` matches this pattern.
     pub fn filter_triple(&self, triple: Triple<T, T, T>) -> bool {
         match self {
             Self::Any => true,
@@ -337,13 +384,18 @@ impl<T: Resource + PartialEq> PatternObject<T> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// Canonical quad pattern matching any subject.
 pub enum AnySubject<T> {
+    /// Any predicate.
     AnyPredicate(AnySubjectAnyPredicate<T>),
+    /// A predicate equal to the subject.
     SameAsSubject(AnySubjectGivenPredicate<T>),
+    /// A given predicate.
     GivenPredicate(T, AnySubjectGivenPredicate<T>),
 }
 
 impl<T> AnySubject<T> {
+    /// Builds a pattern from a quad whose unset positions match anything.
     pub fn from_option_quad(p: Option<T>, o: Option<T>, g: Option<Option<T>>) -> Self {
         match p {
             Some(p) => Self::GivenPredicate(p, AnySubjectGivenPredicate::from_option(o, g)),
@@ -351,6 +403,8 @@ impl<T> AnySubject<T> {
         }
     }
 
+    /// Builds a pattern from `pattern`, canonicalizing repeated
+    /// variables into `SameAs` positions.
     pub fn from_pattern<X: PartialEq>(s: X, p: ResourceOrVar<T, X>, o: ResourceOrVar<T, X>, g: Option<ResourceOrVar<T, X>>) -> Self {
         match p {
             ResourceOrVar::Resource(p) => Self::GivenPredicate(p, AnySubjectGivenPredicate::from_pattern(s, o, g)),
@@ -364,6 +418,7 @@ impl<T> AnySubject<T> {
         }
     }
 
+    /// Returns the predicate of this pattern.
     pub const fn predicate(&self) -> PatternPredicate<&T> {
         match self {
             Self::AnyPredicate(_) => PatternPredicate::Any,
@@ -372,6 +427,7 @@ impl<T> AnySubject<T> {
         }
     }
 
+    /// Consumes this pattern, returning its predicate.
     pub fn into_predicate(self) -> PatternPredicate<T> {
         match self {
             Self::AnyPredicate(_) => PatternPredicate::Any,
@@ -380,6 +436,7 @@ impl<T> AnySubject<T> {
         }
     }
 
+    /// Returns the object of this pattern.
     pub const fn object(&self) -> PatternObject<&T> {
         match self {
             Self::AnyPredicate(t) => t.object(),
@@ -388,6 +445,7 @@ impl<T> AnySubject<T> {
         }
     }
 
+    /// Consumes this pattern, returning its object.
     pub fn into_object(self) -> PatternObject<T> {
         match self {
             Self::AnyPredicate(t) => t.into_object(),
@@ -396,6 +454,7 @@ impl<T> AnySubject<T> {
         }
     }
 
+    /// Returns the graph of this pattern.
     pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyPredicate(t) => t.graph(),
@@ -404,6 +463,7 @@ impl<T> AnySubject<T> {
         }
     }
 
+    /// Consumes this pattern, returning its graph.
     pub fn into_graph(self) -> PatternGraph<T> {
         match self {
             Self::AnyPredicate(t) => t.into_graph(),
@@ -412,6 +472,7 @@ impl<T> AnySubject<T> {
         }
     }
 
+    /// Borrows the resources of this pattern.
     pub const fn as_ref(&self) -> AnySubject<&T> {
         match self {
             Self::AnyPredicate(og) => AnySubject::AnyPredicate(og.as_ref()),
@@ -420,6 +481,7 @@ impl<T> AnySubject<T> {
         }
     }
 
+    /// Maps the resources of this pattern with `f`.
     pub fn map<U>(self, mut f: impl FnMut(T) -> U) -> AnySubject<U> {
         match self {
             Self::AnyPredicate(og) => AnySubject::AnyPredicate(og.map(f)),
@@ -428,6 +490,7 @@ impl<T> AnySubject<T> {
         }
     }
 
+    /// Maps each resource to a pair with `f`, splitting this pattern in two.
     pub fn map2<U, V>(self, mut f: impl FnMut(T) -> (U, V)) -> (AnySubject<U>, AnySubject<V>) {
         match self {
             Self::AnyPredicate(og) => {
@@ -446,6 +509,7 @@ impl<T> AnySubject<T> {
         }
     }
 
+    /// Splits this quad pattern into a triple pattern and a graph pattern.
     pub fn into_triple(self) -> (triple::canonical::AnySubject<T>, PatternGraph<T>) {
         match self {
             Self::AnyPredicate(t) => {
@@ -463,6 +527,7 @@ impl<T> AnySubject<T> {
         }
     }
 
+    /// Consumes this pattern, returning each position separately.
     pub fn into_parts(self) -> (PatternPredicate<T>, PatternObject<T>, PatternGraph<T>) {
         match self {
             Self::AnyPredicate(og) => {
@@ -482,14 +547,20 @@ impl<T> AnySubject<T> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// Canonical quad pattern matching any subject, any predicate.
 pub enum AnySubjectAnyPredicate<T> {
+    /// Any object.
     AnyObject(AnySubjectAnyPredicateAnyObject<T>),
+    /// A object equal to the subject.
     SameAsSubject(AnySubjectAnyPredicateGivenObject<T>),
+    /// A object equal to the predicate.
     SameAsPredicate(AnySubjectAnyPredicateGivenObject<T>),
+    /// A given object.
     GivenObject(T, AnySubjectAnyPredicateGivenObject<T>),
 }
 
 impl<T> AnySubjectAnyPredicate<T> {
+    /// Builds a pattern whose unset positions match anything.
     pub fn from_option(o: Option<T>, g: Option<Option<T>>) -> Self {
         match o {
             Some(o) => Self::GivenObject(o, AnySubjectAnyPredicateGivenObject::from_option(g)),
@@ -497,6 +568,8 @@ impl<T> AnySubjectAnyPredicate<T> {
         }
     }
 
+    /// Builds a pattern from `pattern`, canonicalizing repeated
+    /// variables into `SameAs` positions.
     pub fn from_pattern<X: PartialEq>(s: X, p: X, o: ResourceOrVar<T, X>, g: Option<ResourceOrVar<T, X>>) -> Self {
         match o {
             ResourceOrVar::Resource(o) => Self::GivenObject(o, AnySubjectAnyPredicateGivenObject::from_pattern(s, p, g)),
@@ -512,6 +585,7 @@ impl<T> AnySubjectAnyPredicate<T> {
         }
     }
 
+    /// Returns the object of this pattern.
     pub const fn object(&self) -> PatternObject<&T> {
         match self {
             Self::AnyObject(_) => PatternObject::Any,
@@ -521,6 +595,7 @@ impl<T> AnySubjectAnyPredicate<T> {
         }
     }
 
+    /// Consumes this pattern, returning its object.
     pub fn into_object(self) -> PatternObject<T> {
         match self {
             Self::AnyObject(_) => PatternObject::Any,
@@ -530,6 +605,7 @@ impl<T> AnySubjectAnyPredicate<T> {
         }
     }
 
+    /// Returns the graph of this pattern.
     pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyObject(g) => g.graph(),
@@ -539,6 +615,7 @@ impl<T> AnySubjectAnyPredicate<T> {
         }
     }
 
+    /// Consumes this pattern, returning its graph.
     pub fn into_graph(self) -> PatternGraph<T> {
         match self {
             Self::AnyObject(g) => g.into_graph(),
@@ -548,6 +625,7 @@ impl<T> AnySubjectAnyPredicate<T> {
         }
     }
 
+    /// Borrows the resources of this pattern.
     pub const fn as_ref(&self) -> AnySubjectAnyPredicate<&T> {
         match self {
             Self::AnyObject(g) => AnySubjectAnyPredicate::AnyObject(g.as_ref()),
@@ -557,6 +635,7 @@ impl<T> AnySubjectAnyPredicate<T> {
         }
     }
 
+    /// Maps the resources of this pattern with `f`.
     pub fn map<U>(self, mut f: impl FnMut(T) -> U) -> AnySubjectAnyPredicate<U> {
         match self {
             Self::AnyObject(g) => AnySubjectAnyPredicate::AnyObject(g.map(f)),
@@ -566,6 +645,7 @@ impl<T> AnySubjectAnyPredicate<T> {
         }
     }
 
+    /// Maps each resource to a pair with `f`, splitting this pattern in two.
     pub fn map2<U, V>(self, mut f: impl FnMut(T) -> (U, V)) -> (AnySubjectAnyPredicate<U>, AnySubjectAnyPredicate<V>) {
         match self {
             Self::AnyObject(og) => {
@@ -588,6 +668,7 @@ impl<T> AnySubjectAnyPredicate<T> {
         }
     }
 
+    /// Splits this quad pattern into a triple pattern and a graph pattern.
     pub fn into_triple(self) -> (triple::canonical::AnySubjectAnyPredicate<T>, PatternGraph<T>) {
         match self {
             Self::AnyObject(t) => (triple::canonical::AnySubjectAnyPredicate::AnyObject, t.into_graph()),
@@ -597,6 +678,7 @@ impl<T> AnySubjectAnyPredicate<T> {
         }
     }
 
+    /// Consumes this pattern, returning each position separately.
     pub fn into_parts(self) -> (PatternObject<T>, PatternGraph<T>) {
         match self {
             Self::AnyObject(g) => (PatternObject::Any, g.into_graph()),
@@ -608,13 +690,18 @@ impl<T> AnySubjectAnyPredicate<T> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// Canonical quad pattern matching any subject, a given predicate.
 pub enum AnySubjectGivenPredicate<T> {
+    /// Any object.
     AnyObject(AnySubjectGivenPredicateAnyObject<T>),
+    /// A object equal to the subject.
     SameAsSubject(AnySubjectGivenPredicateGivenObject<T>),
+    /// A given object.
     GivenObject(T, AnySubjectGivenPredicateGivenObject<T>),
 }
 
 impl<T> AnySubjectGivenPredicate<T> {
+    /// Builds a pattern whose unset positions match anything.
     pub fn from_option(o: Option<T>, g: Option<Option<T>>) -> Self {
         match o {
             Some(o) => Self::GivenObject(o, AnySubjectGivenPredicateGivenObject::from_option(g)),
@@ -622,6 +709,8 @@ impl<T> AnySubjectGivenPredicate<T> {
         }
     }
 
+    /// Builds a pattern from `pattern`, canonicalizing repeated
+    /// variables into `SameAs` positions.
     pub fn from_pattern<X: PartialEq>(s: X, o: ResourceOrVar<T, X>, g: Option<ResourceOrVar<T, X>>) -> Self {
         match o {
             ResourceOrVar::Resource(o) => Self::GivenObject(o, AnySubjectGivenPredicateGivenObject::from_pattern(s, g)),
@@ -635,6 +724,7 @@ impl<T> AnySubjectGivenPredicate<T> {
         }
     }
 
+    /// Returns the object of this pattern.
     pub const fn object(&self) -> PatternObject<&T> {
         match self {
             Self::AnyObject(_) => PatternObject::Any,
@@ -643,6 +733,7 @@ impl<T> AnySubjectGivenPredicate<T> {
         }
     }
 
+    /// Consumes this pattern, returning its object.
     pub fn into_object(self) -> PatternObject<T> {
         match self {
             Self::AnyObject(_) => PatternObject::Any,
@@ -651,6 +742,7 @@ impl<T> AnySubjectGivenPredicate<T> {
         }
     }
 
+    /// Returns the graph of this pattern.
     pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyObject(g) => g.graph(),
@@ -659,6 +751,7 @@ impl<T> AnySubjectGivenPredicate<T> {
         }
     }
 
+    /// Consumes this pattern, returning its graph.
     pub fn into_graph(self) -> PatternGraph<T> {
         match self {
             Self::AnyObject(g) => g.into_graph(),
@@ -667,6 +760,7 @@ impl<T> AnySubjectGivenPredicate<T> {
         }
     }
 
+    /// Borrows the resources of this pattern.
     pub const fn as_ref(&self) -> AnySubjectGivenPredicate<&T> {
         match self {
             Self::AnyObject(g) => AnySubjectGivenPredicate::AnyObject(g.as_ref()),
@@ -675,6 +769,7 @@ impl<T> AnySubjectGivenPredicate<T> {
         }
     }
 
+    /// Maps the resources of this pattern with `f`.
     pub fn map<U>(self, mut f: impl FnMut(T) -> U) -> AnySubjectGivenPredicate<U> {
         match self {
             Self::AnyObject(g) => AnySubjectGivenPredicate::AnyObject(g.map(f)),
@@ -683,6 +778,7 @@ impl<T> AnySubjectGivenPredicate<T> {
         }
     }
 
+    /// Maps each resource to a pair with `f`, splitting this pattern in two.
     pub fn map2<U, V>(self, mut f: impl FnMut(T) -> (U, V)) -> (AnySubjectGivenPredicate<U>, AnySubjectGivenPredicate<V>) {
         match self {
             Self::AnyObject(og) => {
@@ -701,6 +797,7 @@ impl<T> AnySubjectGivenPredicate<T> {
         }
     }
 
+    /// Splits this quad pattern into a triple pattern and a graph pattern.
     pub fn into_triple(self) -> (triple::canonical::AnySubjectGivenPredicate<T>, PatternGraph<T>) {
         match self {
             Self::AnyObject(t) => (triple::canonical::AnySubjectGivenPredicate::AnyObject, t.into_graph()),
@@ -709,6 +806,7 @@ impl<T> AnySubjectGivenPredicate<T> {
         }
     }
 
+    /// Consumes this pattern, returning each position separately.
     pub fn into_parts(self) -> (PatternObject<T>, PatternGraph<T>) {
         match self {
             Self::AnyObject(g) => (PatternObject::Any, g.into_graph()),
@@ -719,12 +817,16 @@ impl<T> AnySubjectGivenPredicate<T> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// Canonical quad pattern matching a given subject.
 pub enum GivenSubject<T> {
+    /// Any predicate.
     AnyPredicate(GivenSubjectAnyPredicate<T>),
+    /// A given predicate.
     GivenPredicate(T, GivenSubjectGivenPredicate<T>),
 }
 
 impl<T> GivenSubject<T> {
+    /// Builds a pattern from a quad whose unset positions match anything.
     pub fn from_option_quad(p: Option<T>, o: Option<T>, g: Option<Option<T>>) -> Self {
         match p {
             Some(p) => Self::GivenPredicate(p, GivenSubjectGivenPredicate::from_option(o, g)),
@@ -732,6 +834,8 @@ impl<T> GivenSubject<T> {
         }
     }
 
+    /// Builds a pattern from `pattern`, canonicalizing repeated
+    /// variables into `SameAs` positions.
     pub fn from_pattern<X: PartialEq>(p: ResourceOrVar<T, X>, o: ResourceOrVar<T, X>, g: Option<ResourceOrVar<T, X>>) -> Self {
         match p {
             ResourceOrVar::Resource(p) => Self::GivenPredicate(p, GivenSubjectGivenPredicate::from_pattern(o, g)),
@@ -739,6 +843,7 @@ impl<T> GivenSubject<T> {
         }
     }
 
+    /// Returns the predicate of this pattern.
     pub const fn predicate(&self) -> PatternPredicate<&T> {
         match self {
             Self::AnyPredicate(_) => PatternPredicate::Any,
@@ -746,6 +851,7 @@ impl<T> GivenSubject<T> {
         }
     }
 
+    /// Consumes this pattern, returning its predicate.
     pub fn into_predicate(self) -> PatternPredicate<T> {
         match self {
             Self::AnyPredicate(_) => PatternPredicate::Any,
@@ -753,6 +859,7 @@ impl<T> GivenSubject<T> {
         }
     }
 
+    /// Returns the object of this pattern.
     pub const fn object(&self) -> PatternObject<&T> {
         match self {
             Self::AnyPredicate(t) => t.object(),
@@ -760,6 +867,7 @@ impl<T> GivenSubject<T> {
         }
     }
 
+    /// Consumes this pattern, returning its object.
     pub fn into_object(self) -> PatternObject<T> {
         match self {
             Self::AnyPredicate(t) => t.into_object(),
@@ -767,6 +875,7 @@ impl<T> GivenSubject<T> {
         }
     }
 
+    /// Returns the graph of this pattern.
     pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyPredicate(t) => t.graph(),
@@ -774,6 +883,7 @@ impl<T> GivenSubject<T> {
         }
     }
 
+    /// Consumes this pattern, returning its graph.
     pub fn into_graph(self) -> PatternGraph<T> {
         match self {
             Self::AnyPredicate(t) => t.into_graph(),
@@ -781,6 +891,7 @@ impl<T> GivenSubject<T> {
         }
     }
 
+    /// Borrows the resources of this pattern.
     pub const fn as_ref(&self) -> GivenSubject<&T> {
         match self {
             Self::AnyPredicate(og) => GivenSubject::AnyPredicate(og.as_ref()),
@@ -788,6 +899,7 @@ impl<T> GivenSubject<T> {
         }
     }
 
+    /// Maps the resources of this pattern with `f`.
     pub fn map<U>(self, mut f: impl FnMut(T) -> U) -> GivenSubject<U> {
         match self {
             Self::AnyPredicate(og) => GivenSubject::AnyPredicate(og.map(f)),
@@ -795,6 +907,7 @@ impl<T> GivenSubject<T> {
         }
     }
 
+    /// Maps each resource to a pair with `f`, splitting this pattern in two.
     pub fn map2<U, V>(self, mut f: impl FnMut(T) -> (U, V)) -> (GivenSubject<U>, GivenSubject<V>) {
         match self {
             Self::AnyPredicate(og) => {
@@ -809,6 +922,7 @@ impl<T> GivenSubject<T> {
         }
     }
 
+    /// Splits this quad pattern into a triple pattern and a graph pattern.
     pub fn into_triple(self) -> (triple::canonical::GivenSubject<T>, PatternGraph<T>) {
         match self {
             Self::AnyPredicate(t) => {
@@ -822,6 +936,7 @@ impl<T> GivenSubject<T> {
         }
     }
 
+    /// Consumes this pattern, returning each position separately.
     pub fn into_parts(self) -> (PatternPredicate<T>, PatternObject<T>, PatternGraph<T>) {
         match self {
             Self::AnyPredicate(og) => {
@@ -837,13 +952,18 @@ impl<T> GivenSubject<T> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// Canonical quad pattern matching a given subject, any predicate.
 pub enum GivenSubjectAnyPredicate<T> {
+    /// Any object.
     AnyObject(GivenSubjectAnyPredicateAnyObject<T>),
+    /// A object equal to the predicate.
     SameAsPredicate(GivenSubjectAnyPredicateGivenObject<T>),
+    /// A given object.
     GivenObject(T, GivenSubjectAnyPredicateGivenObject<T>),
 }
 
 impl<T> GivenSubjectAnyPredicate<T> {
+    /// Builds a pattern whose unset positions match anything.
     pub fn from_option(o: Option<T>, g: Option<Option<T>>) -> Self {
         match o {
             Some(o) => Self::GivenObject(o, GivenSubjectAnyPredicateGivenObject::from_option(g)),
@@ -851,6 +971,8 @@ impl<T> GivenSubjectAnyPredicate<T> {
         }
     }
 
+    /// Builds a pattern from `pattern`, canonicalizing repeated
+    /// variables into `SameAs` positions.
     pub fn from_pattern<X: PartialEq>(p: X, o: ResourceOrVar<T, X>, g: Option<ResourceOrVar<T, X>>) -> Self {
         match o {
             ResourceOrVar::Resource(o) => Self::GivenObject(o, GivenSubjectAnyPredicateGivenObject::from_pattern(p, g)),
@@ -864,6 +986,7 @@ impl<T> GivenSubjectAnyPredicate<T> {
         }
     }
 
+    /// Returns the object of this pattern.
     pub const fn object(&self) -> PatternObject<&T> {
         match self {
             Self::AnyObject(_) => PatternObject::Any,
@@ -872,6 +995,7 @@ impl<T> GivenSubjectAnyPredicate<T> {
         }
     }
 
+    /// Consumes this pattern, returning its object.
     pub fn into_object(self) -> PatternObject<T> {
         match self {
             Self::AnyObject(_) => PatternObject::Any,
@@ -880,6 +1004,7 @@ impl<T> GivenSubjectAnyPredicate<T> {
         }
     }
 
+    /// Returns the graph of this pattern.
     pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyObject(t) => t.graph(),
@@ -888,6 +1013,7 @@ impl<T> GivenSubjectAnyPredicate<T> {
         }
     }
 
+    /// Consumes this pattern, returning its graph.
     pub fn into_graph(self) -> PatternGraph<T> {
         match self {
             Self::AnyObject(t) => t.into_graph(),
@@ -896,6 +1022,7 @@ impl<T> GivenSubjectAnyPredicate<T> {
         }
     }
 
+    /// Borrows the resources of this pattern.
     pub const fn as_ref(&self) -> GivenSubjectAnyPredicate<&T> {
         match self {
             Self::AnyObject(g) => GivenSubjectAnyPredicate::AnyObject(g.as_ref()),
@@ -904,6 +1031,7 @@ impl<T> GivenSubjectAnyPredicate<T> {
         }
     }
 
+    /// Maps the resources of this pattern with `f`.
     pub fn map<U>(self, mut f: impl FnMut(T) -> U) -> GivenSubjectAnyPredicate<U> {
         match self {
             Self::AnyObject(g) => GivenSubjectAnyPredicate::AnyObject(g.map(f)),
@@ -912,6 +1040,7 @@ impl<T> GivenSubjectAnyPredicate<T> {
         }
     }
 
+    /// Maps each resource to a pair with `f`, splitting this pattern in two.
     pub fn map2<U, V>(self, mut f: impl FnMut(T) -> (U, V)) -> (GivenSubjectAnyPredicate<U>, GivenSubjectAnyPredicate<V>) {
         match self {
             Self::AnyObject(og) => {
@@ -930,6 +1059,7 @@ impl<T> GivenSubjectAnyPredicate<T> {
         }
     }
 
+    /// Splits this quad pattern into a triple pattern and a graph pattern.
     pub fn into_triple(self) -> (triple::canonical::GivenSubjectAnyPredicate<T>, PatternGraph<T>) {
         match self {
             Self::AnyObject(t) => (triple::canonical::GivenSubjectAnyPredicate::AnyObject, t.into_graph()),
@@ -938,6 +1068,7 @@ impl<T> GivenSubjectAnyPredicate<T> {
         }
     }
 
+    /// Consumes this pattern, returning each position separately.
     pub fn into_parts(self) -> (PatternObject<T>, PatternGraph<T>) {
         match self {
             Self::AnyObject(g) => (PatternObject::Any, g.into_graph()),
@@ -948,12 +1079,16 @@ impl<T> GivenSubjectAnyPredicate<T> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// Canonical quad pattern matching a given subject, a given predicate.
 pub enum GivenSubjectGivenPredicate<T> {
+    /// Any object.
     AnyObject(GivenSubjectGivenPredicateAnyObject<T>),
+    /// A given object.
     GivenObject(T, GivenSubjectGivenPredicateGivenObject<T>),
 }
 
 impl<T> GivenSubjectGivenPredicate<T> {
+    /// Builds a pattern whose unset positions match anything.
     pub fn from_option(o: Option<T>, g: Option<Option<T>>) -> Self {
         match o {
             Some(o) => Self::GivenObject(o, GivenSubjectGivenPredicateGivenObject::from_option(g)),
@@ -961,6 +1096,8 @@ impl<T> GivenSubjectGivenPredicate<T> {
         }
     }
 
+    /// Builds a pattern from `pattern`, canonicalizing repeated
+    /// variables into `SameAs` positions.
     pub fn from_pattern<X: PartialEq>(o: ResourceOrVar<T, X>, g: Option<ResourceOrVar<T, X>>) -> Self {
         match o {
             ResourceOrVar::Resource(o) => Self::GivenObject(o, GivenSubjectGivenPredicateGivenObject::from_pattern(g)),
@@ -968,6 +1105,7 @@ impl<T> GivenSubjectGivenPredicate<T> {
         }
     }
 
+    /// Returns the object of this pattern.
     pub const fn object(&self) -> PatternObject<&T> {
         match self {
             Self::AnyObject(_) => PatternObject::Any,
@@ -975,6 +1113,7 @@ impl<T> GivenSubjectGivenPredicate<T> {
         }
     }
 
+    /// Consumes this pattern, returning its object.
     pub fn into_object(self) -> PatternObject<T> {
         match self {
             Self::AnyObject(_) => PatternObject::Any,
@@ -982,6 +1121,7 @@ impl<T> GivenSubjectGivenPredicate<T> {
         }
     }
 
+    /// Returns the graph of this pattern.
     pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyObject(t) => t.graph(),
@@ -989,6 +1129,7 @@ impl<T> GivenSubjectGivenPredicate<T> {
         }
     }
 
+    /// Consumes this pattern, returning its graph.
     pub fn into_graph(self) -> PatternGraph<T> {
         match self {
             Self::AnyObject(t) => t.into_graph(),
@@ -996,6 +1137,7 @@ impl<T> GivenSubjectGivenPredicate<T> {
         }
     }
 
+    /// Borrows the resources of this pattern.
     pub const fn as_ref(&self) -> GivenSubjectGivenPredicate<&T> {
         match self {
             Self::AnyObject(g) => GivenSubjectGivenPredicate::AnyObject(g.as_ref()),
@@ -1003,6 +1145,7 @@ impl<T> GivenSubjectGivenPredicate<T> {
         }
     }
 
+    /// Maps the resources of this pattern with `f`.
     pub fn map<U>(self, mut f: impl FnMut(T) -> U) -> GivenSubjectGivenPredicate<U> {
         match self {
             Self::AnyObject(g) => GivenSubjectGivenPredicate::AnyObject(g.map(f)),
@@ -1010,6 +1153,7 @@ impl<T> GivenSubjectGivenPredicate<T> {
         }
     }
 
+    /// Maps each resource to a pair with `f`, splitting this pattern in two.
     pub fn map2<U, V>(self, mut f: impl FnMut(T) -> (U, V)) -> (GivenSubjectGivenPredicate<U>, GivenSubjectGivenPredicate<V>) {
         match self {
             Self::AnyObject(og) => {
@@ -1027,6 +1171,7 @@ impl<T> GivenSubjectGivenPredicate<T> {
         }
     }
 
+    /// Splits this quad pattern into a triple pattern and a graph pattern.
     pub fn into_triple(self) -> (triple::canonical::GivenSubjectGivenPredicate<T>, PatternGraph<T>) {
         match self {
             Self::AnyObject(t) => (triple::canonical::GivenSubjectGivenPredicate::AnyObject, t.into_graph()),
@@ -1034,6 +1179,7 @@ impl<T> GivenSubjectGivenPredicate<T> {
         }
     }
 
+    /// Consumes this pattern, returning each position separately.
     pub fn into_parts(self) -> (PatternObject<T>, PatternGraph<T>) {
         match self {
             Self::AnyObject(g) => (PatternObject::Any, g.into_graph()),
@@ -1043,24 +1189,37 @@ impl<T> GivenSubjectGivenPredicate<T> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// Canonical quad pattern.
 pub enum PatternGraph<T> {
+    /// Any .
     Any,
+    /// A graph equal to the subject.
     SameAsSubject,
+    /// A graph equal to the predicate.
     SameAsPredicate,
+    /// A graph equal to the object.
     SameAsObject,
+    /// A given .
     Given(Option<T>),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// Canonical quad pattern matching any subject, any predicate, any object.
 pub enum AnySubjectAnyPredicateAnyObject<T> {
+    /// Any graph.
     AnyGraph,
+    /// A graph equal to the subject.
     SameAsSubject,
+    /// A graph equal to the predicate.
     SameAsPredicate,
+    /// A graph equal to the object.
     SameAsObject,
+    /// A given graph.
     GivenGraph(Option<T>),
 }
 
 impl<T> AnySubjectAnyPredicateAnyObject<T> {
+    /// Builds a pattern whose unset positions match anything.
     pub fn from_option(g: Option<Option<T>>) -> Self {
         match g {
             Some(g) => Self::GivenGraph(g),
@@ -1068,6 +1227,8 @@ impl<T> AnySubjectAnyPredicateAnyObject<T> {
         }
     }
 
+    /// Builds a pattern from `pattern`, canonicalizing repeated
+    /// variables into `SameAs` positions.
     pub fn from_pattern<X: PartialEq>(s: X, p: X, o: X, g: Option<ResourceOrVar<T, X>>) -> Self {
         match g {
             None => Self::GivenGraph(None),
@@ -1086,6 +1247,7 @@ impl<T> AnySubjectAnyPredicateAnyObject<T> {
         }
     }
 
+    /// Returns the graph of this pattern.
     pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyGraph => PatternGraph::Any,
@@ -1096,6 +1258,7 @@ impl<T> AnySubjectAnyPredicateAnyObject<T> {
         }
     }
 
+    /// Consumes this pattern, returning its graph.
     pub fn into_graph(self) -> PatternGraph<T> {
         match self {
             Self::AnyGraph => PatternGraph::Any,
@@ -1106,6 +1269,7 @@ impl<T> AnySubjectAnyPredicateAnyObject<T> {
         }
     }
 
+    /// Borrows the resources of this pattern.
     pub const fn as_ref(&self) -> AnySubjectAnyPredicateAnyObject<&T> {
         match self {
             Self::AnyGraph => AnySubjectAnyPredicateAnyObject::AnyGraph,
@@ -1116,6 +1280,7 @@ impl<T> AnySubjectAnyPredicateAnyObject<T> {
         }
     }
 
+    /// Maps the resources of this pattern with `f`.
     pub fn map<U>(self, f: impl FnMut(T) -> U) -> AnySubjectAnyPredicateAnyObject<U> {
         match self {
             Self::AnyGraph => AnySubjectAnyPredicateAnyObject::AnyGraph,
@@ -1126,6 +1291,7 @@ impl<T> AnySubjectAnyPredicateAnyObject<T> {
         }
     }
 
+    /// Maps each resource to a pair with `f`, splitting this pattern in two.
     pub fn map2<U, V>(self, mut f: impl FnMut(T) -> (U, V)) -> (AnySubjectAnyPredicateAnyObject<U>, AnySubjectAnyPredicateAnyObject<V>) {
         match self {
             Self::AnyGraph => (AnySubjectAnyPredicateAnyObject::AnyGraph, AnySubjectAnyPredicateAnyObject::AnyGraph),
@@ -1153,14 +1319,20 @@ impl<T> AnySubjectAnyPredicateAnyObject<T> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// Canonical quad pattern matching a given subject, any predicate, any object.
 pub enum GivenSubjectAnyPredicateAnyObject<T> {
+    /// Any graph.
     AnyGraph,
+    /// A graph equal to the predicate.
     SameAsPredicate,
+    /// A graph equal to the object.
     SameAsObject,
+    /// A given graph.
     GivenGraph(Option<T>),
 }
 
 impl<T> GivenSubjectAnyPredicateAnyObject<T> {
+    /// Builds a pattern whose unset positions match anything.
     pub fn from_option(g: Option<Option<T>>) -> Self {
         match g {
             Some(g) => Self::GivenGraph(g),
@@ -1168,6 +1340,8 @@ impl<T> GivenSubjectAnyPredicateAnyObject<T> {
         }
     }
 
+    /// Builds a pattern from `pattern`, canonicalizing repeated
+    /// variables into `SameAs` positions.
     pub fn from_pattern<X: PartialEq>(p: X, o: X, g: Option<ResourceOrVar<T, X>>) -> Self {
         match g {
             None => Self::GivenGraph(None),
@@ -1184,6 +1358,7 @@ impl<T> GivenSubjectAnyPredicateAnyObject<T> {
         }
     }
 
+    /// Returns the graph of this pattern.
     pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyGraph => PatternGraph::Any,
@@ -1193,6 +1368,7 @@ impl<T> GivenSubjectAnyPredicateAnyObject<T> {
         }
     }
 
+    /// Consumes this pattern, returning its graph.
     pub fn into_graph(self) -> PatternGraph<T> {
         match self {
             Self::AnyGraph => PatternGraph::Any,
@@ -1202,6 +1378,7 @@ impl<T> GivenSubjectAnyPredicateAnyObject<T> {
         }
     }
 
+    /// Borrows the resources of this pattern.
     pub const fn as_ref(&self) -> GivenSubjectAnyPredicateAnyObject<&T> {
         match self {
             Self::AnyGraph => GivenSubjectAnyPredicateAnyObject::AnyGraph,
@@ -1211,6 +1388,7 @@ impl<T> GivenSubjectAnyPredicateAnyObject<T> {
         }
     }
 
+    /// Maps the resources of this pattern with `f`.
     pub fn map<U>(self, f: impl FnMut(T) -> U) -> GivenSubjectAnyPredicateAnyObject<U> {
         match self {
             Self::AnyGraph => GivenSubjectAnyPredicateAnyObject::AnyGraph,
@@ -1220,6 +1398,7 @@ impl<T> GivenSubjectAnyPredicateAnyObject<T> {
         }
     }
 
+    /// Maps each resource to a pair with `f`, splitting this pattern in two.
     pub fn map2<U, V>(self, mut f: impl FnMut(T) -> (U, V)) -> (GivenSubjectAnyPredicateAnyObject<U>, GivenSubjectAnyPredicateAnyObject<V>) {
         match self {
             Self::AnyGraph => (GivenSubjectAnyPredicateAnyObject::AnyGraph, GivenSubjectAnyPredicateAnyObject::AnyGraph),
@@ -1246,14 +1425,20 @@ impl<T> GivenSubjectAnyPredicateAnyObject<T> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// Canonical quad pattern matching any subject, a given predicate, any object.
 pub enum AnySubjectGivenPredicateAnyObject<T> {
+    /// Any graph.
     AnyGraph,
+    /// A graph equal to the subject.
     SameAsSubject,
+    /// A graph equal to the object.
     SameAsObject,
+    /// A given graph.
     GivenGraph(Option<T>),
 }
 
 impl<T> AnySubjectGivenPredicateAnyObject<T> {
+    /// Builds a pattern whose unset positions match anything.
     pub fn from_option(g: Option<Option<T>>) -> Self {
         match g {
             Some(g) => Self::GivenGraph(g),
@@ -1261,6 +1446,8 @@ impl<T> AnySubjectGivenPredicateAnyObject<T> {
         }
     }
 
+    /// Builds a pattern from `pattern`, canonicalizing repeated
+    /// variables into `SameAs` positions.
     pub fn from_pattern<X: PartialEq>(s: X, o: X, g: Option<ResourceOrVar<T, X>>) -> Self {
         match g {
             None => Self::GivenGraph(None),
@@ -1277,6 +1464,7 @@ impl<T> AnySubjectGivenPredicateAnyObject<T> {
         }
     }
 
+    /// Returns the graph of this pattern.
     pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyGraph => PatternGraph::Any,
@@ -1286,6 +1474,7 @@ impl<T> AnySubjectGivenPredicateAnyObject<T> {
         }
     }
 
+    /// Consumes this pattern, returning its graph.
     pub fn into_graph(self) -> PatternGraph<T> {
         match self {
             Self::AnyGraph => PatternGraph::Any,
@@ -1295,6 +1484,7 @@ impl<T> AnySubjectGivenPredicateAnyObject<T> {
         }
     }
 
+    /// Borrows the resources of this pattern.
     pub const fn as_ref(&self) -> AnySubjectGivenPredicateAnyObject<&T> {
         match self {
             Self::AnyGraph => AnySubjectGivenPredicateAnyObject::AnyGraph,
@@ -1304,6 +1494,7 @@ impl<T> AnySubjectGivenPredicateAnyObject<T> {
         }
     }
 
+    /// Maps the resources of this pattern with `f`.
     pub fn map<U>(self, f: impl FnMut(T) -> U) -> AnySubjectGivenPredicateAnyObject<U> {
         match self {
             Self::AnyGraph => AnySubjectGivenPredicateAnyObject::AnyGraph,
@@ -1313,6 +1504,7 @@ impl<T> AnySubjectGivenPredicateAnyObject<T> {
         }
     }
 
+    /// Maps each resource to a pair with `f`, splitting this pattern in two.
     pub fn map2<U, V>(self, mut f: impl FnMut(T) -> (U, V)) -> (AnySubjectGivenPredicateAnyObject<U>, AnySubjectGivenPredicateAnyObject<V>) {
         match self {
             Self::AnyGraph => (AnySubjectGivenPredicateAnyObject::AnyGraph, AnySubjectGivenPredicateAnyObject::AnyGraph),
@@ -1339,14 +1531,20 @@ impl<T> AnySubjectGivenPredicateAnyObject<T> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// Canonical quad pattern matching any subject, any predicate, a given object.
 pub enum AnySubjectAnyPredicateGivenObject<T> {
+    /// Any graph.
     AnyGraph,
+    /// A graph equal to the subject.
     SameAsSubject,
+    /// A graph equal to the predicate.
     SameAsPredicate,
+    /// A given graph.
     GivenGraph(Option<T>),
 }
 
 impl<T> AnySubjectAnyPredicateGivenObject<T> {
+    /// Builds a pattern whose unset positions match anything.
     pub fn from_option(g: Option<Option<T>>) -> Self {
         match g {
             Some(g) => Self::GivenGraph(g),
@@ -1354,6 +1552,8 @@ impl<T> AnySubjectAnyPredicateGivenObject<T> {
         }
     }
 
+    /// Builds a pattern from `pattern`, canonicalizing repeated
+    /// variables into `SameAs` positions.
     pub fn from_pattern<X: PartialEq>(s: X, p: X, g: Option<ResourceOrVar<T, X>>) -> Self {
         match g {
             None => Self::GivenGraph(None),
@@ -1370,6 +1570,7 @@ impl<T> AnySubjectAnyPredicateGivenObject<T> {
         }
     }
 
+    /// Returns the graph of this pattern.
     pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyGraph => PatternGraph::Any,
@@ -1379,6 +1580,7 @@ impl<T> AnySubjectAnyPredicateGivenObject<T> {
         }
     }
 
+    /// Consumes this pattern, returning its graph.
     pub fn into_graph(self) -> PatternGraph<T> {
         match self {
             Self::AnyGraph => PatternGraph::Any,
@@ -1388,6 +1590,7 @@ impl<T> AnySubjectAnyPredicateGivenObject<T> {
         }
     }
 
+    /// Borrows the resources of this pattern.
     pub const fn as_ref(&self) -> AnySubjectAnyPredicateGivenObject<&T> {
         match self {
             Self::AnyGraph => AnySubjectAnyPredicateGivenObject::AnyGraph,
@@ -1397,6 +1600,7 @@ impl<T> AnySubjectAnyPredicateGivenObject<T> {
         }
     }
 
+    /// Maps the resources of this pattern with `f`.
     pub fn map<U>(self, f: impl FnMut(T) -> U) -> AnySubjectAnyPredicateGivenObject<U> {
         match self {
             Self::AnyGraph => AnySubjectAnyPredicateGivenObject::AnyGraph,
@@ -1406,6 +1610,7 @@ impl<T> AnySubjectAnyPredicateGivenObject<T> {
         }
     }
 
+    /// Maps each resource to a pair with `f`, splitting this pattern in two.
     pub fn map2<U, V>(self, mut f: impl FnMut(T) -> (U, V)) -> (AnySubjectAnyPredicateGivenObject<U>, AnySubjectAnyPredicateGivenObject<V>) {
         match self {
             Self::AnyGraph => (AnySubjectAnyPredicateGivenObject::AnyGraph, AnySubjectAnyPredicateGivenObject::AnyGraph),
@@ -1435,13 +1640,18 @@ impl<T> AnySubjectAnyPredicateGivenObject<T> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// Canonical quad pattern matching any subject, a given predicate, a given object.
 pub enum AnySubjectGivenPredicateGivenObject<T> {
+    /// Any graph.
     AnyGraph,
+    /// A graph equal to the subject.
     SameAsSubject,
+    /// A given graph.
     GivenGraph(Option<T>),
 }
 
 impl<T> AnySubjectGivenPredicateGivenObject<T> {
+    /// Builds a pattern whose unset positions match anything.
     pub fn from_option(g: Option<Option<T>>) -> Self {
         match g {
             Some(g) => Self::GivenGraph(g),
@@ -1449,6 +1659,8 @@ impl<T> AnySubjectGivenPredicateGivenObject<T> {
         }
     }
 
+    /// Builds a pattern from `pattern`, canonicalizing repeated
+    /// variables into `SameAs` positions.
     pub fn from_pattern<X: PartialEq>(s: X, g: Option<ResourceOrVar<T, X>>) -> Self {
         match g {
             None => Self::GivenGraph(None),
@@ -1463,6 +1675,7 @@ impl<T> AnySubjectGivenPredicateGivenObject<T> {
         }
     }
 
+    /// Returns the graph of this pattern.
     pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyGraph => PatternGraph::Any,
@@ -1471,6 +1684,7 @@ impl<T> AnySubjectGivenPredicateGivenObject<T> {
         }
     }
 
+    /// Consumes this pattern, returning its graph.
     pub fn into_graph(self) -> PatternGraph<T> {
         match self {
             Self::AnyGraph => PatternGraph::Any,
@@ -1479,6 +1693,7 @@ impl<T> AnySubjectGivenPredicateGivenObject<T> {
         }
     }
 
+    /// Borrows the resources of this pattern.
     pub const fn as_ref(&self) -> AnySubjectGivenPredicateGivenObject<&T> {
         match self {
             Self::AnyGraph => AnySubjectGivenPredicateGivenObject::AnyGraph,
@@ -1487,6 +1702,7 @@ impl<T> AnySubjectGivenPredicateGivenObject<T> {
         }
     }
 
+    /// Maps the resources of this pattern with `f`.
     pub fn map<U>(self, f: impl FnMut(T) -> U) -> AnySubjectGivenPredicateGivenObject<U> {
         match self {
             Self::AnyGraph => AnySubjectGivenPredicateGivenObject::AnyGraph,
@@ -1495,6 +1711,7 @@ impl<T> AnySubjectGivenPredicateGivenObject<T> {
         }
     }
 
+    /// Maps each resource to a pair with `f`, splitting this pattern in two.
     pub fn map2<U, V>(self, mut f: impl FnMut(T) -> (U, V)) -> (AnySubjectGivenPredicateGivenObject<U>, AnySubjectGivenPredicateGivenObject<V>) {
         match self {
             Self::AnyGraph => (AnySubjectGivenPredicateGivenObject::AnyGraph, AnySubjectGivenPredicateGivenObject::AnyGraph),
@@ -1520,13 +1737,18 @@ impl<T> AnySubjectGivenPredicateGivenObject<T> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// Canonical quad pattern matching a given subject, any predicate, a given object.
 pub enum GivenSubjectAnyPredicateGivenObject<T> {
+    /// Any graph.
     AnyGraph,
+    /// A graph equal to the predicate.
     SameAsPredicate,
+    /// A given graph.
     GivenGraph(Option<T>),
 }
 
 impl<T> GivenSubjectAnyPredicateGivenObject<T> {
+    /// Builds a pattern whose unset positions match anything.
     pub fn from_option(g: Option<Option<T>>) -> Self {
         match g {
             Some(g) => Self::GivenGraph(g),
@@ -1534,6 +1756,8 @@ impl<T> GivenSubjectAnyPredicateGivenObject<T> {
         }
     }
 
+    /// Builds a pattern from `pattern`, canonicalizing repeated
+    /// variables into `SameAs` positions.
     pub fn from_pattern<X: PartialEq>(p: X, g: Option<ResourceOrVar<T, X>>) -> Self {
         match g {
             None => Self::GivenGraph(None),
@@ -1548,6 +1772,7 @@ impl<T> GivenSubjectAnyPredicateGivenObject<T> {
         }
     }
 
+    /// Returns the graph of this pattern.
     pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyGraph => PatternGraph::Any,
@@ -1556,6 +1781,7 @@ impl<T> GivenSubjectAnyPredicateGivenObject<T> {
         }
     }
 
+    /// Consumes this pattern, returning its graph.
     pub fn into_graph(self) -> PatternGraph<T> {
         match self {
             Self::AnyGraph => PatternGraph::Any,
@@ -1564,6 +1790,7 @@ impl<T> GivenSubjectAnyPredicateGivenObject<T> {
         }
     }
 
+    /// Borrows the resources of this pattern.
     pub const fn as_ref(&self) -> GivenSubjectAnyPredicateGivenObject<&T> {
         match self {
             Self::AnyGraph => GivenSubjectAnyPredicateGivenObject::AnyGraph,
@@ -1572,6 +1799,7 @@ impl<T> GivenSubjectAnyPredicateGivenObject<T> {
         }
     }
 
+    /// Maps the resources of this pattern with `f`.
     pub fn map<U>(self, f: impl FnMut(T) -> U) -> GivenSubjectAnyPredicateGivenObject<U> {
         match self {
             Self::AnyGraph => GivenSubjectAnyPredicateGivenObject::AnyGraph,
@@ -1580,6 +1808,7 @@ impl<T> GivenSubjectAnyPredicateGivenObject<T> {
         }
     }
 
+    /// Maps each resource to a pair with `f`, splitting this pattern in two.
     pub fn map2<U, V>(self, mut f: impl FnMut(T) -> (U, V)) -> (GivenSubjectAnyPredicateGivenObject<U>, GivenSubjectAnyPredicateGivenObject<V>) {
         match self {
             Self::AnyGraph => (GivenSubjectAnyPredicateGivenObject::AnyGraph, GivenSubjectAnyPredicateGivenObject::AnyGraph),
@@ -1605,13 +1834,18 @@ impl<T> GivenSubjectAnyPredicateGivenObject<T> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// Canonical quad pattern matching a given subject, a given predicate, any object.
 pub enum GivenSubjectGivenPredicateAnyObject<T> {
+    /// Any graph.
     AnyGraph,
+    /// A graph equal to the object.
     SameAsObject,
+    /// A given graph.
     GivenGraph(Option<T>),
 }
 
 impl<T> GivenSubjectGivenPredicateAnyObject<T> {
+    /// Builds a pattern whose unset positions match anything.
     pub fn from_option(g: Option<Option<T>>) -> Self {
         match g {
             Some(g) => Self::GivenGraph(g),
@@ -1619,6 +1853,8 @@ impl<T> GivenSubjectGivenPredicateAnyObject<T> {
         }
     }
 
+    /// Builds a pattern from `pattern`, canonicalizing repeated
+    /// variables into `SameAs` positions.
     pub fn from_pattern<X: PartialEq>(o: X, g: Option<ResourceOrVar<T, X>>) -> Self {
         match g {
             None => Self::GivenGraph(None),
@@ -1633,6 +1869,7 @@ impl<T> GivenSubjectGivenPredicateAnyObject<T> {
         }
     }
 
+    /// Returns the graph of this pattern.
     pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyGraph => PatternGraph::Any,
@@ -1641,6 +1878,7 @@ impl<T> GivenSubjectGivenPredicateAnyObject<T> {
         }
     }
 
+    /// Consumes this pattern, returning its graph.
     pub fn into_graph(self) -> PatternGraph<T> {
         match self {
             Self::AnyGraph => PatternGraph::Any,
@@ -1649,6 +1887,7 @@ impl<T> GivenSubjectGivenPredicateAnyObject<T> {
         }
     }
 
+    /// Borrows the resources of this pattern.
     pub const fn as_ref(&self) -> GivenSubjectGivenPredicateAnyObject<&T> {
         match self {
             Self::AnyGraph => GivenSubjectGivenPredicateAnyObject::AnyGraph,
@@ -1657,6 +1896,7 @@ impl<T> GivenSubjectGivenPredicateAnyObject<T> {
         }
     }
 
+    /// Maps the resources of this pattern with `f`.
     pub fn map<U>(self, f: impl FnMut(T) -> U) -> GivenSubjectGivenPredicateAnyObject<U> {
         match self {
             Self::AnyGraph => GivenSubjectGivenPredicateAnyObject::AnyGraph,
@@ -1665,6 +1905,7 @@ impl<T> GivenSubjectGivenPredicateAnyObject<T> {
         }
     }
 
+    /// Maps each resource to a pair with `f`, splitting this pattern in two.
     pub fn map2<U, V>(self, mut f: impl FnMut(T) -> (U, V)) -> (GivenSubjectGivenPredicateAnyObject<U>, GivenSubjectGivenPredicateAnyObject<V>) {
         match self {
             Self::AnyGraph => (GivenSubjectGivenPredicateAnyObject::AnyGraph, GivenSubjectGivenPredicateAnyObject::AnyGraph),
@@ -1690,12 +1931,16 @@ impl<T> GivenSubjectGivenPredicateAnyObject<T> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// Canonical quad pattern matching a given subject, a given predicate, a given object.
 pub enum GivenSubjectGivenPredicateGivenObject<T> {
+    /// Any graph.
     AnyGraph,
+    /// A given graph.
     GivenGraph(Option<T>),
 }
 
 impl<T> GivenSubjectGivenPredicateGivenObject<T> {
+    /// Builds a pattern whose unset positions match anything.
     pub fn from_option(g: Option<Option<T>>) -> Self {
         match g {
             Some(g) => Self::GivenGraph(g),
@@ -1703,6 +1948,8 @@ impl<T> GivenSubjectGivenPredicateGivenObject<T> {
         }
     }
 
+    /// Builds a pattern from `pattern`, canonicalizing repeated
+    /// variables into `SameAs` positions.
     pub fn from_pattern<X>(g: Option<ResourceOrVar<T, X>>) -> Self {
         match g {
             None => Self::GivenGraph(None),
@@ -1711,6 +1958,7 @@ impl<T> GivenSubjectGivenPredicateGivenObject<T> {
         }
     }
 
+    /// Returns the graph of this pattern.
     pub const fn graph(&self) -> PatternGraph<&T> {
         match self {
             Self::AnyGraph => PatternGraph::Any,
@@ -1718,6 +1966,7 @@ impl<T> GivenSubjectGivenPredicateGivenObject<T> {
         }
     }
 
+    /// Consumes this pattern, returning its graph.
     pub fn into_graph(self) -> PatternGraph<T> {
         match self {
             Self::AnyGraph => PatternGraph::Any,
@@ -1725,6 +1974,7 @@ impl<T> GivenSubjectGivenPredicateGivenObject<T> {
         }
     }
 
+    /// Borrows the resources of this pattern.
     pub const fn as_ref(&self) -> GivenSubjectGivenPredicateGivenObject<&T> {
         match self {
             Self::AnyGraph => GivenSubjectGivenPredicateGivenObject::AnyGraph,
@@ -1732,6 +1982,7 @@ impl<T> GivenSubjectGivenPredicateGivenObject<T> {
         }
     }
 
+    /// Maps the resources of this pattern with `f`.
     pub fn map<U>(self, f: impl FnMut(T) -> U) -> GivenSubjectGivenPredicateGivenObject<U> {
         match self {
             Self::AnyGraph => GivenSubjectGivenPredicateGivenObject::AnyGraph,
@@ -1739,6 +1990,7 @@ impl<T> GivenSubjectGivenPredicateGivenObject<T> {
         }
     }
 
+    /// Maps each resource to a pair with `f`, splitting this pattern in two.
     pub fn map2<U, V>(self, mut f: impl FnMut(T) -> (U, V)) -> (GivenSubjectGivenPredicateGivenObject<U>, GivenSubjectGivenPredicateGivenObject<V>) {
         match self {
             Self::AnyGraph => (GivenSubjectGivenPredicateGivenObject::AnyGraph, GivenSubjectGivenPredicateGivenObject::AnyGraph),

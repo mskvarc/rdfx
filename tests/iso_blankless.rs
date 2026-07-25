@@ -6,7 +6,7 @@
 #![allow(clippy::unwrap_used, clippy::panic, clippy::expect_used)]
 
 use iri_rs::Iri;
-use rdf_rs::{
+use rdfx::{
     BlankId,
     BlankIdBuf,
     CowLiteral,

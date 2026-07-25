@@ -1,5 +1,5 @@
 //! Blank nodes are forbidden in predicate position by RDF 1.1 §3.
-use rdf_rs::{BlankIdBuf, Id, IriBuf, LocalTerm, Triple};
+use rdfx::{BlankIdBuf, Id, IriBuf, LocalTerm, Triple};
 
 fn main() {
     let _t: Triple<Id, BlankIdBuf, LocalTerm> = Triple::new(

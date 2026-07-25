@@ -1,7 +1,7 @@
 #![allow(clippy::unwrap_used, clippy::panic, clippy::expect_used, clippy::get_unwrap)]
 
 use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
-use rdf_rs::{
+use rdfx::{
     Quad,
     dataset::{BTreeDataset, HashDataset, IndexedBTreeDataset, IndexedHashDataset, PatternMatchingDataset},
     pattern::CanonicalQuadPattern,

@@ -9,7 +9,7 @@ use std::borrow::Cow;
 
 use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 use iri_rs::IriBuf;
-use rdf_rs::{
+use rdfx::{
     CowLiteral,
     Id,
     Interpretation,
@@ -36,7 +36,7 @@ impl Lex {
     }
 }
 
-impl rdf_rs::RdfDisplay for Lex {
+impl rdfx::RdfDisplay for Lex {
     fn rdf_fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         self.0.rdf_fmt(f)
     }

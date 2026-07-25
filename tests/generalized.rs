@@ -1,7 +1,7 @@
 #![allow(clippy::unwrap_used, clippy::panic, clippy::expect_used)]
 
 use iri_rs::IriBuf;
-use rdf_rs::{BlankIdBuf, GeneralizationError, GeneralizedQuad, GeneralizedTriple, Id, Literal, LocalTerm, Quad, Term, Triple};
+use rdfx::{BlankIdBuf, GeneralizationError, GeneralizedQuad, GeneralizedTriple, Id, Literal, LocalTerm, Quad, Term, Triple};
 
 fn iri_term(s: &str) -> LocalTerm {
     LocalTerm::iri(IriBuf::new(s.to_owned()).unwrap())

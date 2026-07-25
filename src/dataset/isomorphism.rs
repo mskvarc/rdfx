@@ -43,7 +43,7 @@
 //! ```ignore
 //! use std::borrow::Cow;
 //! use iri_rs::IriBuf;
-//! use rdf_rs::{
+//! use rdfx::{
 //!     CowLiteral, Id, LiteralRef, LocalTerm, Term,
 //!     dataset::{BTreeGraph, isomorphism::graph_equivalent_with},
 //!     impl_resource,

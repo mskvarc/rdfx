@@ -9,7 +9,7 @@
 //! Round-tripping a tagged value through [`Strip`]:
 //!
 //! ```
-//! use rdf_rs::meta::{Meta, Span, Strip};
+//! use rdfx::meta::{Meta, Span, Strip};
 //!
 //! let tagged = Meta(42usize, Span::new(0, 5));
 //! assert_eq!(tagged.strip(), 42usize);
@@ -19,7 +19,7 @@
 //! by their metadata:
 //!
 //! ```
-//! use rdf_rs::{Quad, dataset::BTreeDataset, meta::{Meta, Span}};
+//! use rdfx::{Quad, dataset::BTreeDataset, meta::{Meta, Span}};
 //!
 //! let s: usize = 0;
 //! let p: usize = 1;

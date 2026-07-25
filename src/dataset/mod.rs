@@ -1,6 +1,7 @@
 //! Dataset traits and implementations.
 use crate::{IsGraph, Quad, Resource, pattern::CanonicalQuadPattern};
 
+/// Fallible counterparts of the dataset traits, for storage that can fail.
 pub mod fallible;
 pub use fallible::FallibleDataset;
 
@@ -20,6 +21,7 @@ pub mod isomorphism;
 ///
 /// [s4]: https://www.w3.org/TR/rdf11-concepts/#section-dataset
 pub trait Dataset: Graph {
+    /// Type of the graph name.
     type Graph: IsGraph;
 }
 
@@ -33,71 +35,93 @@ pub trait TraversableDataset: Dataset {
     /// Returns an iterator over the quads of the dataset.
     fn quads(&self) -> Self::Quads<'_>;
 
+    /// Returns the number of quads in this dataset.
     fn quads_count(&self) -> usize {
         self.quads().count()
     }
 }
 
+/// Dataset whose resources can be enumerated.
 pub trait ResourceTraversableDataset: Dataset {
+    /// Resources iterator.
     type Resources<'a>: Iterator<Item = &'a Self::Subject>
     where
         Self: 'a;
 
+    /// Returns an iterator over the resources of this dataset.
     fn resources(&self) -> Self::Resources<'_>;
 
+    /// Returns the number of resources in this dataset.
     fn resource_count(&self) -> usize {
         self.resources().count()
     }
 }
 
+/// Dataset whose subjects can be enumerated.
 pub trait SubjectTraversableDataset: Dataset {
+    /// Subjects iterator.
     type Subjects<'a>: Iterator<Item = &'a Self::Subject>
     where
         Self: 'a;
 
+    /// Returns an iterator over the subjects of this dataset.
     fn subjects(&self) -> Self::Subjects<'_>;
 
+    /// Returns the number of distinct subjects in this dataset.
     fn subject_count(&self) -> usize {
         self.subjects().count()
     }
 }
 
+/// Dataset whose predicates can be enumerated.
 pub trait PredicateTraversableDataset: Dataset {
+    /// Predicates iterator.
     type Predicates<'a>: Iterator<Item = &'a Self::Predicate>
     where
         Self: 'a;
 
+    /// Returns an iterator over the predicates of this dataset.
     fn predicates(&self) -> Self::Predicates<'_>;
 
+    /// Returns the number of distinct predicates in this dataset.
     fn predicate_count(&self) -> usize {
         self.predicates().count()
     }
 }
 
+/// Dataset whose objects can be enumerated.
 pub trait ObjectTraversableDataset: Dataset {
+    /// Objects iterator.
     type Objects<'a>: Iterator<Item = &'a Self::Object>
     where
         Self: 'a;
 
+    /// Returns an iterator over the objects of this dataset.
     fn objects(&self) -> Self::Objects<'_>;
 
+    /// Returns the number of distinct objects in this dataset.
     fn object_count(&self) -> usize {
         self.objects().count()
     }
 }
 
+/// Dataset whose named graphs can be enumerated.
 pub trait NamedGraphTraversableDataset: Dataset {
+    /// Named graphs iterator.
     type NamedGraphs<'a>: Iterator<Item = &'a <Self as Dataset>::Graph>
     where
         Self: 'a;
 
+    /// Returns an iterator over the named graphs of this dataset.
     fn named_graphs(&self) -> Self::NamedGraphs<'_>;
 
+    /// Returns the number of named graphs in this dataset.
     fn named_graph_count(&self) -> usize {
         self.named_graphs().count()
     }
 }
 
+/// Dataset that can match several quad patterns at once.
 pub trait MultiPatternMatchingDataset: Dataset
 where
     <Self as Graph>::Subject: Resource,
@@ -205,6 +229,7 @@ where
     }
 }
 
+/// Iterator over the predicate-object pairs of a subject in a dataset.
 pub struct QuadPredicatesObjects<'a, 'p, D: 'a + ?Sized + PredicateTraversableDataset + PatternMatchingDataset>
 where
     D::Subject: Resource,
@@ -242,6 +267,7 @@ where
     }
 }
 
+/// Iterator over the objects of a subject-predicate pair in a dataset.
 pub struct QuadObjects<'a, 'p, D: 'a + ?Sized + PatternMatchingDataset>
 where
     D::Subject: Resource + 'p,
@@ -272,13 +298,18 @@ pub trait DatasetMut: Dataset {
 
 /// Dataset view focusing on a given graph.
 pub struct DatasetView<'a, D: Dataset> {
+    /// The dataset being viewed.
     pub dataset: &'a D,
+    /// Name of the graph in focus, `None` for the default graph.
     pub graph: Option<&'a D::Subject>,
 }
 
 /// Dataset view focusing on a given resource and restricted to the given graph.
 pub struct DatasetGraphView<'a, D: Dataset> {
+    /// The dataset being viewed.
     pub dataset: &'a D,
+    /// Name of the graph in focus, `None` for the default graph.
     pub graph: Option<&'a D::Subject>,
+    /// The resource in focus.
     pub resource: &'a D::Subject,
 }

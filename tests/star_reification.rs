@@ -9,7 +9,7 @@
 use std::collections::HashSet;
 
 use iri_rs::IriBuf;
-use rdf_rs::{
+use rdfx::{
     BlankIdBuf,
     Id,
     LexicalTriple,

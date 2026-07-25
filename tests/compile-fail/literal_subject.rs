@@ -1,6 +1,6 @@
 //! Literals are forbidden in subject position by RDF 1.1 §3.
 use iri_rs::IriBuf;
-use rdf_rs::{Literal, LocalTerm, Triple};
+use rdfx::{Literal, LocalTerm, Triple};
 
 fn main() {
     let _t: Triple<Literal, IriBuf, LocalTerm> = Triple::new(

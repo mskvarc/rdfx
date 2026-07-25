@@ -2,7 +2,7 @@
 
 use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 use iri_rs::IriRef;
-use rdf_rs::{BlankId, RdfDisplay};
+use rdfx::{BlankId, RdfDisplay};
 use std::hint::black_box;
 
 fn bench_blankid(c: &mut Criterion) {

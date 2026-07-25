@@ -1,7 +1,7 @@
 #![allow(clippy::unwrap_used, clippy::panic, clippy::expect_used)]
 
 use iri_rs::IriBuf;
-use rdf_rs::{Datatype, Direction, Literal, LiteralType, RDF_DIR_LANG_STRING, RDF_LANG_STRING, ReservedDatatypeError, XSD_STRING, langtag::LangTagBuf};
+use rdfx::{Datatype, Direction, Literal, LiteralType, RDF_DIR_LANG_STRING, RDF_LANG_STRING, ReservedDatatypeError, XSD_STRING, langtag::LangTagBuf};
 
 #[test]
 fn datatype_new_rejects_rdf_lang_string() {

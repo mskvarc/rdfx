@@ -24,6 +24,9 @@ pub struct TriplePatternMap<V, T> {
 }
 
 impl<V: Eq + Hash, T: Eq + Hash> TriplePatternMap<V, T> {
+    /// Binds `value` to `pattern`.
+    ///
+    /// Returns whether the binding was not already present.
     pub fn insert(&mut self, pattern: CanonicalTriplePattern<T>, value: V) -> bool {
         match pattern {
             CanonicalTriplePattern::AnySubject(rest) => self.any.insert(rest, value),
@@ -33,6 +36,7 @@ impl<V: Eq + Hash, T: Eq + Hash> TriplePatternMap<V, T> {
 }
 
 impl<V, T: Resource + Eq + Hash> TriplePatternMap<V, T> {
+    /// Returns the values bound to every pattern matching `triple`.
     pub fn get(&self, triple: Triple<&T, &T, &T>) -> Values<'_, V> {
         Values {
             any: self.any.get(triple),
@@ -41,6 +45,8 @@ impl<V, T: Resource + Eq + Hash> TriplePatternMap<V, T> {
     }
 }
 
+/// Iterator over the values of a [`TriplePatternMap`] whose pattern matches
+/// a given triple.
 pub struct Values<'a, V> {
     any: AnySubjectValues<'a, V>,
     given: Option<GivenSubjectValues<'a, V>>,
@@ -56,12 +62,16 @@ impl<'a, V> Iterator for Values<'a, V> {
 
 #[derive(Debug, Educe)]
 #[educe(Default)]
+/// Map from triple patterns matching a given subject to values.
 pub struct GivenSubjectMap<V, T> {
     any: GivenSubjectAnyPredicateMap<V, T>,
     given: HashMap<T, GivenSubjectGivenPredicateMap<V, T>>,
 }
 
 impl<V: Eq + Hash, T: Eq + Hash> GivenSubjectMap<V, T> {
+    /// Binds `value` to `pattern`.
+    ///
+    /// Returns whether the binding was not already present.
     pub fn insert(&mut self, pattern: GivenSubject<T>, value: V) -> bool {
         match pattern {
             GivenSubject::AnyPredicate(rest) => self.any.insert(rest, value),
@@ -71,6 +81,7 @@ impl<V: Eq + Hash, T: Eq + Hash> GivenSubjectMap<V, T> {
 }
 
 impl<V, T: Resource + Eq + Hash> GivenSubjectMap<V, T> {
+    /// Returns the values bound to every pattern matching `triple`.
     pub fn get(&self, triple: Triple<&T, &T, &T>) -> GivenSubjectValues<'_, V> {
         GivenSubjectValues {
             any: self.any.get(triple),
@@ -80,6 +91,7 @@ impl<V, T: Resource + Eq + Hash> GivenSubjectMap<V, T> {
 }
 
 impl<V: Eq + Hash, T: Eq + Hash> GivenSubjectMap<V, T> {
+    /// Merges the bindings of `other` into this map.
     pub fn union_with(&mut self, other: Self) {
         self.any.union_with(other.any);
         self.given.extend(other.given);
@@ -93,6 +105,8 @@ impl<V: Eq + Hash, T: Eq + Hash> GivenSubjectMap<V, T> {
 // 	}
 // }
 
+/// Iterator over the values of a [`GivenSubjectMap`] whose pattern matches a
+/// given triple.
 pub struct GivenSubjectValues<'a, V> {
     any: GivenSubjectAnyPredicateValues<'a, V>,
     given: Option<GivenSubjectGivenPredicateValues<'a, V>>,
@@ -108,6 +122,7 @@ impl<'a, V> Iterator for GivenSubjectValues<'a, V> {
 
 #[derive(Debug, Educe)]
 #[educe(Default)]
+/// Map from triple patterns matching a given subject and any predicate to values.
 pub struct GivenSubjectAnyPredicateMap<V, T> {
     any: HashSet<V>,
     same_as_predicate: HashSet<V>,
@@ -115,6 +130,9 @@ pub struct GivenSubjectAnyPredicateMap<V, T> {
 }
 
 impl<V: Eq + Hash, T: Eq + Hash> GivenSubjectAnyPredicateMap<V, T> {
+    /// Binds `value` to `pattern`.
+    ///
+    /// Returns whether the binding was not already present.
     pub fn insert(&mut self, pattern: GivenSubjectAnyPredicate<T>, value: V) -> bool {
         match pattern {
             GivenSubjectAnyPredicate::AnyObject => self.any.insert(value),
@@ -125,6 +143,7 @@ impl<V: Eq + Hash, T: Eq + Hash> GivenSubjectAnyPredicateMap<V, T> {
 }
 
 impl<V, T: Resource + Eq + Hash> GivenSubjectAnyPredicateMap<V, T> {
+    /// Returns the values bound to every pattern matching `triple`.
     pub fn get(&self, triple: Triple<&T, &T, &T>) -> GivenSubjectAnyPredicateValues<'_, V> {
         GivenSubjectAnyPredicateValues {
             any: self.any.iter(),
@@ -147,6 +166,7 @@ impl<V, T: Resource + Eq + Hash> GivenSubjectAnyPredicateMap<V, T> {
 // }
 
 impl<V: Eq + Hash, T: Eq + Hash> GivenSubjectAnyPredicateMap<V, T> {
+    /// Merges the bindings of `other` into this map.
     pub fn union_with(&mut self, other: Self) {
         self.any.extend(other.any);
         self.same_as_predicate.extend(other.same_as_predicate);
@@ -154,6 +174,8 @@ impl<V: Eq + Hash, T: Eq + Hash> GivenSubjectAnyPredicateMap<V, T> {
     }
 }
 
+/// Iterator over the values of a [`GivenSubjectAnyPredicateMap`] whose pattern matches a
+/// given triple.
 pub struct GivenSubjectAnyPredicateValues<'a, V> {
     any: std::collections::hash_set::Iter<'a, V>,
     same_as_predicate: Option<std::collections::hash_set::Iter<'a, V>>,
@@ -173,12 +195,16 @@ impl<'a, V> Iterator for GivenSubjectAnyPredicateValues<'a, V> {
 
 #[derive(Debug, Educe)]
 #[educe(Default)]
+/// Map from triple patterns matching a given subject and a given predicate to values.
 pub struct GivenSubjectGivenPredicateMap<V, T> {
     any: HashSet<V>,
     given: HashMap<T, HashSet<V>>,
 }
 
 impl<V: Eq + Hash, T: Eq + Hash> GivenSubjectGivenPredicateMap<V, T> {
+    /// Binds `value` to `pattern`.
+    ///
+    /// Returns whether the binding was not already present.
     pub fn insert(&mut self, pattern: GivenSubjectGivenPredicate<T>, value: V) -> bool {
         match pattern {
             GivenSubjectGivenPredicate::AnyObject => self.any.insert(value),
@@ -188,6 +214,7 @@ impl<V: Eq + Hash, T: Eq + Hash> GivenSubjectGivenPredicateMap<V, T> {
 }
 
 impl<V, T: Resource + Eq + Hash> GivenSubjectGivenPredicateMap<V, T> {
+    /// Returns the values bound to every pattern matching `triple`.
     pub fn get(&self, triple: Triple<&T, &T, &T>) -> GivenSubjectGivenPredicateValues<'_, V> {
         GivenSubjectGivenPredicateValues {
             any: self.any.iter(),
@@ -204,12 +231,15 @@ impl<V, T: Resource + Eq + Hash> GivenSubjectGivenPredicateMap<V, T> {
 // }
 
 impl<V: Eq + Hash, T: Eq + Hash> GivenSubjectGivenPredicateMap<V, T> {
+    /// Merges the bindings of `other` into this map.
     pub fn union_with(&mut self, other: Self) {
         self.any.extend(other.any);
         self.given.extend(other.given)
     }
 }
 
+/// Iterator over the values of a [`GivenSubjectGivenPredicateMap`] whose pattern matches a
+/// given triple.
 pub struct GivenSubjectGivenPredicateValues<'a, V> {
     any: std::collections::hash_set::Iter<'a, V>,
     given: Option<std::collections::hash_set::Iter<'a, V>>,
@@ -225,6 +255,7 @@ impl<'a, V> Iterator for GivenSubjectGivenPredicateValues<'a, V> {
 
 #[derive(Debug, Educe)]
 #[educe(Default)]
+/// Map from triple patterns matching any subject to values.
 pub struct AnySubjectMap<V, T> {
     any: AnySubjectAnyPredicateMap<V, T>,
     same_as_subject: AnySubjectGivenPredicateMap<V, T>,
@@ -232,6 +263,9 @@ pub struct AnySubjectMap<V, T> {
 }
 
 impl<V: Eq + Hash, T: Eq + Hash> AnySubjectMap<V, T> {
+    /// Binds `value` to `pattern`.
+    ///
+    /// Returns whether the binding was not already present.
     pub fn insert(&mut self, pattern: AnySubject<T>, value: V) -> bool {
         match pattern {
             AnySubject::AnyPredicate(rest) => self.any.insert(rest, value),
@@ -242,6 +276,7 @@ impl<V: Eq + Hash, T: Eq + Hash> AnySubjectMap<V, T> {
 }
 
 impl<V, T: Resource + Eq + Hash> AnySubjectMap<V, T> {
+    /// Returns the values bound to every pattern matching `triple`.
     pub fn get(&self, triple: Triple<&T, &T, &T>) -> AnySubjectValues<'_, V> {
         AnySubjectValues {
             any: self.any.get(triple),
@@ -264,6 +299,7 @@ impl<V, T: Resource + Eq + Hash> AnySubjectMap<V, T> {
 // }
 
 impl<V: Eq + Hash, T: Eq + Hash> AnySubjectMap<V, T> {
+    /// Merges the bindings of `other` into this map.
     pub fn union_with(&mut self, other: Self) {
         self.any.union_with(other.any);
         self.same_as_subject.union_with(other.same_as_subject);
@@ -271,6 +307,8 @@ impl<V: Eq + Hash, T: Eq + Hash> AnySubjectMap<V, T> {
     }
 }
 
+/// Iterator over the values of a [`AnySubjectMap`] whose pattern matches a
+/// given triple.
 pub struct AnySubjectValues<'a, V> {
     any: AnySubjectAnyPredicateValues<'a, V>,
     same_as_subject: Option<AnySubjectGivenPredicateValues<'a, V>>,
@@ -290,6 +328,7 @@ impl<'a, V> Iterator for AnySubjectValues<'a, V> {
 
 #[derive(Debug, Educe)]
 #[educe(Default)]
+/// Map from triple patterns matching any subject and any predicate to values.
 pub struct AnySubjectAnyPredicateMap<V, T> {
     any: HashSet<V>,
     same_as_subject: HashSet<V>,
@@ -298,6 +337,9 @@ pub struct AnySubjectAnyPredicateMap<V, T> {
 }
 
 impl<V: Eq + Hash, T: Eq + Hash> AnySubjectAnyPredicateMap<V, T> {
+    /// Binds `value` to `pattern`.
+    ///
+    /// Returns whether the binding was not already present.
     pub fn insert(&mut self, pattern: AnySubjectAnyPredicate<T>, value: V) -> bool {
         match pattern {
             AnySubjectAnyPredicate::AnyObject => self.any.insert(value),
@@ -309,6 +351,7 @@ impl<V: Eq + Hash, T: Eq + Hash> AnySubjectAnyPredicateMap<V, T> {
 }
 
 impl<V, T: Resource + Eq + Hash> AnySubjectAnyPredicateMap<V, T> {
+    /// Returns the values bound to every pattern matching `triple`.
     pub fn get(&self, triple: Triple<&T, &T, &T>) -> AnySubjectAnyPredicateValues<'_, V> {
         AnySubjectAnyPredicateValues {
             any: self.any.iter(),
@@ -337,6 +380,7 @@ impl<V, T: Resource + Eq + Hash> AnySubjectAnyPredicateMap<V, T> {
 // }
 
 impl<V: Eq + Hash, T: Eq + Hash> AnySubjectAnyPredicateMap<V, T> {
+    /// Merges the bindings of `other` into this map.
     pub fn union_with(&mut self, other: Self) {
         self.any.extend(other.any);
         self.same_as_subject.extend(other.same_as_subject);
@@ -345,6 +389,8 @@ impl<V: Eq + Hash, T: Eq + Hash> AnySubjectAnyPredicateMap<V, T> {
     }
 }
 
+/// Iterator over the values of a [`AnySubjectAnyPredicateMap`] whose pattern matches a
+/// given triple.
 pub struct AnySubjectAnyPredicateValues<'a, V> {
     any: std::collections::hash_set::Iter<'a, V>,
     same_as_subject: Option<std::collections::hash_set::Iter<'a, V>>,
@@ -366,6 +412,7 @@ impl<'a, V> Iterator for AnySubjectAnyPredicateValues<'a, V> {
 
 #[derive(Debug, Educe)]
 #[educe(Default)]
+/// Map from triple patterns matching any subject and a given predicate to values.
 pub struct AnySubjectGivenPredicateMap<V, T> {
     any: HashSet<V>,
     same_as_subject: HashSet<V>,
@@ -373,6 +420,9 @@ pub struct AnySubjectGivenPredicateMap<V, T> {
 }
 
 impl<V: Eq + Hash, T: Eq + Hash> AnySubjectGivenPredicateMap<V, T> {
+    /// Binds `value` to `pattern`.
+    ///
+    /// Returns whether the binding was not already present.
     pub fn insert(&mut self, pattern: AnySubjectGivenPredicate<T>, value: V) -> bool {
         match pattern {
             AnySubjectGivenPredicate::AnyObject => self.any.insert(value),
@@ -383,6 +433,7 @@ impl<V: Eq + Hash, T: Eq + Hash> AnySubjectGivenPredicateMap<V, T> {
 }
 
 impl<V, T: Resource + Eq + Hash> AnySubjectGivenPredicateMap<V, T> {
+    /// Returns the values bound to every pattern matching `triple`.
     pub fn get(&self, triple: Triple<&T, &T, &T>) -> AnySubjectGivenPredicateValues<'_, V> {
         AnySubjectGivenPredicateValues {
             any: self.any.iter(),
@@ -405,6 +456,7 @@ impl<V, T: Resource + Eq + Hash> AnySubjectGivenPredicateMap<V, T> {
 // }
 
 impl<V: Eq + Hash, T: Eq + Hash> AnySubjectGivenPredicateMap<V, T> {
+    /// Merges the bindings of `other` into this map.
     pub fn union_with(&mut self, other: Self) {
         self.any.extend(other.any);
         self.same_as_subject.extend(other.same_as_subject);
@@ -412,6 +464,8 @@ impl<V: Eq + Hash, T: Eq + Hash> AnySubjectGivenPredicateMap<V, T> {
     }
 }
 
+/// Iterator over the values of a [`AnySubjectGivenPredicateMap`] whose pattern matches a
+/// given triple.
 pub struct AnySubjectGivenPredicateValues<'a, V> {
     any: std::collections::hash_set::Iter<'a, V>,
     same_as_subject: Option<std::collections::hash_set::Iter<'a, V>>,

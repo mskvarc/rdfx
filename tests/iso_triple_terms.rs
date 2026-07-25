@@ -11,7 +11,7 @@
 use std::borrow::Cow;
 
 use iri_rs::IriBuf;
-use rdf_rs::{
+use rdfx::{
     BlankIdBuf,
     CowLiteral,
     Id,
@@ -43,7 +43,7 @@ impl Lex {
 
 impl_resource!(Lex);
 
-impl rdf_rs::RdfDisplay for Lex {
+impl rdfx::RdfDisplay for Lex {
     fn rdf_fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         self.0.rdf_fmt(f)
     }
