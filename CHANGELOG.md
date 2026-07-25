@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.23.1] - 2026-07-25
+
+### 🧹 Chores
+- Add missing clone derive
+
 ## [v0.23.0] - 2026-07-25
 
 ### ⚡ Performance
@@ -100,6 +105,7 @@ All notable changes to this project will be documented in this file.
 - Update ruby generator and templates
 
 ### 🧹 Chores
+- Changelog
 - Polish
 - Rdf 1.2
 - Fix clippy warnings
