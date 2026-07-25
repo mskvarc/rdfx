@@ -1,3 +1,4 @@
+use educe::Educe;
 use std::marker::PhantomData;
 
 use crate::vocabulary::{
@@ -18,6 +19,12 @@ pub use literal::*;
 
 /// Vocabulary that stores IRIs and blank node identifiers
 /// with a unique index.
+///
+/// `Clone` is derived through `educe` so the index parameters, which are
+/// markers, do not pick up a `Clone` bound. Cloning a vocabulary is what
+/// lets a parallel consumer hand one copy to each worker.
+#[derive(Educe)]
+#[educe(Clone)]
 pub struct IndexVocabulary<I = IriIndex, B = BlankIdIndex, L = LiteralIndex> {
     iri: IndexSet<IriBuf>,
     blank_id: IndexSet<BlankIdBuf>,
