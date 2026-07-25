@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [v0.23.0] - 2026-07-25
 
 ### ⚡ Performance
 - Rdf 1.2 improvements
@@ -100,6 +100,7 @@ All notable changes to this project will be documented in this file.
 - Update ruby generator and templates
 
 ### 🧹 Chores
+- Polish
 - Rdf 1.2
 - Fix clippy warnings
 - Misc tweaks
