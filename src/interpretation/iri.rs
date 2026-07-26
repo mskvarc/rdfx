@@ -9,17 +9,11 @@ pub trait IriInterpretation<I: ?Sized>: Interpretation {
     /// Returns the interpretation of the given IRI, if any.
     fn iri_interpretation(&self, iri: &I) -> Option<Self::Resource>;
 
-    fn lexical_iri_interpretation(
-        &self,
-        vocabulary: &impl IriVocabulary<Iri = I>,
-        iri: Iri<&str>,
-    ) -> Option<Self::Resource>
+    fn lexical_iri_interpretation(&self, vocabulary: &impl IriVocabulary<Iri = I>, iri: Iri<&str>) -> Option<Self::Resource>
     where
         I: Sized,
     {
-        vocabulary
-            .get(iri)
-            .and_then(|iri| self.iri_interpretation(&iri))
+        vocabulary.get(iri).and_then(|iri| self.iri_interpretation(&iri))
     }
 }
 
@@ -40,19 +34,11 @@ pub trait IriInterpretationMut<I = IriBuf>: Interpretation {
     /// Interprets the given IRI.
     fn interpret_iri(&mut self, iri: I) -> Self::Resource;
 
-    fn interpret_lexical_iri(
-        &mut self,
-        vocabulary: &mut impl IriVocabularyMut<Iri = I>,
-        iri: Iri<&str>,
-    ) -> Self::Resource {
+    fn interpret_lexical_iri(&mut self, vocabulary: &mut impl IriVocabularyMut<Iri = I>, iri: Iri<&str>) -> Self::Resource {
         self.interpret_iri(vocabulary.insert(iri))
     }
 
-    fn interpret_owned_lexical_iri(
-        &mut self,
-        vocabulary: &mut impl IriVocabularyMut<Iri = I>,
-        iri: IriBuf,
-    ) -> Self::Resource {
+    fn interpret_owned_lexical_iri(&mut self, vocabulary: &mut impl IriVocabularyMut<Iri = I>, iri: IriBuf) -> Self::Resource {
         self.interpret_iri(vocabulary.insert_owned(iri))
     }
 }
@@ -62,19 +48,11 @@ impl<I, T: IriInterpretationMut<I>> IriInterpretationMut<I> for &mut T {
         T::interpret_iri(*self, iri)
     }
 
-    fn interpret_lexical_iri(
-        &mut self,
-        vocabulary: &mut impl IriVocabularyMut<Iri = I>,
-        iri: Iri<&str>,
-    ) -> Self::Resource {
+    fn interpret_lexical_iri(&mut self, vocabulary: &mut impl IriVocabularyMut<Iri = I>, iri: Iri<&str>) -> Self::Resource {
         T::interpret_lexical_iri(*self, vocabulary, iri)
     }
 
-    fn interpret_owned_lexical_iri(
-        &mut self,
-        vocabulary: &mut impl IriVocabularyMut<Iri = I>,
-        iri: IriBuf,
-    ) -> Self::Resource {
+    fn interpret_owned_lexical_iri(&mut self, vocabulary: &mut impl IriVocabularyMut<Iri = I>, iri: IriBuf) -> Self::Resource {
         T::interpret_owned_lexical_iri(*self, vocabulary, iri)
     }
 }

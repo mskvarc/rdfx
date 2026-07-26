@@ -1,5 +1,7 @@
 use crate::{
-    Interpretation, Literal, LiteralRef,
+    Interpretation,
+    Literal,
+    LiteralRef,
     vocabulary::{LiteralVocabulary, LiteralVocabularyMut},
 };
 
@@ -8,14 +10,8 @@ pub trait LiteralInterpretation<L>: Interpretation {
     /// Returns the interpretation of the given literal value, if any.
     fn literal_interpretation(&self, literal: &L) -> Option<Self::Resource>;
 
-    fn lexical_literal_interpretation<V: LiteralVocabulary<Literal = L>>(
-        &self,
-        vocabulary: &V,
-        literal: LiteralRef<'_>,
-    ) -> Option<Self::Resource> {
-        vocabulary
-            .get_literal(literal)
-            .and_then(|l| self.literal_interpretation(&l))
+    fn lexical_literal_interpretation<V: LiteralVocabulary<Literal = L>>(&self, vocabulary: &V, literal: LiteralRef<'_>) -> Option<Self::Resource> {
+        vocabulary.get_literal(literal).and_then(|l| self.literal_interpretation(&l))
     }
 }
 
@@ -24,11 +20,7 @@ impl<L, T: LiteralInterpretation<L>> LiteralInterpretation<L> for &T {
         T::literal_interpretation(*self, literal)
     }
 
-    fn lexical_literal_interpretation<V: LiteralVocabulary<Literal = L>>(
-        &self,
-        vocabulary: &V,
-        literal: LiteralRef<'_>,
-    ) -> Option<Self::Resource> {
+    fn lexical_literal_interpretation<V: LiteralVocabulary<Literal = L>>(&self, vocabulary: &V, literal: LiteralRef<'_>) -> Option<Self::Resource> {
         T::lexical_literal_interpretation(*self, vocabulary, literal)
     }
 }
@@ -38,11 +30,7 @@ impl<L, T: LiteralInterpretation<L>> LiteralInterpretation<L> for &mut T {
         T::literal_interpretation(*self, literal)
     }
 
-    fn lexical_literal_interpretation<V: LiteralVocabulary<Literal = L>>(
-        &self,
-        vocabulary: &V,
-        literal: LiteralRef<'_>,
-    ) -> Option<Self::Resource> {
+    fn lexical_literal_interpretation<V: LiteralVocabulary<Literal = L>>(&self, vocabulary: &V, literal: LiteralRef<'_>) -> Option<Self::Resource> {
         T::lexical_literal_interpretation(*self, vocabulary, literal)
     }
 }
@@ -52,19 +40,11 @@ pub trait LiteralInterpretationMut<L = Literal>: Interpretation {
     /// Interprets the given literal value.
     fn interpret_literal(&mut self, literal: L) -> Self::Resource;
 
-    fn interpret_lexical_literal<V: LiteralVocabularyMut<Literal = L>>(
-        &mut self,
-        vocabulary: &mut V,
-        literal: LiteralRef<'_>,
-    ) -> Self::Resource {
+    fn interpret_lexical_literal<V: LiteralVocabularyMut<Literal = L>>(&mut self, vocabulary: &mut V, literal: LiteralRef<'_>) -> Self::Resource {
         self.interpret_literal(vocabulary.insert_literal(literal))
     }
 
-    fn interpret_owned_lexical_literal<V: LiteralVocabularyMut<Literal = L>>(
-        &mut self,
-        vocabulary: &mut V,
-        literal: Literal,
-    ) -> Self::Resource {
+    fn interpret_owned_lexical_literal<V: LiteralVocabularyMut<Literal = L>>(&mut self, vocabulary: &mut V, literal: Literal) -> Self::Resource {
         self.interpret_literal(vocabulary.insert_owned_literal(literal))
     }
 }

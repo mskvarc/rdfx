@@ -24,7 +24,7 @@ use std::{cmp::Ordering, fmt};
 
 use iri_rs::{Iri, IriBuf};
 
-use crate::{BlankId, BlankIdBuf, Id, IsGraph, IsObject, IsPredicate, IsSubject, Literal, LiteralRef, LocalTerm, Quad, RdfDisplay, Term, Triple, __seal};
+use crate::{__seal, BlankId, BlankIdBuf, Id, IsGraph, IsObject, IsPredicate, IsSubject, Literal, LiteralRef, LocalTerm, Quad, RdfDisplay, Term, Triple};
 
 /// Reasons a [`GeneralizedTriple`] or [`GeneralizedQuad`] cannot be converted
 /// to a strict [`Triple`] / [`Quad`].
@@ -548,7 +548,7 @@ impl GeneralizedLocalTerm {
 
     /// Creates a term from a triple term.
     pub fn triple(t: GeneralizedTriple<GeneralizedLocalTerm>) -> Self {
-        Self::Triple(Box::new(t))  // GeneralizedLocalTerm keeps Box (no shared-clone story; users construct in tree-shape)
+        Self::Triple(Box::new(t)) // GeneralizedLocalTerm keeps Box (no shared-clone story; users construct in tree-shape)
     }
 
     /// Checks whether this term is a blank node identifier.
@@ -741,4 +741,3 @@ fn generalized_to_iri(t: GeneralizedLocalTerm) -> Result<IriBuf, GeneralizationE
         GeneralizedLocalTerm::Triple(_) => Err(GeneralizationError::TripleTermPredicate),
     }
 }
-

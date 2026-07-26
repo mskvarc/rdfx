@@ -3,26 +3,21 @@
 use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 use iri_rs::IriBuf;
 use rdfx::{
-    BlankIdBuf, Literal, LiteralRef,
-    vocabulary::{
-        BlankIdVocabulary, BlankIdVocabularyMut, IndexVocabulary, IriVocabulary,
-        IriVocabularyMut, LiteralVocabulary, LiteralVocabularyMut, Scoped,
-    },
+    BlankIdBuf,
+    Literal,
+    LiteralRef,
+    vocabulary::{BlankIdVocabulary, BlankIdVocabularyMut, IndexVocabulary, IriVocabulary, IriVocabularyMut, LiteralVocabulary, LiteralVocabularyMut, Scoped},
 };
 use std::hint::black_box;
 
 const SIZES: &[usize] = &[100, 1000, 10_000];
 
 fn make_iris(n: usize) -> Vec<IriBuf> {
-    (0..n)
-        .map(|i| IriBuf::new(format!("http://example.org/resource/{i}")).unwrap())
-        .collect()
+    (0..n).map(|i| IriBuf::new(format!("http://example.org/resource/{i}")).unwrap()).collect()
 }
 
 fn make_blank_ids(n: usize) -> Vec<BlankIdBuf> {
-    (0..n)
-        .map(|i| BlankIdBuf::from_suffix(&format!("b{i}")).unwrap())
-        .collect()
+    (0..n).map(|i| BlankIdBuf::from_suffix(&format!("b{i}")).unwrap()).collect()
 }
 
 fn make_literals(n: usize) -> Vec<Literal> {
@@ -113,27 +108,21 @@ fn bench_iri_get_miss(c: &mut Criterion) {
     let mut g = c.benchmark_group("index_vocabulary/iri/get_miss");
     for &n in SIZES {
         let iris = make_iris(n);
-        let misses: Vec<IriBuf> = (0..n)
-            .map(|i| IriBuf::new(format!("http://example.org/missing/{i}")).unwrap())
-            .collect();
+        let misses: Vec<IriBuf> = (0..n).map(|i| IriBuf::new(format!("http://example.org/missing/{i}")).unwrap()).collect();
         let mut v: IndexVocabulary = IndexVocabulary::new();
         fill_iris(&mut v, &iris);
         g.throughput(Throughput::Elements(n as u64));
-        g.bench_with_input(
-            BenchmarkId::from_parameter(n),
-            &(v, misses),
-            |b, (v, misses)| {
-                b.iter(|| {
-                    let mut hits = 0usize;
-                    for iri in misses {
-                        if v.get(black_box(iri.as_ref())).is_some() {
-                            hits += 1;
-                        }
+        g.bench_with_input(BenchmarkId::from_parameter(n), &(v, misses), |b, (v, misses)| {
+            b.iter(|| {
+                let mut hits = 0usize;
+                for iri in misses {
+                    if v.get(black_box(iri.as_ref())).is_some() {
+                        hits += 1;
                     }
-                    black_box(hits)
-                });
-            },
-        );
+                }
+                black_box(hits)
+            });
+        });
     }
     g.finish();
 }
@@ -183,21 +172,17 @@ fn bench_blank_get_hit(c: &mut Criterion) {
         let mut v: IndexVocabulary = IndexVocabulary::new();
         fill_blanks(&mut v, &blanks);
         g.throughput(Throughput::Elements(n as u64));
-        g.bench_with_input(
-            BenchmarkId::from_parameter(n),
-            &(v, blanks),
-            |b, (v, blanks)| {
-                b.iter(|| {
-                    let mut hits = 0usize;
-                    for x in blanks {
-                        if v.get_blank_id(black_box(x.as_blank_id_ref())).is_some() {
-                            hits += 1;
-                        }
+        g.bench_with_input(BenchmarkId::from_parameter(n), &(v, blanks), |b, (v, blanks)| {
+            b.iter(|| {
+                let mut hits = 0usize;
+                for x in blanks {
+                    if v.get_blank_id(black_box(x.as_blank_id_ref())).is_some() {
+                        hits += 1;
                     }
-                    black_box(hits)
-                });
-            },
-        );
+                }
+                black_box(hits)
+            });
+        });
     }
     g.finish();
 }
@@ -247,22 +232,18 @@ fn bench_literal_get_hit(c: &mut Criterion) {
         let mut v: IndexVocabulary = IndexVocabulary::new();
         fill_literals(&mut v, &lits);
         g.throughput(Throughput::Elements(n as u64));
-        g.bench_with_input(
-            BenchmarkId::from_parameter(n),
-            &(v, lits),
-            |b, (v, lits)| {
-                b.iter(|| {
-                    let mut hits = 0usize;
-                    for l in lits {
-                        let r: LiteralRef<'_> = l.as_ref();
-                        if v.get_literal(black_box(r)).is_some() {
-                            hits += 1;
-                        }
+        g.bench_with_input(BenchmarkId::from_parameter(n), &(v, lits), |b, (v, lits)| {
+            b.iter(|| {
+                let mut hits = 0usize;
+                for l in lits {
+                    let r: LiteralRef<'_> = l.as_ref();
+                    if v.get_literal(black_box(r)).is_some() {
+                        hits += 1;
                     }
-                    black_box(hits)
-                });
-            },
-        );
+                }
+                black_box(hits)
+            });
+        });
     }
     g.finish();
 }
@@ -275,21 +256,17 @@ fn bench_literal_get_miss(c: &mut Criterion) {
         let mut v: IndexVocabulary = IndexVocabulary::new();
         fill_literals(&mut v, &lits);
         g.throughput(Throughput::Elements(n as u64));
-        g.bench_with_input(
-            BenchmarkId::from_parameter(n),
-            &(v, misses),
-            |b, (v, misses)| {
-                b.iter(|| {
-                    let mut hits = 0usize;
-                    for l in misses {
-                        if v.get_literal(black_box(l.as_ref())).is_some() {
-                            hits += 1;
-                        }
+        g.bench_with_input(BenchmarkId::from_parameter(n), &(v, misses), |b, (v, misses)| {
+            b.iter(|| {
+                let mut hits = 0usize;
+                for l in misses {
+                    if v.get_literal(black_box(l.as_ref())).is_some() {
+                        hits += 1;
                     }
-                    black_box(hits)
-                });
-            },
-        );
+                }
+                black_box(hits)
+            });
+        });
     }
     g.finish();
 }

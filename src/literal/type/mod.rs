@@ -118,10 +118,7 @@ impl LiteralType {
         match self {
             Self::Any(d) => LiteralTypeRef::Any(d.as_datatype_ref()),
             Self::LangString(l) => LiteralTypeRef::LangString(l),
-            Self::DirLangString { tag, direction } => LiteralTypeRef::DirLangString {
-                tag,
-                direction: *direction,
-            },
+            Self::DirLangString { tag, direction } => LiteralTypeRef::DirLangString { tag, direction: *direction },
         }
     }
 

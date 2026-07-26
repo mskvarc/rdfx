@@ -9,7 +9,20 @@ use std::{
 
 use iri_rs::{IriBuf, iri};
 use rdfx::{
-    BlankIdBuf, FullyGeneralizedTriple, GeneralizationError, GeneralizedLocalTerm, GeneralizedTriple, Id, Literal, LocalTerm, LocalTermRef, RdfDisplay, Term, Triple, TripleTerm, triple,
+    BlankIdBuf,
+    FullyGeneralizedTriple,
+    GeneralizationError,
+    GeneralizedLocalTerm,
+    GeneralizedTriple,
+    Id,
+    Literal,
+    LocalTerm,
+    LocalTermRef,
+    RdfDisplay,
+    Term,
+    Triple,
+    TripleTerm,
+    triple,
 };
 
 fn ex(s: &str) -> IriBuf {

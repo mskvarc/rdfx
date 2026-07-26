@@ -12,8 +12,8 @@ mod iri;
 mod literal;
 
 pub use blank_id::*;
-use iri_rs::IriBuf;
 pub use iri::*;
+use iri_rs::IriBuf;
 pub use literal::*;
 
 mod r#impl;
@@ -28,10 +28,7 @@ pub use r#impl::*;
 pub trait Vocabulary: IriVocabulary + BlankIdVocabulary + LiteralVocabulary {}
 
 /// Mutable vocabulary.
-pub trait VocabularyMut:
-    Vocabulary + IriVocabularyMut + BlankIdVocabularyMut + LiteralVocabularyMut
-{
-}
+pub trait VocabularyMut: Vocabulary + IriVocabularyMut + BlankIdVocabularyMut + LiteralVocabularyMut {}
 
 impl<V: IriVocabulary + BlankIdVocabulary + LiteralVocabulary> Vocabulary for V {}
 
@@ -49,9 +46,7 @@ impl<V, T: EmbedIntoVocabulary<V>> EmbedIntoVocabulary<V> for Vec<T> {
     type Embedded = Vec<T::Embedded>;
 
     fn embed_into_vocabulary(self, vocabulary: &mut V) -> Self::Embedded {
-        self.into_iter()
-            .map(|t| t.embed_into_vocabulary(vocabulary))
-            .collect()
+        self.into_iter().map(|t| t.embed_into_vocabulary(vocabulary)).collect()
     }
 }
 
@@ -74,9 +69,7 @@ impl<V, T: EmbeddedIntoVocabulary<V>> EmbeddedIntoVocabulary<V> for Vec<T> {
     type Embedded = Vec<T::Embedded>;
 
     fn embedded_into_vocabulary(&self, vocabulary: &mut V) -> Self::Embedded {
-        self.iter()
-            .map(|t| t.embedded_into_vocabulary(vocabulary))
-            .collect()
+        self.iter().map(|t| t.embedded_into_vocabulary(vocabulary)).collect()
     }
 }
 
@@ -84,8 +77,7 @@ impl<V, T: EmbeddedIntoVocabulary<V>> EmbeddedIntoVocabulary<V> for Option<T> {
     type Embedded = Option<T::Embedded>;
 
     fn embedded_into_vocabulary(&self, vocabulary: &mut V) -> Self::Embedded {
-        self.as_ref()
-            .map(|t| t.embedded_into_vocabulary(vocabulary))
+        self.as_ref().map(|t| t.embedded_into_vocabulary(vocabulary))
     }
 }
 
@@ -166,8 +158,7 @@ impl<T: ExtractedFromVocabulary<V>, V> ExtractedFromVocabulary<V> for Option<T> 
     type Extracted = Option<T::Extracted>;
 
     fn extracted_from_vocabulary(&self, vocabulary: &V) -> Self::Extracted {
-        self.as_ref()
-            .map(|t| t.extracted_from_vocabulary(vocabulary))
+        self.as_ref().map(|t| t.extracted_from_vocabulary(vocabulary))
     }
 }
 
@@ -188,7 +179,6 @@ impl<V, T: TryExtractFromVocabulary<V>> TryExtractFromVocabulary<V> for Option<T
     type Error = T::Error;
 
     fn try_extract_from_vocabulary(self, vocabulary: &V) -> Result<Self::Extracted, Self::Error> {
-        self.map(|t| t.try_extract_from_vocabulary(vocabulary))
-            .transpose()
+        self.map(|t| t.try_extract_from_vocabulary(vocabulary)).transpose()
     }
 }

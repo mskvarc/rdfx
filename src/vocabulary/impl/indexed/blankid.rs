@@ -32,18 +32,14 @@ impl<'a> TryFrom<&'a BlankId> for BlankIdIndex {
 }
 
 #[cfg(feature = "contextual")]
-impl<V: crate::vocabulary::BlankIdVocabulary<BlankId = Self>> contextual::DisplayWithContext<V>
-    for BlankIdIndex
-{
+impl<V: crate::vocabulary::BlankIdVocabulary<BlankId = Self>> contextual::DisplayWithContext<V> for BlankIdIndex {
     fn fmt_with(&self, vocabulary: &V, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         std::fmt::Display::fmt(&vocabulary.blank_id(self).unwrap(), f)
     }
 }
 
 #[cfg(feature = "contextual")]
-impl<V: crate::vocabulary::BlankIdVocabulary<BlankId = Self>> crate::RdfDisplayWithContext<V>
-    for BlankIdIndex
-{
+impl<V: crate::vocabulary::BlankIdVocabulary<BlankId = Self>> crate::RdfDisplayWithContext<V> for BlankIdIndex {
     fn rdf_fmt_with(&self, vocabulary: &V, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         std::fmt::Display::fmt(&vocabulary.blank_id(self).unwrap(), f)
     }

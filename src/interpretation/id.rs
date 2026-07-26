@@ -1,21 +1,23 @@
 use crate::{
-    Id, IdRef,
+    Id,
+    IdRef,
     vocabulary::{BlankIdVocabulary, BlankIdVocabularyMut, IriVocabulary, IriVocabularyMut},
 };
 
 use super::{
-    BlankIdInterpretation, BlankIdInterpretationMut, IriInterpretation, IriInterpretationMut,
-    ReverseBlankIdInterpretation, ReverseBlankIdInterpretationMut, ReverseIriInterpretation,
+    BlankIdInterpretation,
+    BlankIdInterpretationMut,
+    IriInterpretation,
+    IriInterpretationMut,
+    ReverseBlankIdInterpretation,
+    ReverseBlankIdInterpretationMut,
+    ReverseIriInterpretation,
     ReverseIriInterpretationMut,
 };
 
 /// Node identifier interpretation.
 pub trait IdInterpretation<I, B>: IriInterpretation<I> + BlankIdInterpretation<B> {
-    fn lexical_id_interpretation(
-        &self,
-        vocabulary: &(impl IriVocabulary<Iri = I> + BlankIdVocabulary<BlankId = B>),
-        id: IdRef<'_>,
-    ) -> Option<Self::Resource> {
+    fn lexical_id_interpretation(&self, vocabulary: &(impl IriVocabulary<Iri = I> + BlankIdVocabulary<BlankId = B>), id: IdRef<'_>) -> Option<Self::Resource> {
         match id {
             IdRef::Iri(i) => self.lexical_iri_interpretation(vocabulary, i),
             IdRef::BlankId(b) => self.lexical_blank_id_interpretation(vocabulary, b),
@@ -27,22 +29,14 @@ impl<I, B, T: IriInterpretation<I> + BlankIdInterpretation<B>> IdInterpretation<
 
 /// Node identifier interpretation.
 pub trait IdInterpretationMut<I, B>: IriInterpretationMut<I> + BlankIdInterpretationMut<B> {
-    fn interpret_lexical_id(
-        &mut self,
-        vocabulary: &mut (impl IriVocabularyMut<Iri = I> + BlankIdVocabularyMut<BlankId = B>),
-        id: IdRef<'_>,
-    ) -> Self::Resource {
+    fn interpret_lexical_id(&mut self, vocabulary: &mut (impl IriVocabularyMut<Iri = I> + BlankIdVocabularyMut<BlankId = B>), id: IdRef<'_>) -> Self::Resource {
         match id {
             IdRef::Iri(i) => self.interpret_lexical_iri(vocabulary, i),
             IdRef::BlankId(b) => self.interpret_lexical_blank_id(vocabulary, b),
         }
     }
 
-    fn interpret_owned_lexical_id(
-        &mut self,
-        vocabulary: &mut (impl IriVocabularyMut<Iri = I> + BlankIdVocabularyMut<BlankId = B>),
-        id: Id,
-    ) -> Self::Resource {
+    fn interpret_owned_lexical_id(&mut self, vocabulary: &mut (impl IriVocabularyMut<Iri = I> + BlankIdVocabularyMut<BlankId = B>), id: Id) -> Self::Resource {
         match id {
             Id::Iri(i) => self.interpret_owned_lexical_iri(vocabulary, i),
             Id::BlankId(b) => self.interpret_owned_lexical_blank_id(vocabulary, b),
@@ -50,10 +44,7 @@ pub trait IdInterpretationMut<I, B>: IriInterpretationMut<I> + BlankIdInterpreta
     }
 }
 
-impl<I, B, T: IriInterpretationMut<I> + BlankIdInterpretationMut<B>> IdInterpretationMut<I, B>
-    for T
-{
-}
+impl<I, B, T: IriInterpretationMut<I> + BlankIdInterpretationMut<B>> IdInterpretationMut<I, B> for T {}
 
 /// Reverse node identifier interpretation.
 ///
@@ -67,10 +58,7 @@ pub trait ReverseIdInterpretation: ReverseIriInterpretation + ReverseBlankIdInte
     }
 }
 
-impl<I: ?Sized + ReverseIriInterpretation + ReverseBlankIdInterpretation> ReverseIdInterpretation
-    for I
-{
-}
+impl<I: ?Sized + ReverseIriInterpretation + ReverseBlankIdInterpretation> ReverseIdInterpretation for I {}
 
 pub struct IdsOf<'a, I: 'a + ?Sized + ReverseIdInterpretation> {
     iris: <I as ReverseIriInterpretation>::Iris<'a>,
@@ -116,16 +104,11 @@ impl<'a, I: 'a + ?Sized + ReverseIdInterpretation> Iterator for IdsOf<'a, I> {
     type Item = BorrowedId<'a, I::Iri, I::BlankId>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.iris
-            .next()
-            .map(BorrowedId::Iri)
-            .or_else(|| self.blanks.next().map(BorrowedId::BlankId))
+        self.iris.next().map(BorrowedId::Iri).or_else(|| self.blanks.next().map(BorrowedId::BlankId))
     }
 }
 
-pub trait ReverseIdInterpretationMut:
-    ReverseIriInterpretationMut + ReverseBlankIdInterpretationMut
-{
+pub trait ReverseIdInterpretationMut: ReverseIriInterpretationMut + ReverseBlankIdInterpretationMut {
     fn assign_id_iri(&mut self, r: &Self::Resource, iri: Self::Iri) -> bool {
         self.assign_iri(r, iri)
     }
@@ -135,8 +118,4 @@ pub trait ReverseIdInterpretationMut:
     }
 }
 
-impl<I: ?Sized + ReverseIriInterpretationMut + ReverseBlankIdInterpretationMut>
-    ReverseIdInterpretationMut for I
-{
-}
-
+impl<I: ?Sized + ReverseIriInterpretationMut + ReverseBlankIdInterpretationMut> ReverseIdInterpretationMut for I {}

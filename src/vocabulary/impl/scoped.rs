@@ -1,9 +1,9 @@
 use crate::{
-    BlankId, BlankIdBuf, Literal, LiteralRef,
-    vocabulary::{
-        BlankIdVocabulary, BlankIdVocabularyMut, IriVocabulary, IriVocabularyMut,
-        LiteralVocabulary, LiteralVocabularyMut,
-    },
+    BlankId,
+    BlankIdBuf,
+    Literal,
+    LiteralRef,
+    vocabulary::{BlankIdVocabulary, BlankIdVocabularyMut, IriVocabulary, IriVocabularyMut, LiteralVocabulary, LiteralVocabularyMut},
 };
 use iri_rs::Iri;
 use std::collections::HashMap;
@@ -72,8 +72,7 @@ where
         match self.get_blank_id(id) {
             Some(id) => id,
             None => {
-                let scoped =
-                    BlankIdBuf::from_suffix(&format!("{}:{}", self.scope, id.suffix())).unwrap();
+                let scoped = BlankIdBuf::from_suffix(&format!("{}:{}", self.scope, id.suffix())).unwrap();
                 let i = self.inner.insert_blank_id(&scoped);
                 self.map.insert(id.to_owned(), i.clone());
                 i

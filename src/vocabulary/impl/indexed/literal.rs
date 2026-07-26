@@ -1,5 +1,8 @@
-use crate::vocabulary::{ExtractFromVocabulary, ExtractedFromVocabulary, LiteralVocabulary};
-use crate::{Literal, LiteralRef};
+use crate::{
+    Literal,
+    LiteralRef,
+    vocabulary::{ExtractFromVocabulary, ExtractedFromVocabulary, LiteralVocabulary},
+};
 
 /// Literal index.
 #[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
@@ -66,18 +69,14 @@ impl<'a> TryFrom<LiteralRef<'a>> for LiteralIndex {
 }
 
 #[cfg(feature = "contextual")]
-impl<V: crate::vocabulary::LiteralVocabulary<Literal = Self>> contextual::DisplayWithContext<V>
-    for LiteralIndex
-{
+impl<V: crate::vocabulary::LiteralVocabulary<Literal = Self>> contextual::DisplayWithContext<V> for LiteralIndex {
     fn fmt_with(&self, vocabulary: &V, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         std::fmt::Display::fmt(&vocabulary.literal(self).unwrap(), f)
     }
 }
 
 #[cfg(feature = "contextual")]
-impl<V: crate::vocabulary::LiteralVocabulary<Literal = Self>> crate::RdfDisplayWithContext<V>
-    for LiteralIndex
-{
+impl<V: crate::vocabulary::LiteralVocabulary<Literal = Self>> crate::RdfDisplayWithContext<V> for LiteralIndex {
     fn rdf_fmt_with(&self, vocabulary: &V, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         crate::RdfDisplay::rdf_fmt(&vocabulary.literal(self).unwrap(), f)
     }
@@ -116,9 +115,7 @@ impl<'a, L: TryFrom<LiteralRef<'a>>> TryFrom<LiteralRef<'a>> for LiteralOrIndex<
 }
 
 /// Partly indexed literal value type.
-pub trait IndexedLiteral:
-    From<usize> + for<'a> TryFrom<LiteralRef<'a>> + TryFrom<Literal, Error = Literal>
-{
+pub trait IndexedLiteral: From<usize> + for<'a> TryFrom<LiteralRef<'a>> + TryFrom<Literal, Error = Literal> {
     fn literal_index(&self) -> LiteralOrIndex<&Literal>;
 
     fn into_literal_index(self) -> LiteralOrIndex<Literal>;
@@ -126,10 +123,7 @@ pub trait IndexedLiteral:
 
 impl<L> IndexedLiteral for LiteralOrIndex<L>
 where
-    L: AsRef<Literal>
-        + Into<Literal>
-        + for<'a> TryFrom<LiteralRef<'a>>
-        + TryFrom<Literal, Error = Literal>,
+    L: AsRef<Literal> + Into<Literal> + for<'a> TryFrom<LiteralRef<'a>> + TryFrom<Literal, Error = Literal>,
 {
     fn literal_index(&self) -> LiteralOrIndex<&Literal> {
         match self {

@@ -18,7 +18,18 @@ use std::collections::{HashMap, HashSet};
 use iri_rs::IriBuf;
 
 use crate::{
-    BlankIdBuf, Id, LocalTerm, Quad, RDF_OBJECT, RDF_PREDICATE, RDF_SUBJECT, RDF_TRIPLE_TERM, RDF_TYPE, Term, Triple, TripleTerm,
+    BlankIdBuf,
+    Id,
+    LocalTerm,
+    Quad,
+    RDF_OBJECT,
+    RDF_PREDICATE,
+    RDF_SUBJECT,
+    RDF_TRIPLE_TERM,
+    RDF_TYPE,
+    Term,
+    Triple,
+    TripleTerm,
     dataset::{DatasetMut, GraphMut, TraversableDataset, TraversableGraph},
 };
 

@@ -579,7 +579,9 @@ impl<R: Resource + Clone + Ord> Bijection<R> {
         // maps just like outer blanks. Uses the borrow-or-own view to
         // skip clones for components that are storage-natural to `R`.
         if let (Some((sa, pa, oa)), Some((sb, pb, ob))) = (interpretation.triple_term_components_view(a), interpretation.triple_term_components_view(b)) {
-            return self.resource_matches_with(interpretation, &*sa, &*sb) && self.resource_matches_with(interpretation, &*pa, &*pb) && self.resource_matches_with(interpretation, &*oa, &*ob);
+            return self.resource_matches_with(interpretation, &*sa, &*sb)
+                && self.resource_matches_with(interpretation, &*pa, &*pb)
+                && self.resource_matches_with(interpretation, &*oa, &*ob);
         }
 
         match self.forward.get(a) {

@@ -1,5 +1,7 @@
 use crate::{
-    BlankId, BlankIdBuf, Interpretation,
+    BlankId,
+    BlankIdBuf,
+    Interpretation,
     vocabulary::{BlankIdVocabulary, BlankIdVocabularyMut},
 };
 
@@ -8,17 +10,11 @@ pub trait BlankIdInterpretation<B: ?Sized>: Interpretation {
     /// Returns the interpretation of the given blank node identifier, if any.
     fn blank_id_interpretation(&self, blank_id: &B) -> Option<Self::Resource>;
 
-    fn lexical_blank_id_interpretation(
-        &self,
-        vocabulary: &impl BlankIdVocabulary<BlankId = B>,
-        blank_id: &BlankId,
-    ) -> Option<Self::Resource>
+    fn lexical_blank_id_interpretation(&self, vocabulary: &impl BlankIdVocabulary<BlankId = B>, blank_id: &BlankId) -> Option<Self::Resource>
     where
         B: Sized,
     {
-        vocabulary
-            .get_blank_id(blank_id)
-            .and_then(|blank_id| self.blank_id_interpretation(&blank_id))
+        vocabulary.get_blank_id(blank_id).and_then(|blank_id| self.blank_id_interpretation(&blank_id))
     }
 }
 
@@ -27,11 +23,7 @@ impl<B, T: BlankIdInterpretation<B>> BlankIdInterpretation<B> for &T {
         T::blank_id_interpretation(*self, blank_id)
     }
 
-    fn lexical_blank_id_interpretation(
-        &self,
-        vocabulary: &impl BlankIdVocabulary<BlankId = B>,
-        blank_id: &BlankId,
-    ) -> Option<Self::Resource>
+    fn lexical_blank_id_interpretation(&self, vocabulary: &impl BlankIdVocabulary<BlankId = B>, blank_id: &BlankId) -> Option<Self::Resource>
     where
         B: Sized,
     {
@@ -44,11 +36,7 @@ impl<B, T: BlankIdInterpretation<B>> BlankIdInterpretation<B> for &mut T {
         T::blank_id_interpretation(*self, blank_id)
     }
 
-    fn lexical_blank_id_interpretation(
-        &self,
-        vocabulary: &impl BlankIdVocabulary<BlankId = B>,
-        blank_id: &BlankId,
-    ) -> Option<Self::Resource>
+    fn lexical_blank_id_interpretation(&self, vocabulary: &impl BlankIdVocabulary<BlankId = B>, blank_id: &BlankId) -> Option<Self::Resource>
     where
         B: Sized,
     {
@@ -61,19 +49,11 @@ pub trait BlankIdInterpretationMut<B = BlankIdBuf>: Interpretation {
     /// Interprets the given blank node identifier.
     fn interpret_blank_id(&mut self, blank_id: B) -> Self::Resource;
 
-    fn interpret_lexical_blank_id(
-        &mut self,
-        vocabulary: &mut impl BlankIdVocabularyMut<BlankId = B>,
-        blank_id: &BlankId,
-    ) -> Self::Resource {
+    fn interpret_lexical_blank_id(&mut self, vocabulary: &mut impl BlankIdVocabularyMut<BlankId = B>, blank_id: &BlankId) -> Self::Resource {
         self.interpret_blank_id(vocabulary.insert_blank_id(blank_id))
     }
 
-    fn interpret_owned_lexical_blank_id(
-        &mut self,
-        vocabulary: &mut impl BlankIdVocabularyMut<BlankId = B>,
-        blank_id: BlankIdBuf,
-    ) -> Self::Resource {
+    fn interpret_owned_lexical_blank_id(&mut self, vocabulary: &mut impl BlankIdVocabularyMut<BlankId = B>, blank_id: BlankIdBuf) -> Self::Resource {
         self.interpret_blank_id(vocabulary.insert_owned_blank_id(blank_id))
     }
 }
@@ -83,19 +63,11 @@ impl<B, T: BlankIdInterpretationMut<B>> BlankIdInterpretationMut<B> for &mut T {
         T::interpret_blank_id(*self, blank_id)
     }
 
-    fn interpret_lexical_blank_id(
-        &mut self,
-        vocabulary: &mut impl BlankIdVocabularyMut<BlankId = B>,
-        blank_id: &BlankId,
-    ) -> Self::Resource {
+    fn interpret_lexical_blank_id(&mut self, vocabulary: &mut impl BlankIdVocabularyMut<BlankId = B>, blank_id: &BlankId) -> Self::Resource {
         T::interpret_lexical_blank_id(*self, vocabulary, blank_id)
     }
 
-    fn interpret_owned_lexical_blank_id(
-        &mut self,
-        vocabulary: &mut impl BlankIdVocabularyMut<BlankId = B>,
-        blank_id: BlankIdBuf,
-    ) -> Self::Resource {
+    fn interpret_owned_lexical_blank_id(&mut self, vocabulary: &mut impl BlankIdVocabularyMut<BlankId = B>, blank_id: BlankIdBuf) -> Self::Resource {
         T::interpret_owned_lexical_blank_id(*self, vocabulary, blank_id)
     }
 }

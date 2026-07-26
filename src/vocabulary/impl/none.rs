@@ -1,11 +1,11 @@
 use std::ptr::addr_of_mut;
 
 use crate::{
-    BlankId, BlankIdBuf, Literal, LiteralRef,
-    vocabulary::{
-        BlankIdVocabulary, BlankIdVocabularyMut, IriVocabulary, IriVocabularyMut,
-        LiteralVocabulary, LiteralVocabularyMut,
-    },
+    BlankId,
+    BlankIdBuf,
+    Literal,
+    LiteralRef,
+    vocabulary::{BlankIdVocabulary, BlankIdVocabularyMut, IriVocabulary, IriVocabularyMut, LiteralVocabulary, LiteralVocabularyMut},
 };
 use iri_rs::{Iri, IriBuf};
 

@@ -4,9 +4,17 @@ use crate::{
 };
 
 use super::{
-    IdInterpretation, IdInterpretationMut, IdsOf, LiteralInterpretation, LiteralInterpretationMut,
-    ReverseBlankIdInterpretation, ReverseIdInterpretation, ReverseIdInterpretationMut,
-    ReverseIriInterpretation, ReverseLiteralInterpretation, TraversableInterpretation,
+    IdInterpretation,
+    IdInterpretationMut,
+    IdsOf,
+    LiteralInterpretation,
+    LiteralInterpretationMut,
+    ReverseBlankIdInterpretation,
+    ReverseIdInterpretation,
+    ReverseIdInterpretationMut,
+    ReverseIriInterpretation,
+    ReverseLiteralInterpretation,
+    TraversableInterpretation,
 };
 
 /// Borrowed-reference form of an uninterpreted term, parameterised over the
@@ -42,35 +50,24 @@ impl<I, B, L> crate::IsGraph for BorrowedTerm<'_, I, B, L> {}
 use crate::__seal;
 
 /// RDF Term interpretation.
-pub trait TermInterpretation<I, B, L>:
-    IdInterpretation<I, B> + LiteralInterpretation<L>
-{
+pub trait TermInterpretation<I, B, L>: IdInterpretation<I, B> + LiteralInterpretation<L> {
     fn lexical_term_interpretation(
         &self,
         vocabulary: &impl Vocabulary<Iri = I, BlankId = B, Literal = L>,
         term: crate::LocalTermRef<'_>,
     ) -> Option<Self::Resource> {
         match term {
-            crate::LocalTermRef::Named(crate::TermRef::Iri(i)) => {
-                self.lexical_iri_interpretation(vocabulary, i)
-            }
-            crate::LocalTermRef::Named(crate::TermRef::Literal(l)) => {
-                self.lexical_literal_interpretation(vocabulary, l)
-            }
+            crate::LocalTermRef::Named(crate::TermRef::Iri(i)) => self.lexical_iri_interpretation(vocabulary, i),
+            crate::LocalTermRef::Named(crate::TermRef::Literal(l)) => self.lexical_literal_interpretation(vocabulary, l),
             crate::LocalTermRef::BlankId(b) => self.lexical_blank_id_interpretation(vocabulary, b),
             crate::LocalTermRef::Triple(_) => None,
         }
     }
 }
 
-impl<I, B, L, T: IdInterpretation<I, B> + LiteralInterpretation<L>> TermInterpretation<I, B, L>
-    for T
-{
-}
+impl<I, B, L, T: IdInterpretation<I, B> + LiteralInterpretation<L>> TermInterpretation<I, B, L> for T {}
 
-pub trait TermInterpretationMut<I, B, L>:
-    IdInterpretationMut<I, B> + LiteralInterpretationMut<L>
-{
+pub trait TermInterpretationMut<I, B, L>: IdInterpretationMut<I, B> + LiteralInterpretationMut<L> {
     fn interpret_term(&mut self, term: OwnedTerm<I, B, L>) -> Self::Resource {
         match term {
             OwnedTerm::Iri(i) => self.interpret_iri(i),
@@ -85,29 +82,18 @@ pub trait TermInterpretationMut<I, B, L>:
         term: crate::LocalTermRef<'_>,
     ) -> Option<Self::Resource> {
         match term {
-            crate::LocalTermRef::Named(crate::TermRef::Iri(i)) => {
-                Some(self.interpret_lexical_iri(vocabulary, i))
-            }
-            crate::LocalTermRef::Named(crate::TermRef::Literal(l)) => {
-                Some(self.interpret_lexical_literal(vocabulary, l))
-            }
+            crate::LocalTermRef::Named(crate::TermRef::Iri(i)) => Some(self.interpret_lexical_iri(vocabulary, i)),
+            crate::LocalTermRef::Named(crate::TermRef::Literal(l)) => Some(self.interpret_lexical_literal(vocabulary, l)),
             crate::LocalTermRef::BlankId(b) => Some(self.interpret_lexical_blank_id(vocabulary, b)),
             crate::LocalTermRef::Triple(_) => None,
         }
     }
 }
 
-impl<I, B, L, T: IdInterpretationMut<I, B> + LiteralInterpretationMut<L>>
-    TermInterpretationMut<I, B, L> for T
-{
-}
+impl<I, B, L, T: IdInterpretationMut<I, B> + LiteralInterpretationMut<L>> TermInterpretationMut<I, B, L> for T {}
 
-pub type TermOf<'a, I> = BorrowedTerm<
-    'a,
-    <I as ReverseIriInterpretation>::Iri,
-    <I as ReverseBlankIdInterpretation>::BlankId,
-    <I as ReverseLiteralInterpretation>::Literal,
->;
+pub type TermOf<'a, I> =
+    BorrowedTerm<'a, <I as ReverseIriInterpretation>::Iri, <I as ReverseBlankIdInterpretation>::BlankId, <I as ReverseLiteralInterpretation>::Literal>;
 
 pub type UninterpretedQuadRef<'a, I> = GeneralizedQuad<
     super::id::BorrowedId<'a, <I as ReverseIriInterpretation>::Iri, <I as ReverseBlankIdInterpretation>::BlankId>,
@@ -123,9 +109,7 @@ pub type UninterpretedGrdfQuadRef<'a, I> = GeneralizedQuad<
     BorrowedTerm<'a, <I as ReverseIriInterpretation>::Iri, <I as ReverseBlankIdInterpretation>::BlankId, <I as ReverseLiteralInterpretation>::Literal>,
 >;
 
-pub trait ReverseTermInterpretation:
-    ReverseIdInterpretation + ReverseLiteralInterpretation
-{
+pub trait ReverseTermInterpretation: ReverseIdInterpretation + ReverseLiteralInterpretation {
     fn terms_of_resource<'a>(&'a self, id: &'a Self::Resource) -> TermsOf<'a, Self> {
         TermsOf {
             ids: self.id_iris_of(id),
@@ -141,10 +125,7 @@ pub trait ReverseTermInterpretation:
         self.term_of(id).is_some()
     }
 
-    fn quads_of<'a>(
-        &'a self,
-        quad: GeneralizedQuad<&'a Self::Resource, &'a Self::Resource, &'a Self::Resource, &'a Self::Resource>,
-    ) -> QuadsOf<'a, Self> {
+    fn quads_of<'a>(&'a self, quad: GeneralizedQuad<&'a Self::Resource, &'a Self::Resource, &'a Self::Resource, &'a Self::Resource>) -> QuadsOf<'a, Self> {
         QuadsOf {
             s: self.id_iris_of(quad.0),
             p: ReverseIriInterpretation::iris_of(self, quad.1),
@@ -168,10 +149,7 @@ pub trait ReverseTermInterpretation:
     }
 }
 
-impl<I: ?Sized + ReverseIdInterpretation + ReverseLiteralInterpretation> ReverseTermInterpretation
-    for I
-{
-}
+impl<I: ?Sized + ReverseIdInterpretation + ReverseLiteralInterpretation> ReverseTermInterpretation for I {}
 
 pub struct QuadsOf<'a, I: ?Sized + ReverseTermInterpretation> {
     s: IdsOf<'a, I>,
@@ -263,14 +241,7 @@ impl<'a, I: ?Sized + ReverseTermInterpretation> Iterator for OgsOf<'a, I> {
                 },
                 None => match self.o.next() {
                     Some(o) => match self.g.clone() {
-                        Some(g) => {
-                            self.gs = Some(GsOf {
-                                s: self.s,
-                                p: self.p,
-                                o,
-                                g,
-                            })
-                        }
+                        Some(g) => self.gs = Some(GsOf { s: self.s, p: self.p, o, g }),
                         None => break Some(GeneralizedQuad(self.s, self.p, o, None)),
                     },
                     None => break None,
@@ -385,14 +356,7 @@ impl<'a, I: ?Sized + ReverseTermInterpretation> Iterator for GrdfOgsOf<'a, I> {
                 },
                 None => match self.o.next() {
                     Some(o) => match self.g.clone() {
-                        Some(g) => {
-                            self.gs = Some(GrdfGsOf {
-                                s: self.s,
-                                p: self.p,
-                                o,
-                                g,
-                            })
-                        }
+                        Some(g) => self.gs = Some(GrdfGsOf { s: self.s, p: self.p, o, g }),
                         None => break Some(GeneralizedQuad(self.s, self.p, o, None)),
                     },
                     None => break None,
@@ -423,15 +387,9 @@ pub trait ReverseLiteralInterpretationMut: ReverseLiteralInterpretation {
 }
 
 /// Mutable reverse term interpretation.
-pub trait ReverseTermInterpretationMut:
-    ReverseIdInterpretationMut + ReverseLiteralInterpretationMut
-{
+pub trait ReverseTermInterpretationMut: ReverseIdInterpretationMut + ReverseLiteralInterpretationMut {
     /// Assigns the given term to the given resource.
-    fn assign_term(
-        &mut self,
-        resource: &Self::Resource,
-        term: OwnedTerm<Self::Iri, Self::BlankId, Self::Literal>,
-    ) -> bool {
+    fn assign_term(&mut self, resource: &Self::Resource, term: OwnedTerm<Self::Iri, Self::BlankId, Self::Literal>) -> bool {
         match term {
             OwnedTerm::Iri(i) => self.assign_iri(resource, i),
             OwnedTerm::BlankId(b) => self.assign_blank_id(resource, b),
@@ -440,13 +398,8 @@ pub trait ReverseTermInterpretationMut:
     }
 
     /// Assigns a term to all the interpreted resources.
-    fn assign_terms(
-        &mut self,
-        mut f: impl FnMut(
-            &Self,
-            &Self::Resource,
-        ) -> Option<OwnedTerm<Self::Iri, Self::BlankId, Self::Literal>>,
-    ) where
+    fn assign_terms(&mut self, mut f: impl FnMut(&Self, &Self::Resource) -> Option<OwnedTerm<Self::Iri, Self::BlankId, Self::Literal>>)
+    where
         Self::Resource: Clone,
         Self: TraversableInterpretation,
     {
@@ -463,10 +416,7 @@ pub trait ReverseTermInterpretationMut:
     }
 }
 
-impl<I: ReverseIdInterpretationMut + ReverseLiteralInterpretationMut> ReverseTermInterpretationMut
-    for I
-{
-}
+impl<I: ReverseIdInterpretationMut + ReverseLiteralInterpretationMut> ReverseTermInterpretationMut for I {}
 
 /// Iterator over the terms of an interpreted resource.
 pub struct TermsOf<'a, I: 'a + ?Sized + ReverseTermInterpretation> {
@@ -496,4 +446,3 @@ impl<'a, I: 'a + ?Sized + ReverseTermInterpretation> Iterator for TermsOf<'a, I>
             .or_else(|| self.literals.next().map(BorrowedTerm::Literal))
     }
 }
-

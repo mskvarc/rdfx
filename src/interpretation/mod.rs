@@ -164,7 +164,8 @@ pub trait ReverseInterpretation: Interpretation {
     where
         Self::Resource: Clone,
     {
-        self.triple_term_components(resource).map(|(s, p, o)| (Cow::Owned(s), Cow::Owned(p), Cow::Owned(o)))
+        self.triple_term_components(resource)
+            .map(|(s, p, o)| (Cow::Owned(s), Cow::Owned(p), Cow::Owned(o)))
     }
 
     fn is_blank_id(&self, resource: &Self::Resource) -> bool {

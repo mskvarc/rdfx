@@ -24,8 +24,8 @@ use rdfx::{
     Triple,
     TripleTerm,
     dataset::{Graph, GraphMut, TraversableGraph},
-    star::{UnstarOptions, restar_graph, unstar_graph},
     generator::Blank,
+    star::{UnstarOptions, restar_graph, unstar_graph},
 };
 
 // ----- minimal test graph -----
@@ -49,7 +49,10 @@ impl<'a> Iterator for TripleIter<'a> {
 }
 
 impl TraversableGraph for TestGraph {
-    type Triples<'a> = TripleIter<'a> where Self: 'a;
+    type Triples<'a>
+        = TripleIter<'a>
+    where
+        Self: 'a;
     fn triples(&self) -> Self::Triples<'_> {
         TripleIter(self.0.iter())
     }

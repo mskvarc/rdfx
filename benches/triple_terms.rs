@@ -92,7 +92,11 @@ impl ReverseInterpretation for LexInterp {
                     Id::Iri(iri) => Lex(LocalTerm::iri(iri.clone())),
                     Id::BlankId(b) => Lex(LocalTerm::BlankId(b.clone())),
                 };
-                Some((Cow::Owned(s), Cow::Owned(Lex(LocalTerm::iri(t.1.clone()))), Cow::Borrowed(Lex::from_local_term_ref(&t.2))))
+                Some((
+                    Cow::Owned(s),
+                    Cow::Owned(Lex(LocalTerm::iri(t.1.clone()))),
+                    Cow::Borrowed(Lex::from_local_term_ref(&t.2)),
+                ))
             }
             _ => None,
         }

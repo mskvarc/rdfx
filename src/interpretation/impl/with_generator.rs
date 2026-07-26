@@ -116,7 +116,14 @@ impl<I: ReverseInterpretation, G> ReverseInterpretation for WithGenerator<G, I> 
         self.interpretation.triple_term_components(resource)
     }
 
-    fn triple_term_components_view<'a>(&'a self, resource: &'a Self::Resource) -> Option<(std::borrow::Cow<'a, Self::Resource>, std::borrow::Cow<'a, Self::Resource>, std::borrow::Cow<'a, Self::Resource>)>
+    fn triple_term_components_view<'a>(
+        &'a self,
+        resource: &'a Self::Resource,
+    ) -> Option<(
+        std::borrow::Cow<'a, Self::Resource>,
+        std::borrow::Cow<'a, Self::Resource>,
+        std::borrow::Cow<'a, Self::Resource>,
+    )>
     where
         Self::Resource: Clone,
     {
@@ -226,7 +233,14 @@ impl<I: ReverseInterpretation, G> ReverseInterpretation for WithLocalGenerator<G
         self.interpretation.triple_term_components(resource)
     }
 
-    fn triple_term_components_view<'a>(&'a self, resource: &'a Self::Resource) -> Option<(std::borrow::Cow<'a, Self::Resource>, std::borrow::Cow<'a, Self::Resource>, std::borrow::Cow<'a, Self::Resource>)>
+    fn triple_term_components_view<'a>(
+        &'a self,
+        resource: &'a Self::Resource,
+    ) -> Option<(
+        std::borrow::Cow<'a, Self::Resource>,
+        std::borrow::Cow<'a, Self::Resource>,
+        std::borrow::Cow<'a, Self::Resource>,
+    )>
     where
         Self::Resource: Clone,
     {

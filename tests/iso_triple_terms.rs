@@ -101,7 +101,11 @@ impl ReverseInterpretation for LexInterp {
                     Id::Iri(iri) => Lex(LocalTerm::iri(iri.clone())),
                     Id::BlankId(b) => Lex(LocalTerm::BlankId(b.clone())),
                 };
-                Some((Cow::Owned(s), Cow::Owned(Lex(LocalTerm::iri(t.1.clone()))), Cow::Borrowed(Lex::from_local_term_ref(&t.2))))
+                Some((
+                    Cow::Owned(s),
+                    Cow::Owned(Lex(LocalTerm::iri(t.1.clone()))),
+                    Cow::Borrowed(Lex::from_local_term_ref(&t.2)),
+                ))
             }
             _ => None,
         }
@@ -252,16 +256,8 @@ fn triple_term_internal_blank_count_mismatch_rejected() {
 #[test]
 fn nested_triple_term_interior_blank_must_align() {
     // Interior blank in inner-most triple-term body. Needs descent past 2 levels.
-    let inner_a: TripleTerm = Triple(
-        Id::BlankId(BlankIdBuf::new("_:x".to_owned()).unwrap()),
-        iri_lex_iri("p"),
-        iri_lex_lt("o"),
-    );
-    let inner_b: TripleTerm = Triple(
-        Id::BlankId(BlankIdBuf::new("_:y".to_owned()).unwrap()),
-        iri_lex_iri("p"),
-        iri_lex_lt("o"),
-    );
+    let inner_a: TripleTerm = Triple(Id::BlankId(BlankIdBuf::new("_:x".to_owned()).unwrap()), iri_lex_iri("p"), iri_lex_lt("o"));
+    let inner_b: TripleTerm = Triple(Id::BlankId(BlankIdBuf::new("_:y".to_owned()).unwrap()), iri_lex_iri("p"), iri_lex_lt("o"));
     let outer_a: TripleTerm = Triple(Id::iri(ex("o1")), iri_lex_iri("witnesses"), LocalTerm::triple(inner_a));
     let outer_b: TripleTerm = Triple(Id::iri(ex("o1")), iri_lex_iri("witnesses"), LocalTerm::triple(inner_b));
 

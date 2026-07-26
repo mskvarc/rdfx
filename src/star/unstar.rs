@@ -32,7 +32,20 @@ use std::collections::{HashMap, HashSet};
 use iri_rs::IriBuf;
 
 use crate::{
-    BlankIdBuf, Id, LocalGenerator, LocalTerm, Quad, RDF_OBJECT, RDF_PREDICATE, RDF_REIFIES, RDF_SUBJECT, RDF_TRIPLE_TERM, RDF_TYPE, Term, Triple, TripleTerm,
+    BlankIdBuf,
+    Id,
+    LocalGenerator,
+    LocalTerm,
+    Quad,
+    RDF_OBJECT,
+    RDF_PREDICATE,
+    RDF_REIFIES,
+    RDF_SUBJECT,
+    RDF_TRIPLE_TERM,
+    RDF_TYPE,
+    Term,
+    Triple,
+    TripleTerm,
     dataset::{DatasetMut, GraphMut, TraversableDataset, TraversableGraph},
 };
 
@@ -118,13 +131,27 @@ where
         let (cache, emitted) = per_graph.entry(g.clone()).or_default();
         if reifies_body(q.1, q.2).is_some() {
             let g2 = g.clone();
-            let _ = unstar_object_inner(q.2.clone(), &mut |Triple(rs, rp, ro)| dest.insert(Quad(rs, rp, ro, g2.clone())), generator, cache, emitted, opts);
+            let _ = unstar_object_inner(
+                q.2.clone(),
+                &mut |Triple(rs, rp, ro)| dest.insert(Quad(rs, rp, ro, g2.clone())),
+                generator,
+                cache,
+                emitted,
+                opts,
+            );
             continue;
         }
         let s = q.0.clone();
         let p = q.1.clone();
         let g2 = g.clone();
-        let o = unstar_object_inner(q.2.clone(), &mut |Triple(rs, rp, ro)| dest.insert(Quad(rs, rp, ro, g2.clone())), generator, cache, emitted, opts);
+        let o = unstar_object_inner(
+            q.2.clone(),
+            &mut |Triple(rs, rp, ro)| dest.insert(Quad(rs, rp, ro, g2.clone())),
+            generator,
+            cache,
+            emitted,
+            opts,
+        );
         dest.insert(Quad(s, p, o, g));
     }
 }
@@ -141,7 +168,14 @@ fn reifies_body(p: &IriBuf, o: &LocalTerm) -> Option<TripleTerm> {
     }
 }
 
-fn unstar_object_inner<F, Gen>(o: LocalTerm, emit: &mut F, generator: &mut Gen, cache: &mut HashMap<TripleTerm, Id>, emitted: &mut HashSet<Id>, opts: UnstarOptions) -> LocalTerm
+fn unstar_object_inner<F, Gen>(
+    o: LocalTerm,
+    emit: &mut F,
+    generator: &mut Gen,
+    cache: &mut HashMap<TripleTerm, Id>,
+    emitted: &mut HashSet<Id>,
+    opts: UnstarOptions,
+) -> LocalTerm
 where
     F: FnMut(Triple<Id, IriBuf, LocalTerm>),
     Gen: LocalGenerator,

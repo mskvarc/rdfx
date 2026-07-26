@@ -32,9 +32,7 @@ impl<'a> TryFrom<Iri<&'a str>> for IriIndex {
 }
 
 #[cfg(feature = "contextual")]
-impl<V: crate::vocabulary::IriVocabulary<Iri = Self>> contextual::DisplayWithContext<V>
-    for IriIndex
-{
+impl<V: crate::vocabulary::IriVocabulary<Iri = Self>> contextual::DisplayWithContext<V> for IriIndex {
     fn fmt_with(&self, vocabulary: &V, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         std::fmt::Display::fmt(&vocabulary.iri(self).unwrap(), f)
     }
