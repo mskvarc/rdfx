@@ -2,12 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.24.0] - 2026-07-26
+
+### 🧹 Chores
+- Move to locspan 1.0.0, msrv 1.96.0 ⚠️ **BREAKING**
+
 ## [v0.23.2] - 2026-07-26
 
 ### 🚀 Features
 - Vocabulary enumeration
 
 ### 🧹 Chores
+- Changelog
 - Update deps
 
 ## [v0.23.1] - 2026-07-25
