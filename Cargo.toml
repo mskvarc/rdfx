@@ -34,25 +34,25 @@ uuid-generator-v5 = ["uuid", "uuid/v5"]
 contextual = { version = "0.1.6", optional = true }
 educe = "0.6.0"
 equivalent = "1.0.2"
-hashbrown = "0.17.0"
+hashbrown = "0.17.1"
 indexmap = "2.14.0"
-iri-rs = { version = "3.3.2", features = ["static"] }
+iri-rs = { version = "3.3.5", features = ["static"] }
 itoa = "1.0.18"
 langtag = "1.1.0"
 locspan = { version = "0.9.2", optional = true }
-memchr = "2.8.0"
+memchr = "2.8.3"
 raw-btree = "0.3.3"
 replace_with = "0.1.8"
-serde = { version = "1.0.228", features = ["derive", "rc"], optional = true }
+serde = { version = "1.0.229", features = ["derive", "rc"], optional = true }
 slab = "0.4.12"
-thiserror = "2.0.18"
-uuid = { version = "1.23.1", optional = true }
+thiserror = "2.0.19"
+uuid = { version = "1.24.0", optional = true }
 
 [dev-dependencies]
 criterion = { version = "0.8.2", features = ["html_reports"] }
-rand = "0.10.1"
-serde_json = "1.0.149"
-trybuild = "1.0.116"
+rand = "0.10.2"
+serde_json = "1.0.151"
+trybuild = "1.0.118"
 
 [[bench]]
 name = "dataset"
