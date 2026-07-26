@@ -3,7 +3,7 @@ name = "rdfx"
 description = "RDF 1.2 data-structures, traits and utilities: terms (incl. triple terms), triples, quads, interpretations, graphs, datasets, unstar/restar reification helpers."
 version = "0.23.2"
 edition = "2024"
-rust-version = "1.85.0"
+rust-version = "1.96.0"
 authors = [
     "Timothée Haudebourg <author@haudebourg.net>",
     "Matej Škvarč <matej.skvarc@senlab.io>",
@@ -39,7 +39,7 @@ indexmap = "2.14.0"
 iri-rs = { version = "3.3.5", features = ["static"] }
 itoa = "1.0.18"
 langtag = "1.1.0"
-locspan = { version = "0.9.2", optional = true }
+locspan = { version = "1.0.0", optional = true }
 memchr = "2.8.3"
 raw-btree = "0.3.3"
 replace_with = "0.1.8"

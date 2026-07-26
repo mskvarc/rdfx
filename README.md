@@ -44,7 +44,7 @@ Fork of [`rdf-types`](https://crates.io/crates/rdf-types) by [Timothée Haudebou
 - Rewritten isomorphism: bitmap signature refinement, candidate ordering by set size, augmenting-path bipartite matching instead of greedy matching, and triple-term descent. Two correctness fixes came with it — false positives on blank-free quads, and stale subject/predicate/object index sets after removal.
 - Sealed position-marker traits (`IsSubject`, `IsPredicate`, `IsObject`, `IsGraph`) turning RDF position constraints into compile-time errors, with generalized-RDF types for when you need to lift them.
 - Performance: SWAR blank id validation, `memchr`-accelerated `Display`, `itoa` and `uuid` fast paths in blank node generators, allocation removal across isomorphism.
-- Rust 2024 edition, MSRV 1.85, single crate instead of a workspace.
+- Rust 2024 edition, MSRV 1.96, single crate instead of a workspace.
 - Renamed crate: `rdf-types` → `rdfx`. Depends on [`iri-rs`](https://crates.io/crates/iri-rs) (fork of `iref`) instead of `iref`, which is the point of the fork.
 - Criterion bench suite (`dataset`, `isomorphism`, `swar`, `triple_terms`, `vocabulary`).
 
@@ -137,7 +137,7 @@ Criterion output: `target/criterion/`.
 
 ## MSRV
 
-Rust 1.85 (edition 2024).
+Rust 1.96 (edition 2024).
 
 ## Attribution
 
