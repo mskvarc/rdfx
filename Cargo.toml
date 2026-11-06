@@ -1,7 +1,7 @@
 [package]
 name = "rdfx"
 description = "RDF 1.2 data-structures, traits and utilities: terms (incl. triple terms), triples, quads, interpretations, graphs, datasets, unstar/restar reification helpers."
-version = "0.24.0"
+version = "0.25.0"
 edition = "2024"
 rust-version = "1.96.0"
 authors = [
