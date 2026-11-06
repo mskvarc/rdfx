@@ -2,137 +2,147 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.25.0] - 2026-11-06
+
+### 🚀 Features
+- move to iri-rs 4 ⚠️ **BREAKING**
+
+### 🧹 Chores
+- update dependencies
+- bump version
+
 ## [v0.24.0] - 2026-07-26
 
 ### 🧹 Chores
-- Move to locspan 1.0.0, msrv 1.96.0 ⚠️ **BREAKING**
+- changelog
+- move to locspan 1.0.0, msrv 1.96.0 ⚠️ **BREAKING**
 
 ## [v0.23.2] - 2026-07-26
 
 ### 🚀 Features
-- Vocabulary enumeration
+- vocabulary enumeration
 
 ### 🧹 Chores
-- Changelog
-- Update deps
+- changelog
+- update deps
 
 ## [v0.23.1] - 2026-07-25
 
 ### 🧹 Chores
-- Changelog
-- Add missing clone derive
+- changelog
+- add missing clone derive
 
 ## [v0.23.0] - 2026-07-25
 
 ### ⚡ Performance
-- Rdf 1.2 improvements
-- Swar optimizations
-- Optimize blank id validator
-- Display memchr simd
+- rdf 1.2 improvements
+- swar optimizations
+- optimize blank id validator
+- display memchr simd
 
 ### 🎨 Style
-- Reformat code
-- Reformat code
-- Reformat code
+- reformat code
+- reformat code
+- reformat code
 
 ### 🐛 Bug Fixes
-- Cleanup clippy warnings across lib + tests
-- Isomorphism reports false positives on blankless quads
-- Blank-node n-triples output is quoted
-- Misc fixes
-- Fix regression in dense escape
-- Fix scalar is_pn_char
-- Fix subjects/predicates/objects stale set bug in hash
-- Fix subjects/predicates/objects stale set bug in btree
-- Resolve issues with hash implementation
-- Restore size-based grouping
-- Compiler warnings
+- cleanup clippy warnings across lib + tests
+- isomorphism reports false positives on blankless quads
+- blank-node n-triples output is quoted
+- misc fixes
+- fix regression in dense escape
+- fix scalar is_pn_char
+- fix subjects/predicates/objects stale set bug in hash
+- fix subjects/predicates/objects stale set bug in btree
+- resolve issues with hash implementation
+- restore size-based grouping
+- compiler warnings
 
 ### 👷 CI
-- Remove workflows
+- remove workflows
 
 ### 💡 Other
-- Factorize `Subject` (now `Id`) type in `Term`.
+- factorize `Subject` (now `Id`) type in `Term`.
 
 ### 📚 Documentation
-- Document public methods
-- Update rustdoc issues
+- document public methods
+- update rustdoc issues
 
 ### 🔧 Refactor
-- Rework cargo manifest
-- Equivalence / isomorphism
-- Rework macros
-- Align tests and benches with trait split
-- Graph/dataset trait split
-- Datatype newtype + literaltype refactor
-- Triple / quad bound changes
-- Remove deprecated features
-- Replace greedy bipartite matching with augmenting path
-- Rename crate
-- Btree set swap
-- Thread hash
-- Align meta helpers
-- Isomorphism cleanup
-- Naming consistency
-- Reorganize isomorphism module
-- From workspace to single crate
-- Slab get_unchecked
-- Combine contains+index in insert
-- Uuid skip parse round-trip
-- Itoa for blank id generators
-- Eliminate cloning in isomorphism
-- Use iri-rs
-- Markdown licenses
-- Repository shape
-- Rework repository shape
+- rework cargo manifest
+- equivalence / isomorphism
+- rework macros
+- align tests and benches with trait split
+- graph/dataset trait split
+- datatype newtype + literaltype refactor
+- triple / quad bound changes
+- remove deprecated features
+- replace greedy bipartite matching with augmenting path
+- rename crate
+- btree set swap
+- thread hash
+- align meta helpers
+- isomorphism cleanup
+- naming consistency
+- reorganize isomorphism module
+- from workspace to single crate
+- slab get_unchecked
+- combine contains+index in insert
+- uuid skip parse round-trip
+- itoa for blank id generators
+- eliminate cloning in isomorphism
+- use iri-rs
+- markdown licenses
+- repository shape
+- rework repository shape
 
 ### 🚀 Features
-- Bring back vocabulary
-- Rdf:reifies-aware unstar + interior-blank iso tracking
-- Add star module, unstar/restar between triple terms and rdf:reifies form
-- Triple-term descent in graph/dataset isomorphism
-- Macro syntax for rdf 1.2 triple terms and directional language strings
-- Rdf 1.2 type model
-- Generalized rdf
-- Literal constructors
-- Sealed position-marker traits
-- Add partialeq + hash implementation to hash datasets
-- Add from impls for term
-- Add id derives + ergonomic surface
-- Count overrides on non-indexed types
-- Re-introduce meta module
-- Some ergonomic methods
-- Indexed hash dataset implementation
-- Hash dataset implementation
-- Indexed hash graph implementation
-- Hash graph implementation
-- Add hashmap utilities
-- New dependencies and features
-- Order blank ids by candidate set size
-- Greedy signature refinement
-- Bitmap signature match
+- bring back vocabulary
+- rdf:reifies-aware unstar + interior-blank iso tracking
+- add star module, unstar/restar between triple terms and rdf:reifies form
+- triple-term descent in graph/dataset isomorphism
+- macro syntax for rdf 1.2 triple terms and directional language strings
+- rdf 1.2 type model
+- generalized rdf
+- literal constructors
+- sealed position-marker traits
+- add partialeq + hash implementation to hash datasets
+- add from impls for term
+- add id derives + ergonomic surface
+- count overrides on non-indexed types
+- re-introduce meta module
+- some ergonomic methods
+- indexed hash dataset implementation
+- hash dataset implementation
+- indexed hash graph implementation
+- hash graph implementation
+- add hashmap utilities
+- new dependencies and features
+- order blank ids by candidate set size
+- greedy signature refinement
+- bitmap signature match
 
 ### 🧪 Tests
-- Rdf 1.2 tests
-- Add tests for new functionality
-- Add swar bench
-- Hash benches
-- Update ruby generator and templates
+- rdf 1.2 tests
+- add tests for new functionality
+- add swar bench
+- hash benches
+- update ruby generator and templates
 
 ### 🧹 Chores
-- Changelog
-- Polish
-- Rdf 1.2
-- Fix clippy warnings
-- Misc tweaks
-- Unify terminology in the code
-- Update manifest
-- Drop ahash feature
-- Strip eprintln
-- Update all dependencies
-- Update langtag
-- Add benches
-- Rustfmt configuration
-- Remove changelog
+- changelog
+- polish
+- rdf 1.2
+- fix clippy warnings
+- misc tweaks
+- unify terminology in the code
+- update manifest
+- drop ahash feature
+- strip eprintln
+- update all dependencies
+- update langtag
+- add benches
+- rustfmt configuration
+- remove changelog
 
 <!-- generated by git-cliff -->
