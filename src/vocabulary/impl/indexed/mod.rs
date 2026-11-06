@@ -22,6 +22,12 @@ pub use literal::*;
 /// Vocabulary that stores IRIs and blank node identifiers
 /// with a unique index.
 ///
+/// IRIs are interned by simple string comparison, as RDF 1.1 Concepts §3.2
+/// requires ("Further normalization MUST NOT be performed when comparing
+/// IRIs for equality"): two spellings of an equivalent IRI, such as
+/// `http://example.org/~a` and `http://example.org/%7Ea`, get two indices,
+/// and each keeps its own spelling.
+///
 /// `Clone` is derived through `educe` so the index parameters, which are
 /// markers, do not pick up a `Clone` bound. Cloning a vocabulary is what
 /// lets a parallel consumer hand one copy to each worker.
@@ -115,7 +121,7 @@ impl<I: IndexedIri, B, L> IriVocabulary for IndexVocabulary<I, B, L> {
     fn get(&self, iri: Iri<&str>) -> Option<I> {
         match I::try_from(iri) {
             Ok(id) => Some(id),
-            Err(_) => self.iri.get_index_of(&IriBuf::from(iri)).map(I::from),
+            Err(_) => self.iri.get_index_of(iri.as_str()).map(I::from),
         }
     }
 }
@@ -124,7 +130,10 @@ impl<I: IndexedIri, B, L> IriVocabularyMut for IndexVocabulary<I, B, L> {
     fn insert(&mut self, iri: Iri<&str>) -> I {
         match I::try_from(iri) {
             Ok(id) => id,
-            Err(_) => self.iri.insert_full(IriBuf::from(iri)).0.into(),
+            Err(_) => match self.iri.get_index_of(iri.as_str()) {
+                Some(index) => index.into(),
+                None => self.iri.insert_full(IriBuf::from(iri)).0.into(),
+            },
         }
     }
 
@@ -246,6 +255,27 @@ mod tests {
         let again = vocabulary.insert(iri!("https://example.org/a"));
         assert_eq!(first, again);
         assert_eq!(vocabulary.iri_count(), 1);
+    }
+
+    /// RDF 1.1 Concepts §3.2: IRIs are equal only under simple string
+    /// comparison, so equivalent spellings are distinct terms.
+    #[test]
+    fn equivalent_spellings_of_an_iri_are_interned_apart() {
+        let mut vocabulary: IndexVocabulary = IndexVocabulary::new();
+        let spellings = [
+            "http://example.org/~a",
+            "http://example.org/%7Ea",
+            "http://example.org/%7ea",
+            "HTTP://EXAMPLE.org/b",
+            "http://example.org/b",
+        ];
+        let indices: Vec<IriIndex> = spellings.iter().map(|s| vocabulary.insert(Iri::parse(*s).expect("valid IRI"))).collect();
+        assert_eq!(vocabulary.iri_count(), spellings.len());
+        for (spelling, index) in spellings.iter().zip(&indices) {
+            assert_eq!(vocabulary.iri(index).expect("interned").as_str(), *spelling);
+            assert_eq!(vocabulary.get(Iri::parse(*spelling).expect("valid IRI")), Some(*index), "`{spelling}`");
+        }
+        assert_eq!(indices.iter().collect::<std::collections::HashSet<_>>().len(), spellings.len());
     }
 
     #[test]

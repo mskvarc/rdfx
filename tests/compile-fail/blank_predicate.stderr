@@ -6,15 +6,15 @@ error[E0277]: the trait bound `BlankIdBuf: IsPredicate` is not satisfied
   |
   = help: the following other types implement trait `IsPredicate`:
             &T
-            Cow<'_, rdf_rs::Iri<String>>
+            BorrowedTerm<'_, I, B, L>
+            Cow<'_, rdfx::Iri<String>>
             GeneralizedLocalTerm
             Meta<T, M>
             Option<T>
             ResourceOrVar<T, X>
             String
-            i32
           and $N others
-note: required by a bound in `rdf_rs::Triple`
+note: required by a bound in `rdfx::Triple`
  --> src/triple.rs
   |
   | pub struct Triple<S: IsSubject = Id, P: IsPredicate = IriBuf, O: IsObject = LocalTerm>(pub S, pub P, pub O);
@@ -31,15 +31,15 @@ error[E0277]: the trait bound `BlankIdBuf: IsPredicate` is not satisfied
   |
   = help: the following other types implement trait `IsPredicate`:
             &T
-            Cow<'_, rdf_rs::Iri<String>>
+            BorrowedTerm<'_, I, B, L>
+            Cow<'_, rdfx::Iri<String>>
             GeneralizedLocalTerm
             Meta<T, M>
             Option<T>
             ResourceOrVar<T, X>
             String
-            i32
           and $N others
-note: required by a bound in `rdf_rs::Triple::<S, P, O>::new`
+note: required by a bound in `rdfx::Triple::<S, P, O>::new`
  --> src/triple.rs
   |
   | impl<S: IsSubject, P: IsPredicate, O: IsObject> Triple<S, P, O> {
@@ -61,15 +61,15 @@ error[E0277]: the trait bound `BlankIdBuf: IsPredicate` is not satisfied
   |
   = help: the following other types implement trait `IsPredicate`:
             &T
-            Cow<'_, rdf_rs::Iri<String>>
+            BorrowedTerm<'_, I, B, L>
+            Cow<'_, rdfx::Iri<String>>
             GeneralizedLocalTerm
             Meta<T, M>
             Option<T>
             ResourceOrVar<T, X>
             String
-            i32
           and $N others
-note: required by a bound in `rdf_rs::Triple`
+note: required by a bound in `rdfx::Triple`
  --> src/triple.rs
   |
   | pub struct Triple<S: IsSubject = Id, P: IsPredicate = IriBuf, O: IsObject = LocalTerm>(pub S, pub P, pub O);

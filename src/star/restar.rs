@@ -96,10 +96,10 @@ fn scan_triple(s: &Id, p: &IriBuf, o: &LocalTerm, typed: &mut HashSet<BlankIdBuf
     let Id::BlankId(b) = s else { return };
     let p_str = p.as_str();
     if p_str == RDF_TYPE.as_str() {
-        if let Some(iri) = o.as_iri() {
-            if iri.as_str() == RDF_TRIPLE_TERM.as_str() {
-                typed.insert(b.clone());
-            }
+        if let Some(iri) = o.as_iri()
+            && iri.as_str() == RDF_TRIPLE_TERM.as_str()
+        {
+            typed.insert(b.clone());
         }
     } else if p_str == RDF_SUBJECT.as_str() {
         parts.entry(b.clone()).or_default().subject = Some(o.clone());
@@ -117,12 +117,11 @@ fn expand_all(typed: &HashSet<BlankIdBuf>, parts: &HashMap<BlankIdBuf, Parts>) -
     // reifier that has all parts and a valid subject/predicate kind.
     let mut raw: HashMap<BlankIdBuf, TripleTerm> = HashMap::new();
     for b in typed {
-        if let Some(p) = parts.get(b) {
-            if let (Some(s), Some(pred), Some(o)) = (&p.subject, &p.predicate, &p.object) {
-                if let (Some(sid), Some(piri)) = (local_term_to_id(s), local_term_to_iri(pred)) {
-                    raw.insert(b.clone(), Triple(sid, piri, o.clone()));
-                }
-            }
+        if let Some(p) = parts.get(b)
+            && let (Some(s), Some(pred), Some(o)) = (&p.subject, &p.predicate, &p.object)
+            && let (Some(sid), Some(piri)) = (local_term_to_id(s), local_term_to_iri(pred))
+        {
+            raw.insert(b.clone(), Triple(sid, piri, o.clone()));
         }
     }
 

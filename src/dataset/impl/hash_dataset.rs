@@ -468,7 +468,7 @@ mod tests {
 
     fn rng_graph(rng: &mut SmallRng) -> Option<u32> {
         let g = rng.next_u32();
-        if g % 2 == 0 { Some(g) } else { None }
+        if g.is_multiple_of(2) { Some(g) } else { None }
     }
 
     fn insert_test(n: usize, seed: [u8; 32]) {

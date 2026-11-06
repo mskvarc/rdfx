@@ -1,18 +1,18 @@
-error[E0277]: the trait bound `rdf_rs::Literal: IsGraph` is not satisfied
+error[E0277]: the trait bound `rdfx::Literal: IsGraph` is not satisfied
  --> tests/compile-fail/literal_graph.rs:6:13
   |
 6 |     let _q: Quad<Id, IriBuf, LocalTerm, Literal> = Quad::new(
-  |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `IsGraph` is not implemented for `rdf_rs::Literal`
+  |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `IsGraph` is not implemented for `rdfx::Literal`
   |
   = help: the following other types implement trait `IsGraph`:
             &T
             BlankIdBuf
+            BorrowedId<'_, I, B>
+            BorrowedTerm<'_, I, B, L>
             Cow<'_, iri_rs::Iri<String>>
-            Cow<'_, rdf_rs::BlankId>
+            Cow<'_, rdfx::BlankId>
             CowId<'_>
             GeneralizedLocalTerm
-            Id
-            IdRef<'_>
           and $N others
 note: required by a bound in `Quad`
  --> src/quad.rs
@@ -20,24 +20,24 @@ note: required by a bound in `Quad`
   | pub struct Quad<S: IsSubject = Id, P: IsPredicate = IriBuf, O: IsObject = LocalTerm, G: IsGraph = Id>(pub S, pub P, pub O, pub Optio...
   |                                                                                         ^^^^^^^ required by this bound in `Quad`
 
-error[E0277]: the trait bound `rdf_rs::Literal: IsGraph` is not satisfied
+error[E0277]: the trait bound `rdfx::Literal: IsGraph` is not satisfied
   --> tests/compile-fail/literal_graph.rs:10:9
    |
  6 |     let _q: Quad<Id, IriBuf, LocalTerm, Literal> = Quad::new(
    |                                                    --------- required by a bound introduced by this call
 ...
 10 |         Some(Literal::plain("graph")),
-   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `IsGraph` is not implemented for `rdf_rs::Literal`
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `IsGraph` is not implemented for `rdfx::Literal`
    |
    = help: the following other types implement trait `IsGraph`:
              &T
              BlankIdBuf
+             BorrowedId<'_, I, B>
+             BorrowedTerm<'_, I, B, L>
              Cow<'_, iri_rs::Iri<String>>
-             Cow<'_, rdf_rs::BlankId>
+             Cow<'_, rdfx::BlankId>
              CowId<'_>
              GeneralizedLocalTerm
-             Id
-             IdRef<'_>
            and $N others
 note: required by a bound in `Quad::<S, P, O, G>::new`
   --> src/quad.rs
@@ -48,7 +48,7 @@ note: required by a bound in `Quad::<S, P, O, G>::new`
    |     pub const fn new(subject: S, predicate: P, object: O, graph: Option<G>) -> Self {
    |                  --- required by a bound in this associated function
 
-error[E0277]: the trait bound `rdf_rs::Literal: IsGraph` is not satisfied
+error[E0277]: the trait bound `rdfx::Literal: IsGraph` is not satisfied
   --> tests/compile-fail/literal_graph.rs:6:52
    |
  6 |       let _q: Quad<Id, IriBuf, LocalTerm, Literal> = Quad::new(
@@ -58,17 +58,17 @@ error[E0277]: the trait bound `rdf_rs::Literal: IsGraph` is not satisfied
  9 | |         LocalTerm::iri(IriBuf::new("http://example.org/o".to_owned()).unwrap()),
 10 | |         Some(Literal::plain("graph")),
 11 | |     );
-   | |_____^ the trait `IsGraph` is not implemented for `rdf_rs::Literal`
+   | |_____^ the trait `IsGraph` is not implemented for `rdfx::Literal`
    |
    = help: the following other types implement trait `IsGraph`:
              &T
              BlankIdBuf
+             BorrowedId<'_, I, B>
+             BorrowedTerm<'_, I, B, L>
              Cow<'_, iri_rs::Iri<String>>
-             Cow<'_, rdf_rs::BlankId>
+             Cow<'_, rdfx::BlankId>
              CowId<'_>
              GeneralizedLocalTerm
-             Id
-             IdRef<'_>
            and $N others
 note: required by a bound in `Quad`
   --> src/quad.rs

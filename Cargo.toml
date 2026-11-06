@@ -36,7 +36,7 @@ educe = "0.6.0"
 equivalent = "1.0.2"
 hashbrown = "0.17.1"
 indexmap = "2.14.0"
-iri-rs = { version = "3.3.5", features = ["static"] }
+iri-rs = { version = "4.0.0", features = ["static"] }
 itoa = "1.0.18"
 langtag = "1.1.0"
 locspan = { version = "1.0.0", optional = true }

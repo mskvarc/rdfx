@@ -1,45 +1,45 @@
-error[E0277]: the trait bound `rdf_rs::Literal: IsPredicate` is not satisfied
+error[E0277]: the trait bound `rdfx::Literal: IsPredicate` is not satisfied
  --> tests/compile-fail/literal_predicate.rs:6:13
   |
 6 |     let _t: Triple<Id, Literal, LocalTerm> = Triple::new(
-  |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `IsPredicate` is not implemented for `rdf_rs::Literal`
+  |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `IsPredicate` is not implemented for `rdfx::Literal`
   |
   = help: the following other types implement trait `IsPredicate`:
             &T
+            BorrowedTerm<'_, I, B, L>
             Cow<'_, iri_rs::Iri<String>>
             GeneralizedLocalTerm
             Meta<T, M>
             Option<T>
             ResourceOrVar<T, X>
             String
-            i32
           and $N others
-note: required by a bound in `rdf_rs::Triple`
+note: required by a bound in `rdfx::Triple`
  --> src/triple.rs
   |
   | pub struct Triple<S: IsSubject = Id, P: IsPredicate = IriBuf, O: IsObject = LocalTerm>(pub S, pub P, pub O);
   |                                         ^^^^^^^^^^^ required by this bound in `Triple`
 
-error[E0277]: the trait bound `rdf_rs::Literal: IsPredicate` is not satisfied
+error[E0277]: the trait bound `rdfx::Literal: IsPredicate` is not satisfied
  --> tests/compile-fail/literal_predicate.rs:8:9
   |
 6 |     let _t: Triple<Id, Literal, LocalTerm> = Triple::new(
   |                                              ----------- required by a bound introduced by this call
 7 |         Id::iri(IriBuf::new("http://example.org/s".to_owned()).unwrap()),
 8 |         Literal::plain("pred"),
-  |         ^^^^^^^^^^^^^^^^^^^^^^ the trait `IsPredicate` is not implemented for `rdf_rs::Literal`
+  |         ^^^^^^^^^^^^^^^^^^^^^^ the trait `IsPredicate` is not implemented for `rdfx::Literal`
   |
   = help: the following other types implement trait `IsPredicate`:
             &T
+            BorrowedTerm<'_, I, B, L>
             Cow<'_, iri_rs::Iri<String>>
             GeneralizedLocalTerm
             Meta<T, M>
             Option<T>
             ResourceOrVar<T, X>
             String
-            i32
           and $N others
-note: required by a bound in `rdf_rs::Triple::<S, P, O>::new`
+note: required by a bound in `rdfx::Triple::<S, P, O>::new`
  --> src/triple.rs
   |
   | impl<S: IsSubject, P: IsPredicate, O: IsObject> Triple<S, P, O> {
@@ -48,7 +48,7 @@ note: required by a bound in `rdf_rs::Triple::<S, P, O>::new`
   |     pub const fn new(subject: S, predicate: P, object: O) -> Self {
   |                  --- required by a bound in this associated function
 
-error[E0277]: the trait bound `rdf_rs::Literal: IsPredicate` is not satisfied
+error[E0277]: the trait bound `rdfx::Literal: IsPredicate` is not satisfied
   --> tests/compile-fail/literal_predicate.rs:6:46
    |
  6 |       let _t: Triple<Id, Literal, LocalTerm> = Triple::new(
@@ -57,19 +57,19 @@ error[E0277]: the trait bound `rdf_rs::Literal: IsPredicate` is not satisfied
  8 | |         Literal::plain("pred"),
  9 | |         LocalTerm::iri(IriBuf::new("http://example.org/o".to_owned()).unwrap()),
 10 | |     );
-   | |_____^ the trait `IsPredicate` is not implemented for `rdf_rs::Literal`
+   | |_____^ the trait `IsPredicate` is not implemented for `rdfx::Literal`
    |
    = help: the following other types implement trait `IsPredicate`:
              &T
+             BorrowedTerm<'_, I, B, L>
              Cow<'_, iri_rs::Iri<String>>
              GeneralizedLocalTerm
              Meta<T, M>
              Option<T>
              ResourceOrVar<T, X>
              String
-             i32
            and $N others
-note: required by a bound in `rdf_rs::Triple`
+note: required by a bound in `rdfx::Triple`
   --> src/triple.rs
    |
    | pub struct Triple<S: IsSubject = Id, P: IsPredicate = IriBuf, O: IsObject = LocalTerm>(pub S, pub P, pub O);

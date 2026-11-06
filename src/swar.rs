@@ -157,7 +157,7 @@ mod tests {
 
     #[test]
     fn has_byte_eq_finds_match() {
-        let w = u64::from_le_bytes([b'a', b'b', b'c', b'.', b'e', b'f', b'g', b'h']);
+        let w = u64::from_le_bytes(*b"abc.efgh");
         assert!(has_byte_eq(w, b'.') != 0);
         assert!(has_byte_eq(w, b'.') == 0x80 << 24);
         assert_eq!(has_byte_eq(w, b'z'), 0);
@@ -174,7 +174,7 @@ mod tests {
 
     #[test]
     fn has_byte_in_range_alpha() {
-        let w = u64::from_le_bytes([b'A', b'Z', b'a', b'z', b'0', b'_', b'@', b'`']);
+        let w = u64::from_le_bytes(*b"AZaz0_@`");
         let m = has_byte_in_range(w | broadcast(0x20), b'a', b'z');
         let positions: Vec<u32> = (0..8u32).filter(|i| (m >> (i * 8 + 7)) & 1 == 1).collect();
         assert_eq!(positions, vec![0, 1, 2, 3]);
@@ -241,7 +241,7 @@ mod tests {
     #[test]
     fn iri_escape_word_multiple_in_chunk() {
         // Escapes at positions 1 and 4: should set both high bits.
-        let arr = [b'a', b'<', b'b', b'c', b'>', b'd', b'e', b'f'];
+        let arr = *b"a<bc>def";
         let w = u64::from_le_bytes(arr);
         let mask = iri_escape_word(w);
         assert_ne!(mask, 0);
